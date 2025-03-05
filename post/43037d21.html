@@ -1,0 +1,231 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>argon-theme-master | 学海拾茜</title><meta name="author" content="茜影神行"><meta name="copyright" content="茜影神行"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="/*网站字体*/ /*原则上你可以设置多个字体，然后在不同的部位使用不同的字体。*/ @font-face{ font-family:echo; src:url(https://fastly.jsdelivr.net/gh/huangwb8/bloghelper@latest/fonts/13.woff2) format(‘woff2’) } body{ f">
+<meta property="og:type" content="article">
+<meta property="og:title" content="argon-theme-master">
+<meta property="og:url" content="https://cyg0825.github.io/post/43037d21.html">
+<meta property="og:site_name" content="学海拾茜">
+<meta property="og:description" content="/*网站字体*/ /*原则上你可以设置多个字体，然后在不同的部位使用不同的字体。*/ @font-face{ font-family:echo; src:url(https://fastly.jsdelivr.net/gh/huangwb8/bloghelper@latest/fonts/13.woff2) format(‘woff2’) } body{ f">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cyg0825.github.io/img/cat.png">
+<meta property="article:published_time" content="2024-07-17T03:05:01.000Z">
+<meta property="article:modified_time" content="2025-03-04T03:07:55.644Z">
+<meta property="article:author" content="茜影神行">
+<meta property="article:tag" content="技术博客, 生活记录, 学习笔记, 前端开发, 个人成长">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cyg0825.github.io/img/cat.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "argon-theme-master",
+  "url": "https://cyg0825.github.io/post/43037d21.html",
+  "image": "https://cyg0825.github.io/img/cat.png",
+  "datePublished": "2024-07-17T03:05:01.000Z",
+  "dateModified": "2025-03-04T03:07:55.644Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "茜影神行",
+      "url": "https://cyg0825.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/333.png"><link rel="canonical" href="https://cyg0825.github.io/post/43037d21.html"><link rel="preconnect" href="//cdn.jsdelivr.net"><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""><link rel="preconnect" href="//busuanzi.ibruce.info"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!true && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":true,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'argon-theme-master',
+  isHighlightShrink: true,
+  isToc: false,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="学海拾茜" type="application/atom+xml">
+<script>function loadCss(l){var d=document,h=d.head,s=d.createElement('link');s.rel='stylesheet';s.href=l;!function e(f){if (d.body)return f();setTimeout(function(){e(f)})}(function(){h.appendChild(s);});}loadCss('/style.css');loadCss('https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css');loadCss('https://fonts.googleapis.com/css?family=Titillium+Web&display=swap');loadCss('https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css');loadCss('https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css');</script><noscript><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Titillium+Web&amp;display=swap"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css"></noscript></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">92</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">36</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/categories/crystal/"><i class="fa-fw fas fa-folder"></i><span> 亦路同行</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/img/5.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/333.png" alt="Logo"><span class="site-name">学海拾茜</span></a><a class="nav-page-title" href="/"><span class="site-name">argon-theme-master</span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/categories/crystal/"><i class="fa-fw fas fa-folder"></i><span> 亦路同行</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">argon-theme-master</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-07-17T03:05:01.000Z" title="发表于 2024-07-17 11:05:01">2024-07-17</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-03-04T03:07:55.644Z" title="更新于 2025-03-04 11:07:55">2025-03-04</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/uncategorized/">uncategorized</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">1.6k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>8分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>/*网站字体*/ /*原则上你可以设置多个字体，然后在不同的部位使用不同的字体。*/ @font-face{ font-family:echo; src:url(<a target="_blank" rel="noopener" href="https://fastly.jsdelivr.net/gh/huangwb8/bloghelper@latest/fonts/13.woff2">https://fastly.jsdelivr.net/gh/huangwb8/bloghelper@latest/fonts/13.woff2</a>) format(‘woff2’) } body{ font-family: ‘echo’, Georgia, -apple-system, ‘Nimbus Roman No9 L’, ‘PingFang SC’, ‘Hiragino Sans GB’, ‘Noto Serif SC’, ‘Microsoft Yahei’, ‘WenQuanYi Micro Hei’, ‘ST Heiti’, sans-serif } /*横幅字体大小*/ .banner-title { font-size: 2.5em; } .banner-subtitle{ font-size: 28px; -webkit-text-fill-color: transparent; background: linear-gradient(94.75deg,rgb(60, 172, 247) 0%,rgb(131, 101, 253) 43.66%, rgb(255, 141, 112) 64.23%,rgb(247, 201, 102) 83.76%,rgb(172, 143, 100) 100%); -webkit-background-clip: text; } /*文章标题字体大小*/ .post-title { font-size: 25px } /*正文字体大小（不包含代码）*/ .post-content p{ font-size: 1.25rem; } li{ font-size: 1.2rem; } /*评论区字体大小*/ p { font-size: 1.2rem } /*评论发送区字体大小*/ .form-control{ font-size: 1.2rem } /*评论勾选项目字体大小*/ .custom-checkbox .custom-control-input~.custom-control-label{ font-size: 1.2rem } /*评论区代码的强调色*/ code { color: rgba(var(–themecolor-rgbstr)); } /*说说字体大小和颜色设置*/ .shuoshuo-title { font-size: 25px; /* color: rgba(var(–themecolor-rgbstr)); */ } /*尾注字体大小*/ .additional-content-after-post{ font-size: 1.2rem } /* 公告居中 */ .leftbar-announcement-title { font-size: 20px; /* &nbsp; &nbsp;text-align: center; */ color: #00FFFF } .leftbar-announcement-content { font-size: 15px; line-height: 1.8; padding-top: 8px; opacity: 0.8; /* text-align: center; */ color:#00FFFF; } /* 一言居中 */ .leftbar-banner-title { font-size: 20px; display: block; text-align: center; opacity: 0.8; } /* 个性签名居中 */ .leftbar-banner-subtitle { margin-top: 15px; margin-bottom: 8px; font-size: 13px; opacity: 0.8; display: block; text-align: center; } /*========颜色设置===========*/ /*文章或页面的正文颜色*/ body{ color:#364863 } /*引文属性设置*/ blockquote { /*添加弱主题色为背景色*/ background: rgba(var(–themecolor-rgbstr), 0.1) !important; width: 100% } /*引文颜色 建议用主题色*/ :root { /*也可以用类似于–color-border-on-foreground-deeper: #009688;这样的命令*/ –color-border-on-foreground-deeper: rgba(var(–themecolor-rgbstr)); } /*左侧菜单栏突出颜色修改*/ .leftbar-menu-item &gt; a:hover, .leftbar-menu-item.current &gt; a{ background-color: #f9f9f980; } /*站点概览分隔线颜色修改*/ .site-state-item{ border-left: 1px solid #aaa; } .site-friend-links-title { border-top: 1px dotted #aaa; } #leftbar_tab_tools ul li { padding-top: 3px; padding-bottom: 3px; border-bottom:none; } html.darkmode #leftbar_tab_tools ul li { border-bottom:none; } /*左侧栏搜索框的颜色*/ button#leftbar_search_container { background-color: transparent; } /*========透明设置===========*/ /*白天卡片背景透明*/ .card{ background-color:rgba(255, 255, 255, 0.8) !important; /*backdrop-filter:blur(6px);*//*毛玻璃效果主要属性*/ -webkit-backdrop-filter:blur(6px); } /*小工具栏背景完全透明*/ /*小工具栏是card的子元素，如果用同一个透明度会叠加变色，故改为完全透明*/ .card .widget,.darkmode .card .widget,#post_content &gt; div &gt; div &gt; div.argon-timeline-card.card.bg-gradient-secondary.archive-timeline-title{ background-color:#ffffff00 !important; backdrop-filter:none; -webkit-backdrop-filter:none; } .emotion-keyboard,#fabtn_blog_settings_popup{ background-color:rgba(255, 255, 255, 0.95) !important; } /*分类卡片透明*/ .bg-gradient-secondary{ background:rgba(255, 255, 255, 0.1) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter:blur(10px); } /*夜间透明*/ html.darkmode.bg-white,html.darkmode .card,html.darkmode #footer{ background:rgba(66, 66, 66, 0.9) !important; } html.darkmode #fabtn_blog_settings_popup{ background:rgba(66, 66, 66, 0.95) !important; } /*标签背景 .post-meta-detail-tag { background:rgba(255, 255, 255, 0.5)!important; }*/ /*========排版设置===========*/ /*左侧栏层级置于上层*/ #leftbar_part1 { z-index: 1; } /*分类卡片文本居中*/ #content &gt; div.page-information-card-container &gt; div &gt; div{ text-align:center; } /*子菜单对齐及样式调整*/ .dropdown-menu .dropdown-item&gt;i{ width: 10px; } .dropdown-menu&gt;a { color:var(–themecolor); } .dropdown-menu{ min-width:max-content; } .dropdown-menu .dropdown-item { padding: .5rem 1.5rem 0.5rem 1rem; } .leftbar-menu-subitem{ min-width:max-content; } .leftbar-menu-subitem .leftbar-menu-item&gt;a{ padding: 0rem 1.5rem 0rem 1rem; } /*左侧栏边距修改*/ .tab-content{ padding:10px 0px 0px 0px !important; } .site-author-links{ padding:0px 0px 0px 10px ; } /*目录位置偏移修改*/ #leftbar_catalog{ margin-left: 0px; } /*目录条目边距修改*/ #leftbar_catalog .index-link{ padding: 4px 4px 4px 4px; } /*左侧栏小工具栏字体缩小*/ #leftbar_tab_tools{ font-size: 14px; } /*正文图片边距修改*/ article figure {margin:0;} /*正文图片居中显示*/ .fancybox-wrapper { margin: auto; } /*正文表格样式修改*/ article table &gt; tbody &gt; tr &gt; td, article table &gt; tbody &gt; tr &gt; th, article table &gt; tfoot &gt; tr &gt; td, article table &gt; tfoot &gt; tr &gt; th, article table &gt; thead &gt; tr &gt; td, article table &gt; thead &gt; tr &gt; th{ padding: 8px 10px; border: 1px solid; } /*表格居中样式*/ .wp-block-table.aligncenter{margin:10px auto;} /*回顶图标放大*/ button#fabtn_back_to_top, button#fabtn_go_to_comment, button#fabtn_toggle_blog_settings_popup, button#fabtn_toggle_sides, button#fabtn_open_sidebar{ font-size: 1.2rem; } /*顶栏菜单放大*/ /*这里也可以设置刚刚我们设置的btfFont字体。试试看！*/ .navbar-nav .nav-link { font-size: 1.1rem; font-family: ‘echo’; } .navbar-brand { font-family: ‘echo’; font-size: 1rem; margin-right: 1 rem; padding-bottom: 0.2 rem; -webkit-text-fill-color: transparent; background: linear-gradient(92.75deg,rgb(60, 172, 267) 0%,rgb(131, 101, 253) 43.66%, rgb(255, 141, 112) 64.23%,rgb(247, 201, 102) 83.76%,rgb(172, 143, 100) 100%); -webkit-background-clip: text; } /*菜单大小*/ .nav-link-inner–text { font-size: 1.2rem; } .navbar-nav .nav-item { margin-right:-0.9rem; } .mr-lg-5, .mx-lg-5 { margin-right:1rem !important; } .navbar-toggler-icon { width: 1.8rem; height: 1.8rem; } /*菜单间距*/ .navbar-expand-lg .navbar-nav .nav-link { padding-right: 1rem; padding-left: 1rem; } /*隐藏wp-SEO插件带来的线条阴影（不一定要装）*/ *[style=’position: relative; z-index: 99998;’] { display: none; } /* Github卡片样式*/ .github-info-card-header a { /*Github卡片抬头颜色*/ color: black !important; font-size: 1.5rem; } .github-info-card { /*Github卡片文字（非链接）*/ font-size: 1rem; color: black !important; } .github-info-card.github-info-card-full.card.shadow-sm { /*Github卡片背景色*/ background-color: rgba(var(–themecolor-rgbstr), 0.1) !important; } /* 左侧栏外观CSS */ /* 头像 */ #leftbar_overview_author_image { width: 100px; height: 100px; margin: auto; background-position: center; background-repeat: no-repeat; background-size: cover; background-color: rgba(127, 127, 127, 0.1); overflow: hidden; transition: transform 0.3s ease; } /* 头像亮暗 */ #leftbar_overview_author_image:hover { transform: scale(1.2); filter: brightness(150%); } /* 名称 */ #leftbar_overview_author_name { margin-top: 15px; font-size: 18px;align-content; color:#4169E1; } /* 简介 */ #leftbar_overview_author_description { font-size: 14px; margin-top: -4px; opacity: 0.7; color:#E64A19; } /* 标题，链接等 */ a, .btn-neutral { color:#7F00FF ; } /* 页脚透明 */ #footer { background: var(–themecolor-gradient); color: #3498DB; width: 100%; float: right; margin-bottom: 25px; text-align: center; padding: 25px 20px; line-height: 1.8; transition: none; opacity: 0.6; } /*网站黑白色（悼念）*/ /*html { filter: grayscale(100%); -webkit-filter: grayscale(100%); -moz-filter: grayscale(100%); -ms-filter: grayscale(100%); -o-filter: grayscale(100%); filter: url(“data:image/svg+xml;utf8,#grayscale”); filter:progid:DXImageTransform.Microsoft.BasicImage(grayscale=1); -webkit-filter: grayscale(1); }*/</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io">茜影神行</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io/post/43037d21.html">https://cyg0825.github.io/post/43037d21.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://cyg0825.github.io" target="_blank">学海拾茜</a>！</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img/cat.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer=""></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/post/9ea9e328.html" title="备案发生的意外"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">备案发生的意外</div></div><div class="info-2"><div class="info-item-1">就挺离谱的工信部没有给我发信息的的情况，通过审核了，进度十分惊人，接着管局就通过不了了，看来有时候进度过快不是什么好事，什么事都还是要仔细一点的好，还在等管局消息中   </div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"></div><div class="author-info-name">茜影神行</div><div class="author-info-description">茜影神行的个人博客，记录技术学习、生活思考与成长点滴。</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">92</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">36</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/cyg0825" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="https://blog.csdn.net/l1513949626?spm=1000.2115.3001.5343" target="_blank" title="CSDN"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/post/e8a8dd01.html" title="2024年结束了，年终总结">2024年结束了，年终总结</a><time datetime="2024-12-31T15:57:09.000Z" title="发表于 2024-12-31 23:57:09">2024-12-31</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/post/72b8900a.html" title="进程管理与系统监控">进程管理与系统监控</a><time datetime="2024-10-20T05:39:14.000Z" title="发表于 2024-10-20 13:39:14">2024-10-20</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/post/4da4af2f.html" title="软件包管理">软件包管理</a><time datetime="2024-10-20T05:18:25.000Z" title="发表于 2024-10-20 13:18:25">2024-10-20</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/post/f24a840b.html" title="文件与目录概述">文件与目录概述</a><time datetime="2024-10-20T04:44:43.000Z" title="发表于 2024-10-20 12:44:43">2024-10-20</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/post/b330f276.html" title="用户和组">用户和组</a><time datetime="2024-10-20T04:13:52.000Z" title="发表于 2024-10-20 12:13:52">2024-10-20</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">©2024 - 2025 By 茜影神行</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><div class="js-pjax"></div><div class="aplayer no-destroy" data-id="9086662585" data-server="netease" data-type="playlist" data-fixed="true" data-autoplay="true" data-order="random" data-mini="true"></div><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zindex="-1" mobile="false" data-click="true"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/click-heart.min.js" async="async" mobile="false"></script><script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/metingjs/dist/Meting.min.js"></script><script src="https://cdn.jsdelivr.net/npm/pjax/pjax.min.js"></script><script async="" data-pjax="" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索" type="text"></div></div><hr><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div></div></div><script src="/bundle.js"></script><script>(() => {
+  const destroyAplayer = () => {
+    if (window.aplayers) {
+      for (let i = 0; i < window.aplayers.length; i++) {
+        if (!window.aplayers[i].options.fixed) {
+          window.aplayers[i].destroy()
+        }
+      }
+    }
+  }
+
+  const runMetingJS = () => {
+    typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+  }
+
+  btf.addGlobalFn('pjaxSend', destroyAplayer, 'destroyAplayer')
+  btf.addGlobalFn('pjaxComplete', loadMeting, 'runMetingJS')
+})();
+(() => {
+  const pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+  window.pjax = new Pjax({
+    elements: 'a:not([target="_blank"])',
+    selectors: pjaxSelectors,
+    cacheBust: false,
+    analytics: false,
+    scrollRestoration: false
+  })
+
+  const triggerPjaxFn = (val) => {
+    if (!val) return
+    Object.values(val).forEach(fn => fn())
+  }
+
+  document.addEventListener('pjax:send', () => {
+    // removeEventListener
+    btf.removeGlobalFnEvent('pjaxSendOnce')
+    btf.removeGlobalFnEvent('themeChange')
+
+    // reset readmode
+    const $bodyClassList = document.body.classList
+    if ($bodyClassList.contains('read-mode')) $bodyClassList.remove('read-mode')
+
+    triggerPjaxFn(window.globalFn.pjaxSend)
+  })
+
+  document.addEventListener('pjax:complete', () => {
+    btf.removeGlobalFnEvent('pjaxCompleteOnce')
+    document.querySelectorAll('script[data-pjax]').forEach(item => {
+      const newScript = document.createElement('script')
+      const content = item.text || item.textContent || item.innerHTML || ""
+      Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+      newScript.appendChild(document.createTextNode(content))
+      item.parentNode.replaceChild(newScript, item)
+    })
+
+    triggerPjaxFn(window.globalFn.pjaxComplete)
+  })
+
+  document.addEventListener('pjax:error', e => {
+    if (e.request.status === 404) {
+      const usePjax = true
+      true 
+        ? (usePjax ? pjax.loadUrl('/404.html') : window.location.href = '/404.html')
+        : window.location.href = e.request.responseURL
+    }
+  })
+})()</script></body></html>
