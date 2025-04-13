@@ -1,0 +1,244 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>VSCode安装及配置（前端） | 学海拾茜</title><meta name="author" content="61飞兔"><meta name="copyright" content="61飞兔"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="初衷：每次卸载之后就找不到安装插件即配置，总结一些常见的 参考学习网址Vscode插件Vue VSCode Snippets生成Vue模板代码使用大全-CSDN博客 VSCode常用插件之EditorConfig for vs code 使用  更多VSCode插件使用请访问：VSCode常用插件汇总  下载并安装VSCode从官网下载安装包，根据自己电脑下载，安装位置自己定，其他全默认http">
+<meta property="og:type" content="article">
+<meta property="og:title" content="VSCode安装及配置（前端）">
+<meta property="og:url" content="http://example.com/2024/08/24/vscode/index.html">
+<meta property="og:site_name" content="学海拾茜">
+<meta property="og:description" content="初衷：每次卸载之后就找不到安装插件即配置，总结一些常见的 参考学习网址Vscode插件Vue VSCode Snippets生成Vue模板代码使用大全-CSDN博客 VSCode常用插件之EditorConfig for vs code 使用  更多VSCode插件使用请访问：VSCode常用插件汇总  下载并安装VSCode从官网下载安装包，根据自己电脑下载，安装位置自己定，其他全默认http">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/back2.png">
+<meta property="article:published_time" content="2024-08-24T14:14:02.000Z">
+<meta property="article:modified_time" content="2025-04-13T14:57:05.493Z">
+<meta property="article:author" content="61飞兔">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/back2.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "VSCode安装及配置（前端）",
+  "url": "http://example.com/2024/08/24/vscode/",
+  "image": "http://example.com/img/back2.png",
+  "datePublished": "2024-08-24T14:14:02.000Z",
+  "dateModified": "2025-04-13T14:57:05.493Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "61飞兔",
+      "url": "http://example.com/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/333.png"><link rel="canonical" href="http://example.com/2024/08/24/vscode/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!true && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Titillium+Web&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":true,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'VSCode安装及配置（前端）',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/custom.css"  media="defer" onload="this.media='all'"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">77</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">26</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">29</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/%E4%BA%A6%E5%AE%B6%E4%BA%BA/"><i class="fa-fw fas fa-heart"></i><span> 亦路同行</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/img/back2.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/333.png" alt="Logo"><span class="site-name">学海拾茜</span></a><a class="nav-page-title" href="/"><span class="site-name">VSCode安装及配置（前端）</span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/%E4%BA%A6%E5%AE%B6%E4%BA%BA/"><i class="fa-fw fas fa-heart"></i><span> 亦路同行</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">VSCode安装及配置（前端）</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-08-24T14:14:02.000Z" title="发表于 2024-08-24 22:14:02">2024-08-24</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-04-13T14:57:05.493Z" title="更新于 2025-04-13 22:57:05">2025-04-13</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%89%8D%E7%AB%AF/">前端</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">587</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>2分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><div id="post-outdate-notice" data="{&quot;limitDay&quot;:365,&quot;messagePrev&quot;:&quot;It has been&quot;,&quot;messageNext&quot;:&quot;days since the last update, the content of the article may be outdated.&quot;,&quot;postUpdate&quot;:&quot;2025-04-13 22:57:05&quot;}" hidden></div><p> 初衷：每次卸载之后就找不到安装插件即配置，总结一些常见的</p>
+<h2 id="参考学习网址"><a href="#参考学习网址" class="headerlink" title="参考学习网址"></a>参考学习网址</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_41107231/article/details/117195087">Vscode插件Vue VSCode Snippets生成Vue模板代码使用大全-CSDN博客</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/jiaoshou/p/11252055.html">VSCode常用插件之EditorConfig for vs code 使用</a></p>
+<blockquote>
+<p><strong>更多VSCode插件使用请访问：<a target="_blank" rel="noopener" href="https://www.cnblogs.com/jiaoshou/p/13408968.html">VSCode常用插件汇总</a></strong></p>
+</blockquote>
+<h2 id="下载并安装VSCode"><a href="#下载并安装VSCode" class="headerlink" title="下载并安装VSCode"></a>下载并安装VSCode</h2><p>从官网下载安装包，根据自己电脑下载，安装位置自己定，其他全默认<a target="_blank" rel="noopener" href="https://code.visualstudio.com/Download">https://code.visualstudio.com/Download</a></p>
+<h2 id="安装插件"><a href="#安装插件" class="headerlink" title="安装插件"></a>安装插件</h2><p>安装完成打开VS Code，点击左边工具栏扩展，在搜索框中输入插件名称，点击对应的Install进行插件安装。 ​</p>
+<p><img src="/../img/qqew.png"></p>
+<h3 id="常用插件（根据自己需求）"><a href="#常用插件（根据自己需求）" class="headerlink" title="常用插件（根据自己需求）"></a>常用插件（根据自己需求）</h3><p>Chinese Language Pack for Visual Studio Code <strong>中文（简体）</strong><br>Code Runner <strong>万能代码运行工具</strong><br>Eclipse Keymap Eclipse <strong>快捷键</strong><br>GitLens <strong>方便查看git日志，git重度使用者必备</strong><br>Material Icon Theme vscode<strong>图标主题，支持更换不同色系的图标</strong><br>vscode-icons VSCode<strong>图标主题</strong><br>Markdown All in One <strong>markdown编辑，预览</strong><br>Project Manager <strong>项目管理</strong><br>REST Client <strong>HTTP请求工具</strong></p>
+<h3 id="前端基础插件-根据自己需求"><a href="#前端基础插件-根据自己需求" class="headerlink" title="前端基础插件(根据自己需求)"></a>前端基础插件(根据自己需求)</h3><p>Auto Complete Tag <strong>自动补全标签</strong> 包含 <strong>Auto Close Tag、Auto Rename Tag</strong><br>Auto Import <strong>自动导入包</strong><br>Bracket Pair Colorizer <strong>括号拥有独立的颜色，易于区分。可以配合任意主题使用（<strong>此扩展已弃用，因为此功能现在内置于 VS Code。</strong>）</strong><br>px to rem &amp; rpx (cssrem) <strong>px转换为rem</strong><br>JavaScript Debugger <strong>方便调试</strong><br>EditorConfig for VS Code <strong>.editorconfig插件配置的代码规范规则优先级高于编辑器默认的代码格式化规则</strong><br>ESLint <strong>js语法纠错</strong><br>HTMLHint <strong>html代码检测</strong><br>Prettier - Code formatter <strong>Prettier格式代码格式化工具</strong><br>HTML CSS Support <strong>智能提示CSS类名以及id</strong><br>JavaScript(ES6) code snippets <strong>ES6语法智能提示，以及快速输入，不仅仅支持.js，还支持.ts，.jsx，.tsx，.html，.vue，省去了配置其支持各种包含js代码文件的时间</strong><br>Path Autocomplete <strong>路径智能补全，比Path Intellisense强，可以连续提示，不用按“&#x2F;”</strong><br>Import Cost <strong>显示VS代码编辑器中导入的程序包的大小</strong><br>CSS Peek <strong>将鼠标悬停在元素的类名或ID上，看元素的CSS规则</strong><br>Better Comments <strong>代码注释高亮</strong></p>
+<h3 id="VUE插件（可选）"><a href="#VUE插件（可选）" class="headerlink" title="VUE插件（可选）"></a>VUE插件（可选）</h3><p>Vue VSCode Snippets</p>
+<p>VueHelper <strong><code>Vue代码提示</code></strong></p>
+<p>Vetur <strong><code>Vue多功能集成插件，包括：语法高亮、智能提示、emmet、错误提示、格式化、自动补全、debugger</code></strong></p>
+<p><img src="/../img/qs.png"></p>
+<p><img src="/../img/qsd.png"></p>
+<p><img src="/../img/wd.png"></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">61飞兔</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2024/08/24/vscode/">http://example.com/2024/08/24/vscode/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://example.com" target="_blank">学海拾茜</a>！</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img/back2.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2024/08/21/1420/" title="交了证件复印件，彻底备案成功"><img class="cover" src="/img/back2.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">交了证件复印件，彻底备案成功</div></div><div class="info-2"><div class="info-item-1">终于去把证件复印件交了，去网安派出所不是警务室，找错地方了😭不过警察叔叔人很好，给我指路了并且稍我了一段路，很担心我找不到回家的路，再三嘱咐我🤣，然后我准备说辞的都没用上，证件复印件各一份，第一步就错了😖 </div></div></div></a><a class="pagination-related" href="/2024/08/24/879-2/" title="一些好用的软件及插件"><img class="cover" src="/img/back2.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">一些好用的软件及插件</div></div><div class="info-2"><div class="info-item-1">chatgpt-AI秘塔AI搜索 秘塔（适合检索全网、学术资料） Kimi.ai - 帮你看更大的世界 chat8 智谱清言 智谱清言（清华大学出品） 通义 （阿里出品）里面也有总结的 flomo 笔记（微信小程序也可以）一个不算罕见的优点就是可以直接和它像朋友一样微信对话 发给它，自动帮你整理到你的笔记里 制作二维码网站 还可以解析二维码二维彩虹在线二维码 草料二维码生成器 尼玛二维码 微微在线二维码生成器 Jsons二维码生成器 二维工坊 赤兔二维码 码主人 品味二维码 安装并开始设置 Windows 终端Windows Terminal - Windows官方下载 微软应用商店 Microsoft Store↗ 终端设置 管理员身份设置和普通终端都要改  进行设置  microsoft onedrive相当于百度网盘的功能了，各端都能用 Your request has been blocked. This could be due to several reasons.  可以到官网了解OneDrive 中的文件 - Microsoft 支持 To...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content is-expand"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E5%AD%A6%E4%B9%A0%E7%BD%91%E5%9D%80"><span class="toc-number">1.</span> <span class="toc-text">参考学习网址</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8B%E8%BD%BD%E5%B9%B6%E5%AE%89%E8%A3%85VSCode"><span class="toc-number">2.</span> <span class="toc-text">下载并安装VSCode</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%89%E8%A3%85%E6%8F%92%E4%BB%B6"><span class="toc-number">3.</span> <span class="toc-text">安装插件</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E6%8F%92%E4%BB%B6%EF%BC%88%E6%A0%B9%E6%8D%AE%E8%87%AA%E5%B7%B1%E9%9C%80%E6%B1%82%EF%BC%89"><span class="toc-number">3.1.</span> <span class="toc-text">常用插件（根据自己需求）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%89%8D%E7%AB%AF%E5%9F%BA%E7%A1%80%E6%8F%92%E4%BB%B6-%E6%A0%B9%E6%8D%AE%E8%87%AA%E5%B7%B1%E9%9C%80%E6%B1%82"><span class="toc-number">3.2.</span> <span class="toc-text">前端基础插件(根据自己需求)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#VUE%E6%8F%92%E4%BB%B6%EF%BC%88%E5%8F%AF%E9%80%89%EF%BC%89"><span class="toc-number">3.3.</span> <span class="toc-text">VUE插件（可选）</span></a></li></ol></li></ol></div></div></div></div></main><footer id="footer" style="background-image: url(/img/back2.png);"><div id="footer-wrap"><div class="copyright">&copy;2024 - 2025 By 61飞兔</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><div class="js-pjax"></div><div class="aplayer no-destroy" data-id="9086662585" data-server="netease" data-type="playlist" data-fixed="true" data-autoplay="true" data-order="random" data-mini = "true"></div><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="false" data-click="true"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/click-heart.min.js" async="async" mobile="false"></script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/metingjs/dist/Meting.min.js"></script><script>(() => {
+  const destroyAplayer = () => {
+    if (window.aplayers) {
+      for (let i = 0; i < window.aplayers.length; i++) {
+        if (!window.aplayers[i].options.fixed) {
+          window.aplayers[i].destroy()
+        }
+      }
+    }
+  }
+
+  const runMetingJS = () => {
+    typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+  }
+
+  btf.addGlobalFn('pjaxSend', destroyAplayer, 'destroyAplayer')
+  btf.addGlobalFn('pjaxComplete', loadMeting, 'runMetingJS')
+})()</script><script src="https://cdn.jsdelivr.net/npm/pjax/pjax.min.js"></script><script>(() => {
+  const pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+  window.pjax = new Pjax({
+    elements: 'a:not([target="_blank"])',
+    selectors: pjaxSelectors,
+    cacheBust: false,
+    analytics: false,
+    scrollRestoration: false
+  })
+
+  const triggerPjaxFn = (val) => {
+    if (!val) return
+    Object.values(val).forEach(fn => fn())
+  }
+
+  document.addEventListener('pjax:send', () => {
+    // removeEventListener
+    btf.removeGlobalFnEvent('pjaxSendOnce')
+    btf.removeGlobalFnEvent('themeChange')
+
+    // reset readmode
+    const $bodyClassList = document.body.classList
+    if ($bodyClassList.contains('read-mode')) $bodyClassList.remove('read-mode')
+
+    triggerPjaxFn(window.globalFn.pjaxSend)
+  })
+
+  document.addEventListener('pjax:complete', () => {
+    btf.removeGlobalFnEvent('pjaxCompleteOnce')
+    document.querySelectorAll('script[data-pjax]').forEach(item => {
+      const newScript = document.createElement('script')
+      const content = item.text || item.textContent || item.innerHTML || ""
+      Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+      newScript.appendChild(document.createTextNode(content))
+      item.parentNode.replaceChild(newScript, item)
+    })
+
+    triggerPjaxFn(window.globalFn.pjaxComplete)
+  })
+
+  document.addEventListener('pjax:error', e => {
+    if (e.request.status === 404) {
+      const usePjax = true
+      true 
+        ? (usePjax ? pjax.loadUrl('/404.html') : window.location.href = '/404.html')
+        : window.location.href = e.request.responseURL
+    }
+  })
+})()</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>
