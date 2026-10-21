@@ -1,0 +1,434 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>16学生选课功能的开发 | 学海拾茜</title><meta name="author" content="茜影神行"><meta name="copyright" content="茜影神行"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="在设计数据库表的时候，当有某个字段需要（具体看自己的业务）跟其他模块的信息有所关联的时候，或者这个字段是跟角色相关的（可能不同的角色对这个模块看到的信息或者行为不一样）时候，该字段就要考虑关联了，我们可以设计为xxx_id。   逻辑  选课入口：  学生登录系统后，可以看到可选课程列表（CourseService提供数据）   每门课程会显示：课程名称、授课教师、剩余名额等信息  选课核心流程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="16学生选课功能的开发">
+<meta property="og:url" content="https://cyg0825.github.io/2025/05/09/16%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E5%8A%9F%E8%83%BD%E7%9A%84%E5%BC%80%E5%8F%91/index.html">
+<meta property="og:site_name" content="学海拾茜">
+<meta property="og:description" content="在设计数据库表的时候，当有某个字段需要（具体看自己的业务）跟其他模块的信息有所关联的时候，或者这个字段是跟角色相关的（可能不同的角色对这个模块看到的信息或者行为不一样）时候，该字段就要考虑关联了，我们可以设计为xxx_id。   逻辑  选课入口：  学生登录系统后，可以看到可选课程列表（CourseService提供数据）   每门课程会显示：课程名称、授课教师、剩余名额等信息  选课核心流程">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cyg0825.github.io/uploads/2025/05/image-29-1024x232.png">
+<meta property="article:published_time" content="2025-05-09T09:54:57.000Z">
+<meta property="article:modified_time" content="2025-05-09T09:54:58.000Z">
+<meta property="article:author" content="茜影神行">
+<meta property="article:tag" content="学生选课系统">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cyg0825.github.io/uploads/2025/05/image-29-1024x232.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "16学生选课功能的开发",
+  "url": "https://cyg0825.github.io/2025/05/09/16%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E5%8A%9F%E8%83%BD%E7%9A%84%E5%BC%80%E5%8F%91/",
+  "image": "https://cyg0825.github.io/uploads/2025/05/image-29-1024x232.png",
+  "datePublished": "2025-05-09T09:54:57.000Z",
+  "dateModified": "2025-05-09T09:54:58.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "茜影神行",
+      "url": "https://cyg0825.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/333.png"><link rel="canonical" href="https://cyg0825.github.io/2025/05/09/16%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E5%8A%9F%E8%83%BD%E7%9A%84%E5%BC%80%E5%8F%91/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/css/fontawesome/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '16学生选课功能的开发',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><style>
+/* 手机端复用右侧收起按钮，整块侧栏（个人信息等卡片）可收起 */
+@media (max-width: 900px) {
+  #rightside #hide-aside-btn { display: block !important; }
+  html.hide-aside .layout > #aside-content { display: none; }
+  /* 个人信息卡折叠进抽屉，页面里不再单独占一块 */
+  #aside-content > .card-info { display: none; }
+}
+#sidebar-menus .sidebar-author-name { margin: 6px 0 0; font-size: 1.3em; font-weight: 700; text-align: center; }
+#sidebar-menus .sidebar-follow { display: block; margin: 14px 20px 0; padding: 9px 0; border-radius: 8px; background: var(--btn-bg); color: var(--btn-color); text-align: center; }
+#sidebar-menus .sidebar-follow i { margin-right: 6px; }
+/* 沿用线上站点：页脚与头图遮罩透明，让背景色和头图直接透出 */
+#footer { background: transparent !important; }
+#footer::before, #page-header::before { background: transparent !important; }
+[data-theme="dark"] #footer::before, [data-theme="dark"] #page-header::before { background: transparent !important; }
+</style><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background-color: #bbdefb;"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">57</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">22</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-code"></i><span> 项目</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/"><i class="fa-fw fas fa-book"></i><span> 学生选课系统</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-file-alt"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/333.png" alt="Logo"><span class="site-name">学海拾茜</span></a><a class="nav-page-title" href="/"><span class="site-name">16学生选课功能的开发</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-code"></i><span> 项目</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/"><i class="fa-fw fas fa-book"></i><span> 学生选课系统</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-file-alt"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">16学生选课功能的开发</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-05-09T09:54:57.000Z" title="发表于 2025-05-09 17:54:57">2025-05-09</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-05-09T09:54:58.000Z" title="更新于 2025-05-09 17:54:58">2025-05-09</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/">学生选课系统</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><blockquote class="wp-block-quote">
+<p><strong>在设计数据库表的时候，当有某个字段需要（具体看自己的业务）跟其他模块的信息有所关联的时候，或者这个字段是跟角色相关的（可能不同的角色对这个模块看到的信息或者行为不一样）时候，该字段就要考虑关联了，我们可以设计为<code>xxx_id</code>。</strong></p>
+</blockquote>
+
+<h2 class="wp-block-heading">逻辑</h2>
+
+<h3 class="wp-block-heading">选课入口：</h3>
+
+<p>学生登录系统后，可以看到可选课程列表（<code>CourseService</code>提供数据）</p>
+
+<p> 每门课程会显示：课程名称、授课教师、剩余名额等信息</p>
+
+<h3 class="wp-block-heading">选课核心流程：</h3>
+
+<p>学生点击"选课"按钮时，系统会做两个重要检查：</p>
+
+<ol class="wp-block-list">
+<li>检查课程是否已满（通过比较课程总人数<code>num</code>和已选人数<code>alreadyNum</code>）</li>
+
+<li>检查该学生是否已经选过这门课（通过查询<code>choice</code>表）</li>
+</ol>
+
+<h3 class="wp-block-heading">选课成功的情况：</h3>
+
+<p>如果课程未满且学生未选过： 系统会在选课表(<code>choice</code>)中新增一条记录 </p>
+
+<p>同时把该课程的已选人数+1（更新<code>course</code>表）</p>
+
+<h3 class="wp-block-heading">选课失败的情况：</h3>
+
+<p>如果课程已满：提示"课程已经选满" 如果已经选过：提示"你已经选过这门课程"</p>
+
+<h3 class="wp-block-heading">关键代码位置：</h3>
+
+<p>选课逻辑主要在<code>ChoiceService.java</code>的<code>add()</code>方法 </p>
+
+<p>课程信息查询在<code>CourseService.java</code> </p>
+
+<p>前端选课页面在<code>Choice.vue</code> </p>
+
+<p>简单来说就是：选课前检查名额和重复选课，通过检查就记录选课信息并更新课程人数。</p>
+
+<h2 class="wp-block-heading">创建数据库</h2>
+
+<pre class="wp-block-code"><code>CREATE TABLE `choice` (<br> &nbsp;`id` int NOT NULL AUTO_INCREMENT COMMENT '主键ID',<br> &nbsp;`name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '课程名称',<br> &nbsp;`teacher_id` int DEFAULT NULL COMMENT '授课教师',<br> &nbsp;`student_id` int DEFAULT NULL COMMENT '学生信息',<br> &nbsp;`course_id` int DEFAULT NULL COMMENT '课程ID',<br> &nbsp;PRIMARY KEY (`id`)<br>) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='选课信息';</code></pre>
+
+<figure class="wp-block-gallery has-nested-images columns-default is-cropped">
+<figure class="wp-block-image size-large"><img src="/uploads/2025/05/image-29-1024x232.png" alt="" class="wp-image-1998"/></figure>
+</figure>
+
+<h2 class="wp-block-heading">entity—Choice.java</h2>
+
+<p>创建实体类</p>
+
+<pre class="wp-block-code"><code>public class Choice {<br> &nbsp; &nbsp;private Integer id;<br> &nbsp; &nbsp;private String name;<br> &nbsp; &nbsp;private Integer studentId;<br> &nbsp; &nbsp;private Integer teacherId;<br> &nbsp; &nbsp;private String teacherName;<br> &nbsp; &nbsp;private String studentName;<br> &nbsp; &nbsp;private Integer courseId;<br>​<br> &nbsp; &nbsp;public Integer getId() {<br> &nbsp; &nbsp; &nbsp; &nbsp;return id;<br> &nbsp;  }<br>​<br> &nbsp; &nbsp;public void setId(Integer id) {<br> &nbsp; &nbsp; &nbsp; &nbsp;this.id = id;<br> &nbsp;  }<br>​<br> &nbsp; &nbsp;public String getName() {<br> &nbsp; &nbsp; &nbsp; &nbsp;return name;<br> &nbsp;  }<br>​<br> &nbsp; &nbsp;public void setName(String name) {<br> &nbsp; &nbsp; &nbsp; &nbsp;this.name = name;<br> &nbsp;  }<br>​<br> &nbsp; &nbsp;public Integer getStudentId() {<br> &nbsp; &nbsp; &nbsp; &nbsp;return studentId;<br> &nbsp;  }<br>​<br> &nbsp; &nbsp;public void setStudentId(Integer studentId) {<br> &nbsp; &nbsp; &nbsp; &nbsp;this.studentId = studentId;<br> &nbsp;  }<br>​<br> &nbsp; &nbsp;public Integer getTeacherId() {<br> &nbsp; &nbsp; &nbsp; &nbsp;return teacherId;<br> &nbsp;  }<br>​<br> &nbsp; &nbsp;public void setTeacherId(Integer teacherId) {<br> &nbsp; &nbsp; &nbsp; &nbsp;this.teacherId = teacherId;<br> &nbsp;  }<br>​<br> &nbsp; &nbsp;public String getTeacherName() {<br> &nbsp; &nbsp; &nbsp; &nbsp;return teacherName;<br> &nbsp;  }<br>​<br> &nbsp; &nbsp;public void setTeacherName(String teacherName) {<br> &nbsp; &nbsp; &nbsp; &nbsp;this.teacherName = teacherName;<br> &nbsp;  }<br>​<br> &nbsp; &nbsp;public String getStudentName() {<br> &nbsp; &nbsp; &nbsp; &nbsp;return studentName;<br> &nbsp;  }<br>​<br> &nbsp; &nbsp;public void setStudentName(String studentName) {<br> &nbsp; &nbsp; &nbsp; &nbsp;this.studentName = studentName;<br> &nbsp;  }<br>​<br> &nbsp; &nbsp;public Integer getCourseId() {<br> &nbsp; &nbsp; &nbsp; &nbsp;return courseId;<br> &nbsp;  }<br>​<br> &nbsp; &nbsp;public void setCourseId(Integer courseId) {<br> &nbsp; &nbsp; &nbsp; &nbsp;this.courseId = courseId;<br> &nbsp;  }<br>}</code></pre>
+
+<h2 class="wp-block-heading">前端</h2>
+
+<h3 class="wp-block-heading">Manager.vue</h3>
+
+<pre class="wp-block-code"><code>&lt;el-menu-item index="/choice"&gt;<br> &nbsp;&lt;el-icon&gt;&lt;Reading /&gt;&lt;/el-icon&gt;<br> &nbsp;&lt;span&gt;选课信息&lt;/span&gt;<br>&lt;/el-menu-item&gt;</code></pre>
+
+<h3 class="wp-block-heading">index.js</h3>
+
+<pre class="wp-block-code"><code>{ path: 'choice', component: () =&gt; import('@/views/manager/Choice.vue')},</code></pre>
+
+<h3 class="wp-block-heading">Choice.vue</h3>
+
+<pre class="wp-block-code"><code>&lt;template&gt;<br> &nbsp;&lt;div&gt;<br>​<br> &nbsp; &nbsp;&lt;div class="card" style="margin-bottom: 5px;"&gt;<br> &nbsp; &nbsp; &nbsp;&lt;el-input v-model="data.name" style="width: 300px; margin-right: 10px" placeholder="请输入课程名称查询"&gt;&lt;/el-input&gt;<br> &nbsp; &nbsp; &nbsp;&lt;el-button type="primary" @click="load"&gt;查询&lt;/el-button&gt;<br> &nbsp; &nbsp; &nbsp;&lt;el-button type="info" style="margin: 0 10px" @click="reset"&gt;重置&lt;/el-button&gt;<br> &nbsp; &nbsp;&lt;/div&gt;<br>​<br> &nbsp; &nbsp;&lt;div class="card" style="margin-bottom: 5px"&gt;<br> &nbsp; &nbsp; &nbsp;&lt;el-table :data="data.tableData" stripe&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;el-table-column label="课程名称" prop="name"&gt;&lt;/el-table-column&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;el-table-column label="授课教师" prop="teacherName"&gt;&lt;/el-table-column&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;el-table-column label="选课学生" prop="studentName"&gt;&lt;/el-table-column&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;el-table-column label="操作" align="center" width="160" v-if ="data.user.role === 'ADMIN'"&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;template #default="scope" &gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;el-button type="danger" @click="handleDelete(scope.row.id)"&gt;删除&lt;/el-button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;/template&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;/el-table-column&gt;<br> &nbsp; &nbsp; &nbsp;&lt;/el-table&gt;<br> &nbsp; &nbsp;&lt;/div&gt;<br>​<br> &nbsp; &nbsp;&lt;div class="card"&gt;<br> &nbsp; &nbsp; &nbsp;&lt;el-pagination background layout="prev, pager, next" v-model:page-size="data.pageSize" v-model:current-page="data.pageNum" :total="data.total"/&gt;<br> &nbsp; &nbsp;&lt;/div&gt;<br> &nbsp;&lt;/div&gt;<br>&lt;/template&gt;<br>​<br>&lt;script setup&gt;<br>import request from "@/utils/request";<br>import {reactive} from "vue";<br>import {ElMessageBox, ElMessage} from "element-plus";<br>​<br>​<br>const data = reactive({<br> &nbsp;user: JSON.parse(localStorage.getItem('system-user') || '{}'),// 获取当前登录的用户信息<br> &nbsp;pageNum: 1,<br> &nbsp;pageSize: 10,<br> &nbsp;total: 0,<br> &nbsp;formVisible: false,<br> &nbsp;form: {},<br> &nbsp;tableData: &#91;],<br> &nbsp;name: null,<br> &nbsp;collegeDate: &#91;],// 用于存储学院信息<br> &nbsp;teacherDate: &#91;]// 用于存储教师信息<br>})<br>​<br>// 分页查询<br>const load = () =&gt; {<br> &nbsp;let teacherId = null// 用于存储教师id<br> &nbsp;if (data.user.role === 'TEACHER') {<br> &nbsp; &nbsp;teacherId = data.user.id// 如果是教师，就查询自己的课程信息<br>  }<br> &nbsp;request.get('/choice/selectPage', {<br> &nbsp; &nbsp;params: {<br> &nbsp; &nbsp; &nbsp;pageNum: data.pageNum,<br> &nbsp; &nbsp; &nbsp;pageSize: data.pageSize,<br> &nbsp; &nbsp; &nbsp;name: data.name,<br> &nbsp; &nbsp; &nbsp;teacherId: teacherId,// 如果是教师，就查询自己的课程信息<br> &nbsp;  }<br>  }).then(res =&gt; {<br> &nbsp; &nbsp;data.tableData = res.data?.list<br> &nbsp; &nbsp;data.total = res.data?.total<br>  })<br>}<br>​<br>// 删除<br>const handleDelete = (id) =&gt; {<br> &nbsp;ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗?', '删除确认', { type: 'warning' }).then(res =&gt; {<br> &nbsp; &nbsp;request.delete('/choice/deleteById/' + id).then(res =&gt; {<br> &nbsp; &nbsp; &nbsp;if (res.code === '200') {<br> &nbsp; &nbsp; &nbsp; &nbsp;load()<br> &nbsp; &nbsp; &nbsp; &nbsp;ElMessage.success('操作成功')<br> &nbsp; &nbsp;  } else {<br> &nbsp; &nbsp; &nbsp; &nbsp;ElMessage.error(res.msg)<br> &nbsp; &nbsp;  }<br> &nbsp;  })<br>  }).catch(err =&gt; {})<br>}<br>​<br>// 重置<br>const reset = () =&gt; {<br> &nbsp;data.name = null<br> &nbsp;load()<br>}<br>​<br>const loadTeacher = () =&gt; {//查询所有教师信息<br> &nbsp;request.get('/teacher/selectAll').then(res =&gt; {//调用后端接口查询所有教师信息<br> &nbsp; &nbsp;if (res.code === '200') {//如果查询成功，将查询到的教师信息赋值给data.teacherDate<br> &nbsp; &nbsp; &nbsp;data.teacherDate = res.data<br> &nbsp;  }else {//如果查询失败，提示用户<br> &nbsp; &nbsp; &nbsp;ElMessage.error(res.msg)<br> &nbsp;  }<br>  })<br>}<br>​<br>const loadCollege= () =&gt; {//查询所有学院信息<br> &nbsp;request.get('/college/selectAll').then(res =&gt; {//调用后端接口查询所有学院信息<br> &nbsp; &nbsp;if (res.code === '200') {//如果查询成功，将查询到的学院信息赋值给data.collegeDate<br> &nbsp; &nbsp; &nbsp;data.collegeDate = res.data<br> &nbsp; &nbsp; &nbsp;load()//查询课程信息<br> &nbsp;  }else {//如果查询失败，提示用户<br> &nbsp; &nbsp; &nbsp;ElMessage.error(res.msg)<br> &nbsp;  }<br>  })<br>}<br>​<br>load()<br>loadCollege()<br>loadTeacher()<br>&lt;/script&gt;</code></pre>
+
+<h3 class="wp-block-heading">Course.vue</h3>
+
+<pre class="wp-block-code"><code>&lt;template #default="scope" v-else&gt;<br> &nbsp;&lt;el-button type="primary" @click="ChoiceCouse(scope.row)" :disabled = "scope.row.num === scope.row.alreadyNum"&gt;选课&lt;/el-button&gt;<br> &nbsp;&lt;!--点击选课按钮的时候会触发选课方法，传入的参数是scope.row，也就是当前行的数据--&gt;<br>&lt;/template&gt;</code></pre>
+
+<pre class="wp-block-code"><code>const ChoiceCouse = (row) =&gt; {//选课<br> &nbsp;let courseData = JSON.parse(JSON.stringify(row))// 复制一份row的数据<br> &nbsp;courseData.studentId = data.user.id// 将学生id赋值给courseData.studentId<br>​<br> &nbsp;request.post('/choice/add', courseData).then(res =&gt; {//调用后端接口添加选课信息<br> &nbsp; &nbsp;if (res.code === '200') {<br> &nbsp; &nbsp; &nbsp;ElMessage.success('选课成功')<br> &nbsp; &nbsp; &nbsp;load() // 刷新课程列表<br> &nbsp;  } else {//如果添加失败，提示用户<br> &nbsp; &nbsp; &nbsp;ElMessage.error(res.msg)<br> &nbsp;  }<br>  })<br>}</code></pre>
+
+<h2 class="wp-block-heading">Controller— ChoiceController.java</h2>
+
+<pre class="wp-block-code"><code>/**<br> * 选课信息模块前端操作接口入口<br> * 拿到数据后，调用service层的方法，返回结果<br> * 前端调用接口时，需要传入参数，调用service层的方法，返回结果<br> **/<br>@RestController<br>​<br>@RequestMapping("/choice")<br>public class ChoiceController {<br> &nbsp; &nbsp;@Resource<br>// &nbsp;  注入ChoiceService<br> &nbsp; &nbsp;private ChoiceService choiceService;<br>​<br> &nbsp; &nbsp;/**<br> &nbsp; &nbsp; * 新增选课信息<br> &nbsp; &nbsp; * */<br> &nbsp; &nbsp;@PostMapping("/add")<br> &nbsp; &nbsp;public Result add(@RequestBody Course course) { &nbsp;// 修改参数类型为 Course<br> &nbsp; &nbsp; &nbsp; &nbsp;choiceService.add(course);<br> &nbsp; &nbsp; &nbsp; &nbsp;return Result.success();<br> &nbsp;  }<br>​<br> &nbsp; &nbsp;/**<br> &nbsp; &nbsp; * 更新选课信息<br> &nbsp; &nbsp; */<br> &nbsp; &nbsp;@PutMapping("/update")<br> &nbsp; &nbsp;public Result update(@RequestBody Choice choice) {<br> &nbsp; &nbsp; &nbsp; &nbsp;choiceService.updateById(choice);<br> &nbsp; &nbsp; &nbsp; &nbsp;return Result.success();<br> &nbsp;  }<br>​<br> &nbsp; &nbsp;/**<br> &nbsp; &nbsp; * 删除选课信息<br> &nbsp; &nbsp; */<br> &nbsp; &nbsp;@DeleteMapping("/deleteById/{id}")<br> &nbsp; &nbsp;public Result deleteById(@PathVariable Integer id) {<br> &nbsp; &nbsp; &nbsp; &nbsp;choiceService.deleteById(id);<br> &nbsp; &nbsp; &nbsp; &nbsp;return Result.success();<br> &nbsp;  }<br>​<br> &nbsp; &nbsp;/**<br> &nbsp; &nbsp; * 分页查询<br> &nbsp; &nbsp; * */<br> &nbsp; &nbsp;@GetMapping("selectPage")<br> &nbsp; &nbsp;public Result selectPage(Choice choice,<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; @RequestParam(defaultValue = "1") Integer pageNum,<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; @RequestParam(defaultValue = "5") Integer pageSize){<br>// &nbsp; &nbsp; &nbsp;  调用service层的方法，返回结果<br> &nbsp; &nbsp; &nbsp; &nbsp;PageInfo&lt;Choice&gt; pageInfo = choiceService.selectPage(choice,pageNum,pageSize);<br>// &nbsp; &nbsp; &nbsp;  总数<br> &nbsp; &nbsp; &nbsp; &nbsp;return Result.success(pageInfo);<br> &nbsp;  }<br> &nbsp; &nbsp;/**<br> &nbsp; &nbsp; * 查询所有选课信息<br> &nbsp; &nbsp; */<br> &nbsp; &nbsp;@GetMapping("/selectAll")<br> &nbsp; &nbsp;public Result selectAll(){<br> &nbsp; &nbsp; &nbsp; &nbsp;List&lt;Choice&gt; list = choiceService.selectAll();<br> &nbsp; &nbsp; &nbsp; &nbsp;return Result.success(list);<br> &nbsp;  }<br>}</code></pre>
+
+<h2 class="wp-block-heading">Service</h2>
+
+<h3 class="wp-block-heading">ChoiceService.java</h3>
+
+<pre class="wp-block-code"><code>/**
+ * 选课模块业务逻辑接口
+ * 要把数据往数据库里存，调用mapper层的方法，返回结果
+ * 业务逻辑接口调用mapper层的方法，返回结果
+ */
+@Service
+public class ChoiceService {
+    //    注入ChoiceMapper
+    @Resource
+    private ChoiceMapper choiceMapper;
+    @Resource
+    private CourseMapper courseMapper;
+    /**
+     * 新增选课
+     */
+    public void add(Course course) {
+        //判断课程是否已经选满
+        if(course.getNum().equals(course.getAlreadyNum())){//如果课程已经选满，就抛出异常
+            throw new CustomException("课程已经选满");
+        }
+        //判断这个学生这门课程是否已经选过
+        List&lt;Choice> list = choiceMapper.selectByStudentIdAndCourseId(course.getStudentId(),course.getId());
+        if(CollectionUtil.isNotEmpty(list)){
+            throw new CustomException("你已经选过这门课程");//如果已经选过这门课程，就抛出异常
+        }
+        //往选课信息表中插入数据
+        Choice choice = new Choice();//创建一个choice对象
+        choice.setStudentId(course.getStudentId());//设置学生id
+        choice.setCourseId(course.getId());//设置课程id
+        choice.setTeacherId(course.getTeacherId());//设置教师id
+        choice.setName(course.getName());//设置课程名称
+        choiceMapper.insert(choice);//往选课信息表中插入数据
+        //该门课程的已选人数加1
+        course.setAlreadyNum(course.getAlreadyNum()+1);//已选人数加1
+        courseMapper.updateById(course);//更新课程信息
+    }
+    /**
+     * 分页查询
+     */
+    public PageInfo&lt;Choice> selectPage(Choice choice,Integer pageNum, Integer pageSize) {
+        // ToDo 分页查询逻辑处理
+        // 1. 分页查询选课信息
+        // 2. 返回选课信息
+        // 3. 如果没有选课信息，返回空列表
+        // 4. 如果有选课信息，返回选课信息列表
+        List&lt;Choice> list;//定义一个list集合
+        PageHelper.startPage(pageNum,pageSize);//分页查询
+        if(ObjectUtil.isNotEmpty(choice.getName())){//如果name不为空，就查询name对应的选课信息
+            list = choiceMapper.selectByName(choice.getName());//查询name对应的选课信息
+        }else{//如果name为空，就查询所有选课信息
+           list = choiceMapper.selectAll();//查询所有选课信息
+        }
+        return PageInfo.of(list);//返回选课信息列表
+    }
+​
+    //根据id查询选课信息，返回一个choice对象
+    public void updateById(Choice choice) {//传入一个choice对象   前端传过来的choice对象
+        choiceMapper.updateById(choice);//更新选课信息
+    }
+​
+​
+    //根据id删除选课信息
+    public void deleteById(Integer id) {//传入一个id
+        choiceMapper.deleteById(id);//删除选课信息
+    }
+    //查询所有选课信息
+    public List&lt;Choice> selectAll() {//返回一个list集合
+        return choiceMapper.selectAll();//返回所有选课信息
+    }
+}</code></pre>
+
+<h3 class="wp-block-heading">CourseService.java</h3>
+
+<pre class="wp-block-code"><code>/**
+ * 课程模块业务逻辑接口
+ * 要把数据往数据库里存，调用mapper层的方法，返回结果
+ * 业务逻辑接口调用mapper层的方法，返回结果
+ */
+@Service
+public class CourseService {
+    //    注入CourseMapper
+    @Resource
+    private CourseMapper courseMapper;
+    /**
+     * 新增课程
+     */
+    public void add(Course course) {
+        course.setAlreadyNum(0);//设置已选人数为0
+        courseMapper.insert(course);//调用mapper层的方法，返回结果
+    }
+    /**
+     * 分页查询
+     */
+    public PageInfo&lt;Course> selectPage(Course course,Integer pageNum, Integer pageSize) {
+        // ToDo 分页查询逻辑处理
+        // 1. 分页查询课程信息
+        // 2. 返回课程信息
+        // 3. 如果没有课程信息，返回空列表
+        // 4. 如果有课程信息，返回课程信息列表
+        List&lt;Course> list;//定义一个list集合
+        PageHelper.startPage(pageNum,pageSize);//分页查询
+        //表示当前登录是教师
+        if(ObjectUtil.isNotEmpty(course.getTeacherId())){//如果teacherId不为空，就查询teacherId对应的课程信息
+            Integer teacherId = course.getTeacherId();
+            //如果name不为空，就查询name对应的课程信息，否则就查询所有课程信息
+            if (ObjectUtil.isNotEmpty(course.getName())) {//如果name不为空，就查询name对应的课程信息
+                list = courseMapper.selectByNameAndTeacherId(course.getName(),teacherId);
+            } else {//如果name为空，就查询所有课程信息
+                list = courseMapper.selectAllByTeacherId(teacherId);
+            }
+        }
+        else {
+            //如果name不为空，就查询name对应的课程信息，否则就查询所有课程信息
+            if (ObjectUtil.isNotEmpty(course.getName())) {//如果name不为空，就查询name对应的课程信息
+                list = courseMapper.selectByName(course.getName());
+            } else {//如果name为空，就查询所有课程信息
+                list = courseMapper.selectAll();
+            }
+        }
+        return PageInfo.of(list);//返回课程信息列表
+    }
+​
+    //根据id查询课程信息，返回一个course对象
+    public void updateById(Course course) {//传入一个course对象
+        courseMapper.updateById(course);//调用mapper层的方法，返回结果
+    }
+​
+​
+    //根据id删除课程信息
+    public void deleteById(Integer id) {
+        courseMapper.deleteById(id);
+    }
+    //查询所有课程信息
+    public List&lt;Course> selectAll() {
+        return courseMapper.selectAll();
+    }
+}</code></pre>
+
+<h2 class="wp-block-heading">Mapper</h2>
+
+<h3 class="wp-block-heading">ChoiceMapper.java</h3>
+
+<p>注意：sql语句换行后面加空格</p>
+
+<p>明确指定表名样MySQL就能明确知道我们要查询的是哪个表</p>
+
+<pre class="wp-block-code"><code>@Mapper<br>public interface ChoiceMapper {<br> &nbsp; &nbsp;//新增<br> &nbsp; &nbsp;void insert(Choice choice);<br>​<br> &nbsp; &nbsp;//查询所有<br> &nbsp; &nbsp;@Select("select choice.*, course.name as courseName, teacher.name as teacherName, student.name as studentName " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"from choice " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"left join course on choice.course_id = course.id " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"left join teacher on choice.teacher_id = teacher.id " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"left join student on choice.student_id = student.id")<br> &nbsp; &nbsp;List&lt;Choice&gt; selectAll();<br>​<br> &nbsp; &nbsp;//根据name查询<br> &nbsp; &nbsp;@Select("select choice.*, course.name as courseName, teacher.name as teacherName,student.name as studentName " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"from choice " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"left join course on choice.course_id = course.id " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"left join teacher on choice.teacher_id = teacher.id " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"left join student on choice.student_id = student.id " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"where choice.name like concat('%',#{name},'%')")<br> &nbsp; &nbsp;//查询所有专业信息，并且把专业信息对应的学院名称也查询出来,并且把专业信息对应的教师名称也查询出来，并且模糊查询<br> &nbsp; &nbsp;List&lt;Choice&gt; selectByName(String name);<br>​<br> &nbsp; &nbsp;//修改<br> &nbsp; &nbsp;void updateById(Choice choice);<br>​<br> &nbsp; &nbsp;//删除<br> &nbsp; &nbsp;@Delete("delete from choice where id = #{id}")<br> &nbsp; &nbsp;void deleteById(Integer id);<br>​<br> &nbsp; &nbsp;//根据name查询,并且根据teacherId查询 &nbsp;  模糊查询<br> &nbsp; &nbsp;@Select("select choice.*, course.name as courseName, teacher.name as teacherName,student.name as studentName " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"from choice " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"left join course on choice.course_id = course.id " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"left join teacher on choice.teacher_id = teacher.id " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"left join student on choice.student_id = student.id " + &nbsp;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"where choice.name like concat('%',#{name},'%') and choice.teacher_id = #{teacherId}") &nbsp;<br> &nbsp; &nbsp;List&lt;Choice&gt; selectByNameAndTeacherId(@Param("name") String name, @Param("teacherId") Integer teacherId);<br>​<br> &nbsp; &nbsp;//根据teacherId查询,并且把专业信息对应的学院名称也查询出来,把专业信息对应的教师名称也查询出来<br> &nbsp; &nbsp;@Select("select choice.*, course.name as courseName,teacher.name as teacherName,student.name as studentName " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"from choice " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"left join course on choice.course_id = course.id " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"left join teacher on choice.teacher_id = teacher.id " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"left join student on choice.student_id = student.id " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"where choice.teacher_id = #{teacherId}")<br> &nbsp; &nbsp;List&lt;Choice&gt; selectAllByTeacherId(Integer teacherId);<br>​<br> &nbsp; &nbsp;@Select("select * from choice where student_id = #{studentId} and course_id = #{courseId}")<br> &nbsp; &nbsp;List&lt;Choice&gt; selectByStudentIdAndCourseId(@Param("studentId") Integer studentId, @Param("courseId") Integer courseId);<br>​<br> &nbsp; &nbsp;@Select("select choice.*, teacher.name as teacherName,student.name as studentName " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"from choice " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"left join teacher on choice.teacher_id = teacher.id " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"left join student on choice.student_id = student.id " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"where choice.name like concat('%',#{name},'%') and student_id = #{studentId}")<br> &nbsp; &nbsp;List&lt;Choice&gt; selectByNameAndStudentId(@Param("name") String name, @Param("studentId") Integer studentId);<br>​<br>​<br> &nbsp; &nbsp;@Select("select choice.*, teacher.name as teacherName,student.name as studentName " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"from choice " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"left join teacher on choice.teacher_id = teacher.id " +<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"left join student on choice.student_id = student.id " + &nbsp;// 这里添加空格<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"where student_id = #{studentId} ") &nbsp;// 修改查询条件为student_id<br> &nbsp; &nbsp;List&lt;Choice&gt; selectAllByStudentId(Integer studentId);<br>}</code></pre>
+
+<h3 class="wp-block-heading">ChoiceMapper.xml</h3>
+
+<pre class="wp-block-code"><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;<br>&lt;!DOCTYPE mapper<br> &nbsp; &nbsp; &nbsp; &nbsp;PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"<br> &nbsp; &nbsp; &nbsp; &nbsp;"http://mybatis.org/dtd/mybatis-3-mapper.dtd"&gt;<br>&lt;mapper namespace="com.example.mapper.ChoiceMapper"&gt;<br> &nbsp; &nbsp;&lt;insert id="insert" parameterType="com.example.entity.Choice" useGeneratedKeys="true"&gt;<br> &nbsp; &nbsp; &nbsp;  insert into choice (name, teacher_id, student_id,course_id)<br> &nbsp; &nbsp; &nbsp;  values (#{name}, #{teacherId}, #{studentId},#{courseId})<br> &nbsp; &nbsp;&lt;/insert&gt;<br>​<br> &nbsp; &nbsp;&lt;update id="updateById" parameterType="com.example.entity.Choice"&gt;<br> &nbsp; &nbsp; &nbsp;  update choice<br> &nbsp; &nbsp; &nbsp;  set name = #{name},<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  student_id = #{studentId},<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  teacher_id = #{teacherId},<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  course_id = #{courseId}<br> &nbsp; &nbsp; &nbsp;  where id = #{id}<br>-- &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 这里的id是实体类中的属性名，不是数据库中的字段名<br> &nbsp; &nbsp;&lt;/update&gt;<br>&lt;/mapper&gt;</code></pre>
+
+<p>这个算是整个系统里面最难，最重要的一个逻辑之一吧，一定要仔细看！！！好好消化</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io">茜影神行</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io/2025/05/09/16%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E5%8A%9F%E8%83%BD%E7%9A%84%E5%BC%80%E5%8F%91/">https://cyg0825.github.io/2025/05/09/16%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E5%8A%9F%E8%83%BD%E7%9A%84%E5%BC%80%E5%8F%91/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://cyg0825.github.io" target="_blank">学海拾茜</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/">学生选课系统</a></div><div class="post-share"><div class="social-share" data-image="/uploads/2025/05/image-29-1024x232.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/05/09/17%E5%8F%96%E6%B6%88%E9%80%89%E8%AF%BE%E5%8A%9F%E8%83%BD%E7%9A%84%E5%BC%80%E5%8F%91/" title="17取消选课功能的开发"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">17取消选课功能的开发</div></div><div class="info-2"><div class="info-item-1">只有学生登录才有取消选课  逻辑  前端操作：  学生在选课列表页面点击"取消选课"按钮 前端会把要取消的选课记录ID传给后端  后端处理：  后端先根据ID查到这条选课记录 然后删除这条选课记录 接着找到这门课程，把课程的"已选人数"减1 最后更新课程信息  前端  Choice.vue  &lt;div class="card" style="margin-bottom: 5px"&gt; &nbsp;&lt;el-table :data="data.tableData" stripe&gt; &nbsp; &nbsp;&lt;el-table-column label="课程名称" prop="name"&gt;&lt;/el-table-column&gt; &nbsp; &nbsp;&lt;el-table-column label="授课教师" prop="teacherName"&gt;&lt;/el-table-column&gt; &nbsp; &nbsp;&lt;el-table-column label="选课学生" prop="studentName"&g...</div></div></div></a><a class="pagination-related" href="/2025/05/09/15%E8%AF%BE%E7%A8%8B%E4%BF%A1%E6%81%AF%E5%8A%9F%E8%83%BD%E7%9A%84%E5%BC%80%E5%8F%91/" title="15课程信息功能的开发"><img class="cover" src="/uploads/2025/05/image-28-1024x409.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">15课程信息功能的开发</div></div><div class="info-2"><div class="info-item-1">课程信息不看视频的情况下基本上自己已经能写出来了，就是关联查询后端逻辑遇到一点问题，写了两天这个功能（毕竟不能全天写）  逻辑  查询课程：  前端有个搜索框可以输入课程名称查询 点击查询按钮会向后端发送请求，后端根据课程名称模糊匹配返回结果   表格会显示所有课程信息，包括课程名称、学分、教师、上课时间地点等  新增课程：  点击"新增"按钮弹出表单 填写课程信息（名称、介绍、学分、人数限制等）   需要选择授课教师和所属学院（从下拉框选择） 点击保存后，后端会创建新课程  编辑课程：  点击表格行的"编辑"按钮 会弹出表单并自动填充该课程现有信息 修改后点击保存，后端会更新这条课程信息  删除课程：  点击"删除"按钮会弹出确认框 确认后后端会删除这条课程记录  分页功能：  表格底部有分页控件 可以切换页码查看不同页的课程数据  数据关联：  课程关联了教师和学院信息 新增/编辑时可以选择已有教师和学院   表格中会显示教师姓名和学院名称（而不是ID）  创建数据库  CREATE TABLE `course` ( &nbsp;`id` int NOT NULL AUTO_...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/05/09/15%E8%AF%BE%E7%A8%8B%E4%BF%A1%E6%81%AF%E5%8A%9F%E8%83%BD%E7%9A%84%E5%BC%80%E5%8F%91/" title="15课程信息功能的开发"><img class="cover" src="/uploads/2025/05/image-28-1024x409.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-05-09</div><div class="info-item-2">15课程信息功能的开发</div></div><div class="info-2"><div class="info-item-1">课程信息不看视频的情况下基本上自己已经能写出来了，就是关联查询后端逻辑遇到一点问题，写了两天这个功能（毕竟不能全天写）  逻辑  查询课程：  前端有个搜索框可以输入课程名称查询 点击查询按钮会向后端发送请求，后端根据课程名称模糊匹配返回结果   表格会显示所有课程信息，包括课程名称、学分、教师、上课时间地点等  新增课程：  点击"新增"按钮弹出表单 填写课程信息（名称、介绍、学分、人数限制等）   需要选择授课教师和所属学院（从下拉框选择） 点击保存后，后端会创建新课程  编辑课程：  点击表格行的"编辑"按钮 会弹出表单并自动填充该课程现有信息 修改后点击保存，后端会更新这条课程信息  删除课程：  点击"删除"按钮会弹出确认框 确认后后端会删除这条课程记录  分页功能：  表格底部有分页控件 可以切换页码查看不同页的课程数据  数据关联：  课程关联了教师和学院信息 新增/编辑时可以选择已有教师和学院   表格中会显示教师姓名和学院名称（而不是ID）  创建数据库  CREATE TABLE `course` ( &nbsp;`id` int NOT NULL AUTO_...</div></div></div></a><a class="pagination-related" href="/2025/05/09/18%E5%85%B6%E4%BB%96%E5%85%B3%E8%81%94/" title="18其他关联"><img class="cover" src="/uploads/2025/05/image-30-1024x678.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-05-09</div><div class="info-item-2">18其他关联</div></div><div class="info-2"><div class="info-item-1">教师关联专业  逻辑  当创建课程时，课程会自动关联到教师所属的专业 学生选课时，系统可以按专业筛选课程 在后台管理中，管理员可以按专业查看教师和课程情况  绑定关系：  每个教师必须选择一个所属专业  核心作用：  排课时：系统会自动限制教师只能开设本专业的课程   选课时：学生能看到授课教师的专业背景   管理时：可以按专业筛选教师名单  前端  Teacher.vue  &lt;el-table-column label="所属专业" prop="specialityName"&gt;&lt;/el-table-column&gt;​&lt;el-form-item label="所属专业" prop="specialityId"&gt; &nbsp;&lt;el-select v-model="data.form.specialityId" placeholder="请选择专业" style="width: 100%"&gt; &nbsp; &nbsp;&lt;el-option v-for="item in data.specialityDate" &nbsp; &nb...</div></div></div></a><a class="pagination-related" href="/2025/05/09/1958-2/" title="11修改密码功能的开发"><img class="cover" src="/uploads/2025/05/image-16-1024x363.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-05-09</div><div class="info-item-2">11修改密码功能的开发</div></div><div class="info-2"><div class="info-item-1">逻辑  前端操作：  用户在前端页面输入： 原密码（证明是你本人） 新密码（想改成啥） 确认新密码（防止输错）  后台验证：  系统会先检查： 原密码对不对（不对就报错："账号或密码错误"）      新密码和确认密码是否一致（不一致就报错："确认新密码错误")      如果都正确： 把新密码存到数据库 自动退出登录（让你重新用新密码登录)    安全设计：  改密码必须知道原密码（防止别人乱改）   改完强制重新登录（确保新密码立即生效）   所有角色（管理员/老师/学生）改密码流程都一样  添加接口分支  WebController.java  /**  * 修改密码  */ @PutMapping("/updatePassword") public Result updatePassword(@RequestBody Account account) {     if ("ADMIN".equals(account.getRole())) {         adminService.updatePassword(account);     }     if ("TEAC...</div></div></div></a><a class="pagination-related" href="/2025/05/09/08%E7%99%BB%E5%BD%95%E5%8A%9F%E8%83%BD%E7%9A%84%E5%BC%80%E5%8F%91/" title="08登录功能的开发"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-05-09</div><div class="info-item-2">08登录功能的开发</div></div><div class="info-2"><div class="info-item-1">逻辑  前端部分：  创建登录页面Login.vue，包含账号、密码输入框和角色选择下拉框 默认设置角色为STUDENT 点击登录按钮时，将表单数据(包含username, password, role)发送到后端  后端部分：  后端Controller接收登录请求(/login)，根据role字段分发到不同的Service：  if ("ADMIN".equals(account.getRole())) {     return adminService.login(account); } else if ("TEACHER".equals(account.getRole())) {     return teacherService.login(account);  } else if ("STUDENT".equals(account.getRole())) {     return studentService.login(account); }  各Service的login方法逻辑类似： 通过username查询用户是否存在 验证密码是否正确 返回用户完整信息或抛出...</div></div></div></a><a class="pagination-related" href="/2025/05/09/02%E6%95%99%E5%B8%88%E4%BF%A1%E6%81%AF%E7%9A%84%E6%96%B0%E5%A2%9E%E5%8A%9F%E8%83%BD/" title="02教师信息的新增功能"><img class="cover" src="/uploads/2025/05/image-2-1024x291.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-05-09</div><div class="info-item-2">02教师信息的新增功能</div></div><div class="info-2"><div class="info-item-1">逻辑  前端操作：  管理员点击"新增"按钮 弹出空白表单，填写教师信息（用户名、姓名、性别等） 点击"保存"按钮提交  后端处理：   // 1. 检查用户名是否已存在（防重复） Teacher dbTeacher = teacherMapper.selectByUsername(teacher.getUsername()); if(已存在){ 直接报错："用户名已存在" }  // 2. 设置默认值： if(没填密码){ 自动设置密码为"123456" } 强制设置角色为"TEACHER"  // 3. 保存到数据库 teacherMapper.insert(teacher);   结果反馈：  成功：提示"新增成功"，列表自动刷新显示新教师 失败：提示具体原因  关键处理点  唯一性校验：通过用户名检查教师是否已存在 默认值设置： 密码为空时自动设为"123456" 角色固定设为"TEACHER" 异常处理：用户名存在时抛出业务异常 数据流向：Controller → Service → Mapper → DB（数据库）  创建教师信息表  CREATE TABLE `te...</div></div></div></a><a class="pagination-related" href="/2025/05/09/13%E5%AD%A6%E9%99%A2%E4%BF%A1%E6%81%AF%E5%8A%9F%E8%83%BD%E7%9A%84%E5%BC%80%E5%8F%91/" title="13学院信息功能的开发"><img class="cover" src="/uploads/2025/05/image-25-1024x283.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-05-09</div><div class="info-item-2">13学院信息功能的开发</div></div><div class="info-2"><div class="info-item-1">逻辑  学员信息与系统公告信息逻辑基本一致，主要修改的前端内容  数据结构   每个学院包含4个核心字段：  id：学院唯一标识  name：学院名称  content：学院详细介绍  score：该学院要求的最低学分     核心功能   新增学院：通过insert语句实现，插入名称、介绍和学分要求  修改信息：通过updateById语句，可以修改学院名称、介绍或学分要求  删除学院  查询学院   业务规则   学院ID是主键，自动生成（useGeneratedKeys="true"）  更新操作必须指定学院ID（where id = #{id}）  学分要求应该是数字类型   创建学院信息数据库  CREATE TABLE `college` ( &nbsp;`id` int NOT NULL AUTO_INCREMENT COMMENT '主键ID', &nbsp;`name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '学院名称', &nbsp;`content` varchar(255)...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">茜影神行</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">57</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">22</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/cyg0825"><i class="fab fa-github"></i><span>关注我</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.</span> <span class="toc-text">逻辑</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.1.</span> <span class="toc-text">选课入口：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.2.</span> <span class="toc-text">选课核心流程：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.3.</span> <span class="toc-text">选课成功的情况：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.4.</span> <span class="toc-text">选课失败的情况：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.5.</span> <span class="toc-text">关键代码位置：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">2.</span> <span class="toc-text">创建数据库</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">3.</span> <span class="toc-text">entity—Choice.java</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">4.</span> <span class="toc-text">前端</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.1.</span> <span class="toc-text">Manager.vue</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.2.</span> <span class="toc-text">index.js</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.3.</span> <span class="toc-text">Choice.vue</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.4.</span> <span class="toc-text">Course.vue</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">5.</span> <span class="toc-text">Controller— ChoiceController.java</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">6.</span> <span class="toc-text">Service</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">6.1.</span> <span class="toc-text">ChoiceService.java</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">6.2.</span> <span class="toc-text">CourseService.java</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">7.</span> <span class="toc-text">Mapper</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">7.1.</span> <span class="toc-text">ChoiceMapper.java</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">7.2.</span> <span class="toc-text">ChoiceMapper.xml</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/04/linux%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="Linux学习笔记">Linux学习笔记</a><time datetime="2026-03-04T15:02:33.000Z" title="发表于 2026-03-04 23:02:33">2026-03-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/03/01/idea%E4%B8%ADjava%E6%89%93%E5%8C%85%E6%95%99%E7%A8%8B/" title="idea中java打包教程"><img src="/uploads/2026/03/1.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="idea中java打包教程"/></a><div class="content"><a class="title" href="/2026/03/01/idea%E4%B8%ADjava%E6%89%93%E5%8C%85%E6%95%99%E7%A8%8B/" title="idea中java打包教程">idea中java打包教程</a><time datetime="2026-03-01T02:34:19.000Z" title="发表于 2026-03-01 10:34:19">2026-03-01</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/08/10/vscode-2/" title="vscode搭建Spring Boot + Vue 全栈环境笔记"><img src="/uploads/2026/10/image.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="vscode搭建Spring Boot + Vue 全栈环境笔记"/></a><div class="content"><a class="title" href="/2025/08/10/vscode-2/" title="vscode搭建Spring Boot + Vue 全栈环境笔记">vscode搭建Spring Boot + Vue 全栈环境笔记</a><time datetime="2025-08-09T17:26:00.000Z" title="发表于 2025-08-10 01:26:00">2025-08-10</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/05/09/18%E5%85%B6%E4%BB%96%E5%85%B3%E8%81%94/" title="18其他关联"><img src="/uploads/2025/05/image-30-1024x678.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="18其他关联"/></a><div class="content"><a class="title" href="/2025/05/09/18%E5%85%B6%E4%BB%96%E5%85%B3%E8%81%94/" title="18其他关联">18其他关联</a><time datetime="2025-05-09T10:02:23.000Z" title="发表于 2025-05-09 18:02:23">2025-05-09</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/05/09/17%E5%8F%96%E6%B6%88%E9%80%89%E8%AF%BE%E5%8A%9F%E8%83%BD%E7%9A%84%E5%BC%80%E5%8F%91/" title="17取消选课功能的开发">17取消选课功能的开发</a><time datetime="2025-05-09T09:57:09.000Z" title="发表于 2025-05-09 17:57:09">2025-05-09</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2024 - 2026 By 茜影神行</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script>
+(function () {
+  var menus = document.getElementById('sidebar-menus')
+  var card = document.querySelector('#aside-content .card-info')
+  if (!menus || !card || menus.dataset.profileIn) return
+  var name = card.querySelector('.author-info-name')
+  var btn = card.querySelector('#card-info-btn')
+  if (name) {
+    var n = name.cloneNode(true)
+    n.className = 'sidebar-author-name'
+    menus.querySelector('.avatar-img').after(n)
+  }
+  if (btn) {
+    var b = btn.cloneNode(true)
+    b.removeAttribute('id')
+    b.className = 'sidebar-follow'
+    menus.querySelector('.site-data').after(b)
+  }
+  menus.dataset.profileIn = '1'
+})()
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索文章" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>

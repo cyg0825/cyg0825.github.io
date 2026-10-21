@@ -1,0 +1,238 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>idea中java打包教程 | 学海拾茜</title><meta name="author" content="茜影神行"><meta name="copyright" content="茜影神行"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="点击顶部菜单栏的 File → Project Structure（快捷键：⌘;）      在左侧面板选择 Artifacts  点击 + 按钮，选择 JAR → From modules with dependencies...      在弹出的对话框中，选择 App 类作为主类（Main Class）  确保 Extract to the target JAR 选项被选中     点">
+<meta property="og:type" content="article">
+<meta property="og:title" content="idea中java打包教程">
+<meta property="og:url" content="https://cyg0825.github.io/2026/03/01/idea%E4%B8%ADjava%E6%89%93%E5%8C%85%E6%95%99%E7%A8%8B/index.html">
+<meta property="og:site_name" content="学海拾茜">
+<meta property="og:description" content="点击顶部菜单栏的 File → Project Structure（快捷键：⌘;）      在左侧面板选择 Artifacts  点击 + 按钮，选择 JAR → From modules with dependencies...      在弹出的对话框中，选择 App 类作为主类（Main Class）  确保 Extract to the target JAR 选项被选中     点">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cyg0825.github.io/uploads/2026/03/1.png">
+<meta property="article:published_time" content="2026-03-01T02:34:19.000Z">
+<meta property="article:modified_time" content="2026-03-01T02:55:54.000Z">
+<meta property="article:author" content="茜影神行">
+<meta property="article:tag" content="java">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cyg0825.github.io/uploads/2026/03/1.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "idea中java打包教程",
+  "url": "https://cyg0825.github.io/2026/03/01/idea%E4%B8%ADjava%E6%89%93%E5%8C%85%E6%95%99%E7%A8%8B/",
+  "image": "https://cyg0825.github.io/uploads/2026/03/1.png",
+  "datePublished": "2026-03-01T02:34:19.000Z",
+  "dateModified": "2026-03-01T02:55:54.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "茜影神行",
+      "url": "https://cyg0825.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/333.png"><link rel="canonical" href="https://cyg0825.github.io/2026/03/01/idea%E4%B8%ADjava%E6%89%93%E5%8C%85%E6%95%99%E7%A8%8B/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/css/fontawesome/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'idea中java打包教程',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><style>
+/* 手机端复用右侧收起按钮，整块侧栏（个人信息等卡片）可收起 */
+@media (max-width: 900px) {
+  #rightside #hide-aside-btn { display: block !important; }
+  html.hide-aside .layout > #aside-content { display: none; }
+  /* 个人信息卡折叠进抽屉，页面里不再单独占一块 */
+  #aside-content > .card-info { display: none; }
+}
+#sidebar-menus .sidebar-author-name { margin: 6px 0 0; font-size: 1.3em; font-weight: 700; text-align: center; }
+#sidebar-menus .sidebar-follow { display: block; margin: 14px 20px 0; padding: 9px 0; border-radius: 8px; background: var(--btn-bg); color: var(--btn-color); text-align: center; }
+#sidebar-menus .sidebar-follow i { margin-right: 6px; }
+/* 沿用线上站点：页脚与头图遮罩透明，让背景色和头图直接透出 */
+#footer { background: transparent !important; }
+#footer::before, #page-header::before { background: transparent !important; }
+[data-theme="dark"] #footer::before, [data-theme="dark"] #page-header::before { background: transparent !important; }
+</style><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background-color: #bbdefb;"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">57</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">22</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-code"></i><span> 项目</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/"><i class="fa-fw fas fa-book"></i><span> 学生选课系统</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-file-alt"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/333.png" alt="Logo"><span class="site-name">学海拾茜</span></a><a class="nav-page-title" href="/"><span class="site-name">idea中java打包教程</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-code"></i><span> 项目</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/"><i class="fa-fw fas fa-book"></i><span> 学生选课系统</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-file-alt"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">idea中java打包教程</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-03-01T02:34:19.000Z" title="发表于 2026-03-01 10:34:19">2026-03-01</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-03-01T02:55:54.000Z" title="更新于 2026-03-01 10:55:54">2026-03-01</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E7%B3%BB%E7%BB%9F/">系统</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E9%97%AE%E9%A2%98/">问题</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/java/">java</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><figure class="wp-block-image size-full"><img src="/uploads/2026/03/1.png" alt="" class="wp-image-2124"/></figure>
+
+<ul class="wp-block-list">
+<li>点击顶部菜单栏的 <code>File</code> → <code>Project Structure</code>（快捷键：<code>⌘;</code>）</li>
+</ul>
+
+<figure class="wp-block-image size-full"><img src="/uploads/2026/03/6.png" alt="" class="wp-image-2129"/></figure>
+
+<ul class="wp-block-list">
+<li>在左侧面板选择 <code>Artifacts</code></li>
+
+<li>点击 <code>+</code> 按钮，选择 <code>JAR</code> → <code>From modules with dependencies...</code></li>
+</ul>
+
+<figure class="wp-block-image size-full"><img src="/uploads/2026/03/2-1.png" alt="" class="wp-image-2130"/></figure>
+
+<ul class="wp-block-list">
+<li>在弹出的对话框中，选择 <code>App</code> 类作为主类（Main Class）</li>
+
+<li>确保 <code>Extract to the target JAR</code> 选项被选中</li>
+</ul>
+
+<figure class="wp-block-image size-full"><img src="/uploads/2026/03/3.png" alt="" class="wp-image-2126"/></figure>
+
+<p>点击 <code>OK</code></p>
+
+<figure class="wp-block-image size-full"><img src="/uploads/2026/03/4.png" alt="" class="wp-image-2127"/></figure>
+
+<ul class="wp-block-list">
+<li>点击顶部菜单栏的 <code>Build</code> → <code>Build Artifacts...</code></li>
+
+<li>在弹出的菜单中，选择您刚才创建的Artifact，然后点击 <code>Build</code></li>
+</ul>
+
+<figure class="wp-block-image size-full"><img src="/uploads/2026/03/5-1.png" alt="" class="wp-image-2131"/></figure>
+
+<p>构建完成后，在配置的输出目录中可以找到生成的JAR文件</p>
+
+<figure class="wp-block-image size-full"><img src="/uploads/2026/03/image.png" alt="" class="wp-image-2133"/></figure>
+
+<p></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io">茜影神行</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io/2026/03/01/idea%E4%B8%ADjava%E6%89%93%E5%8C%85%E6%95%99%E7%A8%8B/">https://cyg0825.github.io/2026/03/01/idea%E4%B8%ADjava%E6%89%93%E5%8C%85%E6%95%99%E7%A8%8B/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://cyg0825.github.io" target="_blank">学海拾茜</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/java/">java</a></div><div class="post-share"><div class="social-share" data-image="/uploads/2026/03/1.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/03/04/linux%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="Linux学习笔记"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">Linux学习笔记</div></div><div class="info-2"><div class="info-item-1">一、目录与导航 ⭐⭐⭐  pwd                     # 显示当前所在目录的绝对路径 cd 路径                 # 切换到指定目录（如 cd /var/log） cd ~                    # 回到当前用户的家目录（/home/用户名） cd ..                   # 返回上一级目录 ls -la                  # 列出当前目录所有文件（含隐藏文件，含详细信息） ls 路径                 # 列出指定目录的文件（如 ls /var/log）  二、文件操作 ⭐⭐⭐  touch 文件名            # 创建一个空文件，或更新已有文件的时间戳 cp 原文件 目标文件      # 复制文件（如 cp test.txt test_backup.txt） cp -r 原目录 目标目录   # 复制目录（-r = 递归复制） mv 原文件 目标文件      # 移动文件，或重命名文件（如 mv A B 把A改名为B） mv 文件 路径/           # ...</div></div></div></a><a class="pagination-related" href="/2025/08/10/vscode-2/" title="vscode搭建Spring Boot + Vue 全栈环境笔记"><img class="cover" src="/uploads/2026/10/image.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">vscode搭建Spring Boot + Vue 全栈环境笔记</div></div><div class="info-2"><div class="info-item-1"> 用途：从零搭起可端到端跑通的后端（Spring Boot + MyBatis-Plus + MySQL）与前端（Vite + Vue 3），并在 VS Code 中按界面操作跑起来、打出包。 通用教程，不绑定具体业务工程；  文中 demo_db、com.example.demo、8080、5173 均为示例值，落到具体工程时替换成实际库名、包名与端口即可。 版本基线：JDK 17、Maven 3.9+、Node 22/24、MySQL 8、Spring Boot 3.x、持久层 MyBatis-Plus 3.5.14。     前置条件自检  先确认四件工具在位，再开始建工程。缺任何一件都会在后面以难以定位的方式报错。  依赖版本要求自检命令JDK17（Boot 3.x/4.x 的 baseline 均为 17）java -versionMaven3.9 以上mvn -vNode满足前端工程的 engines，Vite 8 要求 ^22.18.0 \|\| &gt;=24.12.0node -v &amp;&amp; npm -vMySQL8.x，且本机 3306 有服务在监...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">茜影神行</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">57</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">22</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/cyg0825"><i class="fab fa-github"></i><span>关注我</span></a></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/04/linux%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="Linux学习笔记">Linux学习笔记</a><time datetime="2026-03-04T15:02:33.000Z" title="发表于 2026-03-04 23:02:33">2026-03-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/03/01/idea%E4%B8%ADjava%E6%89%93%E5%8C%85%E6%95%99%E7%A8%8B/" title="idea中java打包教程"><img src="/uploads/2026/03/1.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="idea中java打包教程"/></a><div class="content"><a class="title" href="/2026/03/01/idea%E4%B8%ADjava%E6%89%93%E5%8C%85%E6%95%99%E7%A8%8B/" title="idea中java打包教程">idea中java打包教程</a><time datetime="2026-03-01T02:34:19.000Z" title="发表于 2026-03-01 10:34:19">2026-03-01</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/08/10/vscode-2/" title="vscode搭建Spring Boot + Vue 全栈环境笔记"><img src="/uploads/2026/10/image.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="vscode搭建Spring Boot + Vue 全栈环境笔记"/></a><div class="content"><a class="title" href="/2025/08/10/vscode-2/" title="vscode搭建Spring Boot + Vue 全栈环境笔记">vscode搭建Spring Boot + Vue 全栈环境笔记</a><time datetime="2025-08-09T17:26:00.000Z" title="发表于 2025-08-10 01:26:00">2025-08-10</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/05/09/18%E5%85%B6%E4%BB%96%E5%85%B3%E8%81%94/" title="18其他关联"><img src="/uploads/2025/05/image-30-1024x678.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="18其他关联"/></a><div class="content"><a class="title" href="/2025/05/09/18%E5%85%B6%E4%BB%96%E5%85%B3%E8%81%94/" title="18其他关联">18其他关联</a><time datetime="2025-05-09T10:02:23.000Z" title="发表于 2025-05-09 18:02:23">2025-05-09</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/05/09/17%E5%8F%96%E6%B6%88%E9%80%89%E8%AF%BE%E5%8A%9F%E8%83%BD%E7%9A%84%E5%BC%80%E5%8F%91/" title="17取消选课功能的开发">17取消选课功能的开发</a><time datetime="2025-05-09T09:57:09.000Z" title="发表于 2025-05-09 17:57:09">2025-05-09</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2024 - 2026 By 茜影神行</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script>
+(function () {
+  var menus = document.getElementById('sidebar-menus')
+  var card = document.querySelector('#aside-content .card-info')
+  if (!menus || !card || menus.dataset.profileIn) return
+  var name = card.querySelector('.author-info-name')
+  var btn = card.querySelector('#card-info-btn')
+  if (name) {
+    var n = name.cloneNode(true)
+    n.className = 'sidebar-author-name'
+    menus.querySelector('.avatar-img').after(n)
+  }
+  if (btn) {
+    var b = btn.cloneNode(true)
+    b.removeAttribute('id')
+    b.className = 'sidebar-follow'
+    menus.querySelector('.site-data').after(b)
+  }
+  menus.dataset.profileIn = '1'
+})()
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索文章" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>
