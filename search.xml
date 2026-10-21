@@ -6119,7 +6119,7 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 
 <p>根配置里 <code>syntax_highlighter: highlight.js</code>，<code>highlight</code> 一节全用默认值：line_number true、auto_detect false、wrap true、hljs false、tab_replace 留空。这套只处理 Markdown 的围栏代码块。</p>
 
-<p>正文是从 WordPress 导进来的，代码块长成 <code>&lt;pre class="wp-block-code"&gt;&lt;code&gt;</code> 这样：整段挤成一行，换行用 <code>&lt;br&gt;</code> 表示，Hexo 的高亮流程看不见它们，页面上就是一整块灰字。要高亮得先把它们转成主题认识的 <code>figure.highlight</code>。</p>
+<p>正文里的代码块长成 <code>&lt;pre class="wp-block-code"&gt;&lt;code&gt;</code> 这样：整段挤成一行，换行用 <code>&lt;br&gt;</code> 表示，Hexo 的高亮流程看不见它们，页面上就是一整块灰字。要高亮得先把它们转成主题认识的 <code>figure.highlight</code>。</p>
 
 <p>转换放在 <code>scripts/wp-code-highlight.js</code>，注册 <code>after_post_render</code>，优先级 20。做三件事：解 HTML 实体（导入正文只用到 <code>&amp;nbsp;</code> <code>&amp;gt;</code> <code>&amp;lt;</code> <code>&amp;#91;</code> <code>&amp;amp;</code>，仍按通用解码器写，命名与数字都认）、把 <code>&lt;br&gt;</code> 换回换行、按内容猜语言，最后交给 <code>hexo-util</code> 的 <code>highlight()</code> 出表格结构。行号与 wrap 跟着根配置读，产物的 class 名和主题原生围栏一致。</p>
 
@@ -6360,7 +6360,7 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 
 <h2 class="wp-block-heading" id="本站配置差异清单">本站配置差异清单</h2>
 
-<p>本站 <code>_config.butterfly.yml</code> 是把主题配置整份复制到根目录再改的，绝大多数键与默认一致。和主题官方 5.5.3 的 <code>_config.yml</code> 逐项比对，叶子项不同 41 处，归成配置块就是下面这些。主题版本 butterfly 5.5.3，hexo 8.x。照着这张表改完，版面就和现站一致。</p>
+<p>本站 <code>_config.butterfly.yml</code> 是把主题配置整份复制到根目录再改的，绝大多数键与默认一致。和主题官方 5.5.3 的 <code>_config.yml</code> 逐项比对，取值不同的键归成配置块就是下面这些。主题版本 butterfly 5.5.3，hexo 8.x。照着这张表改完，版面就和现站一致。</p>
 
 <figure class="wp-block-table"><table class="has-fixed-layout"><thead><tr><th>配置块</th><th>本站取值</th><th>默认值</th></tr></thead><tbody>
 <tr><td>nav</td><td>logo 为 /img/333.png，fixed 为 true</td><td>logo 留空，fixed 为 false</td></tr>
@@ -6389,11 +6389,11 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 
 <p>最后三行是从旧版本配置文件一路复制下来的残留。<code>share</code> 那两个列表仍然写 <code>twitter</code>，文末标签下方的分享按钮因此出现的是 Twitter 图标而不是官方 5.5.3 的 <code>x</code>，要跟上就把两处一起改。JSON-LD 由 <code>structured_data</code> 控制，模板里按布尔判断，老写法 <code>true</code> 照样输出，只是配不了 <code>alternate_name</code> 别名。<code>CDN.version: false</code> 只是不给第三方链接拼版本号查询串，资源全部本地之后没有影响。</p>
 
-<p>比对基准要注意：主题目录里的 <code>themes/butterfly/_config.yml</code> 早前被覆盖成了站点配置的副本，直接拿它比对会得到 24 处这种偏少的数字。要取官方默认值，用主题仓库里的那份：</p>
+<p>比对基准要注意：主题目录里的 <code>themes/butterfly/_config.yml</code> 早前被覆盖成了站点配置的副本，直接拿它比对等于跟自己的另一份副本比，差异会偏少。要取官方默认值，用主题仓库里的那份：</p>
 
 <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git -C themes/butterfly show HEAD:_config.yml | diff - _config.butterfly.yml | <span class="built_in">head</span> -60</span><br></pre></td></tr></table></figure>
 
-<p>两份文件行尾写法不同，直接 diff 会整片报差异，看具体键还是各自打开对照更省事；要精确比对，就把两份配置按叶子键展开取值再比。展开比对的口径是：两边都有且值不同 23 项，本站多出 18 项（menu、inject、CDN.option 那批），上面那句 41 处就是这两类相加；另有 15 项是 5.5.3 有、本站文件里压根没写的键，例如 <code>nav.display_post_title</code>、<code>lazyload.native</code>、<code>rightside_config_animation</code>、<code>structured_data.enable</code>，缺了就走主题默认，不影响版面，照着改的时候也不用补。</p>
+<p>两份文件行尾写法不同，直接 diff 会整片报差异，看具体键还是各自打开对照更省事；要精确比对，就把两份配置按叶子键展开取值再比。展开比对的口径是：两边都有且值不同的键、本站多出的键（menu、inject、CDN.option 那批），这两类就是上面那张表的范围；另有一批是 5.5.3 有、本站文件里压根没写的键，例如 <code>nav.display_post_title</code>、<code>lazyload.native</code>、<code>rightside_config_animation</code>、<code>structured_data.enable</code>，缺了就走主题默认，不影响版面，照着改的时候也不用补。</p>
 
 <p>另外 <code>footer.copyright</code> 在这张表里没有，因为官方 5.5.3 默认就是对象；但被覆盖过的那份主题文件里写的是 <code>copyright: true</code>，从那种文件复制起点的话，这一处必须改回对象，否则页脚少一行，详见「页脚」一节。</p>
 
