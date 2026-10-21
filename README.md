@@ -4,10 +4,8 @@ Hexo + Butterfly 静态博客，构建产物整站推送到 GitHub Pages。
 
 | 项 | 值 |
 | --- | --- |
-| 站点 | https://cyg0825.github.io/ |
 | 构建器 | Hexo 8.1.1 |
 | 主题 | Butterfly 5.5.3（`themes/butterfly`） |
-| 文章 | `source/_posts`，正文是 HTML 片段 |
 | Node | v24 系列，包管理用 pnpm 或 npm 均可 |
 
 ## 常用命令
@@ -20,7 +18,7 @@ npx hexo generate         # 产物在 public/
 npx hexo deploy           # 提交并推送，见下面的部署须知
 ```
 
-推送目标配置在根 `_config.yml` 的 `deploy` 段（`type: git`，分支 `main`，仓库就是站点地址对应的 Pages 仓库）。
+推送目标配置在根 `_config.yml` 的 `deploy` 段（`type: git`，分支 `main`，仓库是 Pages 站点仓库），地址：https://cyg0825.github.io/。
 
 ## 目录结构
 
@@ -30,7 +28,7 @@ _config.butterfly.yml        主题配置，整份从主题 _config.yml 复制�
 scripts/wp-code-highlight.js 构建期把正文里的原始代码块换成高亮产物
 scripts/copy-readme.js       构建结束时把本文件拷进产物，让仓库首页能看到说明
 source/_posts/               文章
-source/uploads/              正文配图，单图都在 300KB 以下
+source/uploads/              正文配图
 source/assets/               本地化的第三方 js/css
 source/css/fontawesome/      本地化的图标字体
 source/js/typed.umd.min.js   本地化的打字机脚本
