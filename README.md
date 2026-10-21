@@ -81,7 +81,7 @@ grep -r '<figure class="highlight' public --include=*.html | wc -l
 
 ## 部署须知
 
-`npx hexo deploy` 会把 `public/` 整份复制进 `.deploy_git`，提交后推送到 Pages 仓库，属于整站替换，Pages 仓库的历史只由这条命令维护。仓库根目录能看到本文件也是这条链的一部分，产物里缺了它就查 `scripts/copy-readme.js`。推送前跑一遍敏感项扫描，至少覆盖：凭据赋值、密钥文件标记、长十六进制串、IP、超过 300KB 的图片、外部 `script/link/img` 标签的 host 白名单。命中的逐项确认是原有公开内容还是新增，网盘提取码这类是文章里本来就公开的分享信息。
+`npx hexo deploy` 会把 `public/` 整份复制进 `.deploy_git`，提交后推送到 Pages 仓库，属于整站替换，Pages 仓库的历史只由这条命令维护。仓库根目录能看到本文件也是这条链的一部分，产物里缺了它就查 `scripts/copy-readme.js`。**推送前先比对远端 tip**：`git ls-remote git@github.com:cyg0825/cyg0825.github.io.git main` 与 `git -C .deploy_git rev-parse HEAD` 不一致，说明仓库上有别的提交（网页上直接编辑过文件），这条命令会 force push 把它抹掉，先把那份取回来合进本地。真被抹了也能按 SHA 拉回：`https://raw.githubusercontent.com/cyg0825/cyg0825.github.io/<完整SHA>/README.md`。推送前跑一遍敏感项扫描，至少覆盖：凭据赋值、密钥文件标记、长十六进制串、IP、超过 300KB 的图片、外部 `script/link/img` 标签的 host 白名单。命中的逐项确认是原有公开内容还是新增，网盘提取码这类是文章里本来就公开的分享信息。
 
 推完别立刻判定失败：Pages 重建有延迟，推送后线上仍是旧构建属正常。线上验证直接拉文章 URL，比对 `updated` 时间与新增段落文本。
 
