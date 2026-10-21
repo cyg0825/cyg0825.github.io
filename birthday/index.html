@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0825刘亦菲生日快乐</title>
+    <link rel="shortcut icon" href="/img/333.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-container" id="bgContainer">
+        <img src="img/cat.jpg" alt="生日快乐背景" class="background-image" id="bgImage">
+        
+        <audio id="bgAudio" loop></audio>
+        
+        <div class="overlay-layer" id="overlayLayer">
+            <div class="main-window" id="mainWindow">
+                <div class="title-bar">
+                    <span class="title-text">生日快乐</span>
+                    <button class="close-btn" id="mainCloseBtn">×</button>
+                </div>
+                <div class="content-area">
+                    <div class="greeting-text">
+                        0825刘亦菲生日快乐 🎂<br>
+                        愿所有美好如约而至 💝
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-primary" id="startBtn">生日快乐</button>
+                        <button class="btn btn-secondary" id="skipBtn">悄悄溜走</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="close-all-btn" id="closeAllBtn" title="收下全部">
+                <svg viewBox="0 0 32 32" class="heart-icon">
+                    <path d="M16 28 L4 16 C0 12 0 6 4 3 C8 0 14 2 16 7 C18 2 24 0 28 3 C32 6 32 12 28 16 Z" 
+                          fill="rgba(206, 147, 216, 0.95)" stroke="rgba(75, 0, 130, 0.6)" stroke-width="1"/>
+                </svg>
+                <span class="close-all-text">收下全部</span>
+            </div>
+
+            <div class="restart-btn" id="restartBtn">
+                <svg viewBox="0 0 32 32" class="restart-icon">
+                    <path d="M16 4 A12 12 0 1 0 28 16 L24 16 A8 8 0 1 1 16 8 L20 12 L16 16 L12 12 Z" 
+                          fill="rgba(206, 147, 216, 0.95)" stroke="rgba(75, 0, 130, 0.6)" stroke-width="1"/>
+                </svg>
+                <span class="restart-text">重新开启</span>
+            </div>
+
+            <div class="wishes-container" id="wishesContainer"></div>
+
+            <div class="footer-notice">
+                <span>本作品仅供个人交流学习使用，严禁用于任何商业用途</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
