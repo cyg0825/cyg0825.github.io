@@ -92,7 +92,8 @@ grep -r '<figure class="highlight' public --include=*.html | wc -l
 - 文章 front-matter 的 `date` 是页面上的发表于，`updated` 是更新于；只改正文时不动 `date`。
 - 站点时间格式由根配置的 `date_format`、`time_format` 决定。
 - 文章的 `top_img` 统一 `false`，头图走 `default_top_img`。
-- 多级分类写成嵌套形态，同级分类写成 `- ["A"]` 这种数组套数组，直接 `- A` 会被当成不同层级。
+- 分类两级：父分类只有 `学习`、`生活`，其余分类挂在它们下面，`学生选课系统` 单独顶级。写成 `- [学习, 建站]`，数组从左到右是父到子，一篇多个分类写多行。
+- 批量改 front-matter 前先停 `hexo server`，否则存一半就触发处理，hexo-abbrlink 会在残缺文件前面补一个只含 abbrlink 的块；改完用 `hexo clean` 再构建，增量生成不会清掉已删除路由的旧产物。
 - 装了 `hexo-abbrlink`，它会把 abbrlink 回写进 front-matter，提交时看见这类改动属正常。
 - 草稿由根配置 `render_drafts: false` 排除。
 - 图片放 `source/uploads/`，新图压到 300KB 以下再入库。
