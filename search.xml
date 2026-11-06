@@ -3458,7 +3458,7 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 
 <h3 id="TeacherMapper"><a href="#TeacherMapper" class="headerlink" title="TeacherMapper"></a>TeacherMapper</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">updateById</span><span class="params">(Teacher teacher)</span>;<span class="comment">//更新教师信息</span></span><br></pre></td></tr></table></figure>
 
-<h4 id="同时在TeacherMapper-xml修改更新逻辑"><a href="#同时在TeacherMapper-xml修改更新逻辑" class="headerlink" title="同时在TeacherMapper.xml修改更新逻辑"></a>同时在<code>TeacherMapper.xml</code>修改更新逻辑</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">update</span> <span class="attr">id</span>=<span class="string">&quot;updateById&quot;</span> <span class="attr">parameterType</span>=<span class="string">&quot;com.example.entity.Teacher&quot;</span>&gt;</span></span><br><span class="line">        update teacher</span><br><span class="line">        set username = #&#123;username&#125;, password = #&#123;password&#125;, name = #&#123;name&#125;, sex = #&#123;sex&#125;, title = #&#123;title&#125;, speciality_id = #&#123;specialityId&#125;, role = #&#123;role&#125;, avatar = #&#123;avatar&#125;</span><br><span class="line">        where id = #&#123;id&#125;</span><br><span class="line">    <span class="tag">&lt;/<span class="name">update</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h4 id="同时在TeacherMapper-xml修改更新逻辑"><a href="#同时在TeacherMapper-xml修改更新逻辑" class="headerlink" title="同时在TeacherMapper.xml修改更新逻辑"></a>同时在<code>TeacherMapper.xml</code>修改更新逻辑</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">update</span> <span class="attr">id</span>=<span class="string">&quot;updateById&quot;</span> <span class="attr">parameterType</span>=<span class="string">&quot;com.example.entity.Teacher&quot;</span>&gt;</span></span><br><span class="line">    update teacher</span><br><span class="line">    set username = #&#123;username&#125;, password = #&#123;password&#125;, name = #&#123;name&#125;, sex = #&#123;sex&#125;, title = #&#123;title&#125;, speciality_id = #&#123;specialityId&#125;, role = #&#123;role&#125;, avatar = #&#123;avatar&#125;</span><br><span class="line">    where id = #&#123;id&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">update</span>&gt;</span></span><br></pre></td></tr></table></figure>
 
 <blockquote>
 <p>这里的teacher是数据库表名 注意：逗号是必须的, 否则会报错, 因为没有逗号, mybatis会认为这是一个字符串, 而不是一个数组 这里的id是实体类中的属性名，不是数据库中的字段名</p>
@@ -5104,12 +5104,8 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 <p><img src="/img/link/lk-02-board.png" alt="第 1 关开局后的棋盘"></p>
 <h2 id="棋盘在代码里是一张比棋盘大一圈的表"><a href="#棋盘在代码里是一张比棋盘大一圈的表" class="headerlink" title="棋盘在代码里是一张比棋盘大一圈的表"></a>棋盘在代码里是一张比棋盘大一圈的表</h2><p>页面上看到的是一张 <code>列数 × 行数</code> 的格子图，代码里存的不是这张图，而是一张横竖各多两行两列的表。多出来的那一圈永远留空，专门给连线绕路用。</p>
 <p>以 <code>4 列 3 行</code> 为例，<code>#</code> 是有图的格子，<code>.</code> 是那圈空格：</p>
-<pre><code>. . . . . .
-. # # # # .
-. # # # # .
-. # # # # .
-. . . . . .
-</code></pre>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">. . . . . .</span><br><span class="line">. # # # # .</span><br><span class="line">. # # # # .</span><br><span class="line">. # # # # .</span><br><span class="line">. . . . . .</span><br></pre></td></tr></table></figure>
+
 <p>代码里这张表的行号是 <code>0..4</code>、列号是 <code>0..5</code>，真正的图只放在行 <code>1..3</code>、列 <code>1..4</code> 里面。</p>
 <p>这圈空格不是摆设。连连看的连线允许从棋盘外面绕过去，最常见的例子是第一行左右两端各有一张相同的图：中间所有直线和折线都堵住了也没用，连线可以往上抬到棋盘外那一行，横着走一段再下来，两个拐弯，照样算连上。</p>
 <p><img src="/img/link/lk-03-two-turns.png" alt="连线抬到棋盘外那一行再下来"></p>
@@ -5356,12 +5352,12 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 </tr>
 </tbody></table>
 <h2 id="自测"><a href="#自测" class="headerlink" title="自测"></a>自测</h2><ol>
-<li>代码里那张表为什么比棋盘横竖各多两行两列？少这一圈会怎样？<br>答：这一圈是留给连线绕棋盘外用的通道。少了这一圈，边界上的图就没有绕行路线，很多本该连得上的组合会被判成连不上。</li>
-<li><code>g[0][3]</code> 上的值有可能不是 0 吗？<br>答：不可能。第 0 行是外圈，填牌从行 1 开始，外圈永远是空格。</li>
-<li>表里存的值是 <code>7</code>，代表什么？<br>答：这张格子的图是第 7 种图案，对应 <code>img/image6.jpg</code>。编号相同的图在棋盘上成对出现。</li>
-<li>关卡表里的 <code>s:0</code> 是什么意思？<br>答：这一关的重排次数是 0，重排按钮一开始就是禁用状态，排成死局只能重玩。</li>
-<li><code>c</code> 与 <code>r</code> 的乘积如果是奇数会发生什么？<br>答：牌数无法成对，最后一张落单，永远消不掉，那一关不可能过。</li>
-<li>第 19 关写着 <code>c:22</code>，手机上也是 22 列吗？<br>答：不是。<code>c</code> 是设计目标，实际行列由牌数的因数分解在当前窗口里重新挑，第 19 关窄屏下是 16 行 11 列，见第五篇。</li>
+<li>代码里那张表为什么比棋盘横竖各多两行两列？少这一圈会怎样？ 答：这一圈是留给连线绕棋盘外用的通道。少了这一圈，边界上的图就没有绕行路线，很多本该连得上的组合会被判成连不上。</li>
+<li><code>g[0][3]</code> 上的值有可能不是 0 吗？ 答：不可能。第 0 行是外圈，填牌从行 1 开始，外圈永远是空格。</li>
+<li>表里存的值是 <code>7</code>，代表什么？ 答：这张格子的图是第 7 种图案，对应 <code>img/image6.jpg</code>。编号相同的图在棋盘上成对出现。</li>
+<li>关卡表里的 <code>s:0</code> 是什么意思？ 答：这一关的重排次数是 0，重排按钮一开始就是禁用状态，排成死局只能重玩。</li>
+<li><code>c</code> 与 <code>r</code> 的乘积如果是奇数会发生什么？ 答：牌数无法成对，最后一张落单，永远消不掉，那一关不可能过。</li>
+<li>第 19 关写着 <code>c:22</code>，手机上也是 22 列吗？ 答：不是。<code>c</code> 是设计目标，实际行列由牌数的因数分解在当前窗口里重新挑，第 19 关窄屏下是 16 行 11 列，见第五篇。</li>
 </ol>
 ]]></content>
       <categories>
