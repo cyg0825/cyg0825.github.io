@@ -20,7 +20,8 @@ body{
 }
 header{
   display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-  padding:10px 16px; border-bottom:1px solid var(--line);
+  padding:10px max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left));
+  border-bottom:1px solid var(--line);
   position:sticky; top:0; z-index:5;
   background:color-mix(in srgb, var(--bg2) 88%, transparent);
   backdrop-filter:blur(6px);
@@ -38,7 +39,7 @@ button{
 button:hover:not(:disabled){border-color:var(--accent); color:var(--accent2)}
 button:disabled{opacity:.45; cursor:default}
 button .n{color:var(--ink2); font-variant-numeric:tabular-nums}
-main{max-width:1240px; margin:0 auto; padding:18px 16px 40px}
+main{max-width:1240px; margin:0 auto; padding:18px 16px calc(40px + env(safe-area-inset-bottom))}
 .lead{color:var(--ink2); margin:0 0 16px}
 #levels{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px}
 .lv{
@@ -54,13 +55,14 @@ main{max-width:1240px; margin:0 auto; padding:18px 16px 40px}
 #barwrap{height:6px; border-radius:3px; background:var(--line); overflow:hidden; margin-bottom:14px}
 #bar{height:100%; width:100%; background:var(--accent); transition:width .2s linear}
 #bar.low{background:var(--danger)}
-#stage{display:flex; justify-content:center}
-#board{position:relative; border-radius:14px; background:color-mix(in srgb, var(--card) 55%, transparent); border:1px solid var(--line)}
-#tiles{position:absolute; inset:0}
+#stage{display:block; overflow:auto; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain}
+#board{position:relative; margin:0 auto; border-radius:14px; background:color-mix(in srgb, var(--card) 55%, transparent); border:1px solid var(--line)}
+#tiles{position:absolute; inset:0; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none}
 #line{position:absolute; inset:0; pointer-events:none; overflow:visible}
 .tile{
   position:absolute; padding:0; border:0; background:none;
   display:flex; align-items:center; justify-content:center;
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
 }
 .tile span{
   display:block; width:calc(100% - 6px); height:calc(100% - 6px);
@@ -95,6 +97,6 @@ polyline.out{transition:opacity .2s; opacity:0}
 @media (max-width:640px){
   header{padding:8px 10px; gap:8px}
   #hud{font-size:13px; gap:8px}
-  main{padding:12px 8px 30px}
+  main{padding:12px 8px calc(30px + env(safe-area-inset-bottom))}
   #tools{margin-left:0; width:100%}
 }

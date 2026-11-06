@@ -34,21 +34,30 @@ function shuffled(a,rnd){
   return b;
 }
 // 在可用宽高里挑一个因数分解，让格子尽量大；列数接近设计值
+var MIN_CELL=24;
 function fitGrid(n,specC,W,H){
-  var best=null;
+  var fits=[],tight=[];
   for(var c=1;c*c<=n;c++){
     if(n%c) continue;
     var opts=[c,n/c];
     for(var k=0;k<2;k++){
       var cc=Math.round(opts[k]), rr=Math.round(n/opts[k]);
-      if(cc<4||rr<4||cc>18||rr>18) continue;
+      if(cc<4||rr<4||cc>24||rr>24) continue;
       var cell=Math.min(W/(cc+2),H/(rr+2),84);
-      var score=cell-Math.abs(cc-specC)*0.12;
-      if(!best||score>best.score-0.001) best={c:cc,r:rr,cell:cell,score:score};
+      if(cell>=MIN_CELL) fits.push({c:cc,r:rr,cell:cell,score:cell-Math.abs(cc-specC)*0.12});
+      else tight.push({c:cc,r:rr,cell:MIN_CELL,over:(cc+2)*MIN_CELL-W+(rr+2)*MIN_CELL-H});
     }
   }
-  if(!best){ var c2=Math.max(4,Math.min(18,specC)); var r2=Math.ceil(n/c2); best={c:c2,r:r2,cell:Math.min(W/(c2+2),H/(r2+2),84)}; }
-  return best;
+  if(fits.length){
+    fits.sort(function(a,b){return b.score-a.score;});
+    return fits[0];
+  }
+  if(tight.length){
+    tight.sort(function(a,b){return a.over-b.over;});
+    return tight[0];
+  }
+  var c2=Math.max(4,Math.min(24,specC)); var r2=Math.ceil(n/c2);
+  return {c:c2,r:r2,cell:Math.max(MIN_CELL,Math.min(W/(c2+2),H/(r2+2),84))};
 }
 function deal(level,W,H,rnd){
   var n=level.c*level.r;
@@ -172,9 +181,12 @@ function toast(msg){
   clearTimeout(toastT); toastT=setTimeout(function(){t.classList.remove('on');},1800);
 }
 
+function toolset(on){
+  ['bHint','bShuf','bRetry','bHome'].forEach(function(id){ $(id).hidden=!on; });
+}
 function renderHome(){
   $('home').hidden=false; $('game').hidden=true;
-  $('hud').hidden=true; $('tools').hidden=true;
+  $('hud').hidden=true; $('tools').hidden=false; toolset(false);
   stopTimer();
   var box=$('levels'); box.innerHTML='';
   LEVELS.forEach(function(lv,i){
@@ -190,6 +202,10 @@ function renderHome(){
   $('sMax').textContent=save.max; $('sTotal').textContent=total;
 }
 
+function fitStage(){
+  var top=$('stage').getBoundingClientRect().top;
+  $('stage').style.maxHeight=Math.max(240, document.documentElement.clientHeight-top-12)+'px';
+}
 function stageBox(){
   var w=Math.min(document.documentElement.clientWidth,1240)-32;
   var h=document.documentElement.clientHeight-$('board').getBoundingClientRect().top-40;
@@ -199,7 +215,8 @@ function stageBox(){
 function start(level){
   var lv=LEVELS[level-1];
   $('home').hidden=true; $('game').hidden=false;
-  $('hud').hidden=false; $('tools').hidden=false;
+  $('hud').hidden=false; $('tools').hidden=false; toolset(true);
+  fitStage();
   var box=stageBox();
   var d=deal(lv,box.w,box.h,rngOf(Date.now()&0x7fffffff));
   S={lv:lv,no:level,g:d.g,rows:d.rows,cols:d.cols,cell:d.cell,total:d.total,
@@ -373,8 +390,11 @@ $('bHint').onclick=function(){
   var mv=findMove(S.g);
   if(!mv){ toast('没有可连的'); return; }
   S.hint--; syncTools();
+  var b=$('board');
   [tileAt(mv.a.r,mv.a.c),tileAt(mv.b.r,mv.b.c)].forEach(function(e){
-    if(!e) return; e.classList.add('hint'); setTimeout(function(){e.classList.remove('hint');},1800);
+    if(!e) return; e.classList.add('hint');
+    var st=$('stage'); if(b.offsetWidth>st.clientWidth||b.offsetHeight>st.clientHeight) e.scrollIntoView({block:'nearest',inline:'nearest'});
+    setTimeout(function(){e.classList.remove('hint');},1800);
   });
 };
 $('bShuf').onclick=function(){
