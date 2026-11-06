@@ -373,12 +373,17 @@ bgm.addEventListener('ended',function(){
   nextMusic();
   if(!save.muted) bgm.play().catch(function(){});
 });
+function syncMusic(){
+  var b=$('bMusic'), lab=save.muted?'音乐关':'音乐开';
+  b.classList.toggle('off',!!save.muted);
+  b.title=lab; b.setAttribute('aria-label',lab);
+}
 function ensureMusic(){
-  $('bMusic').textContent=save.muted?'音乐关':'音乐开';
+  syncMusic();
   if(save.muted){ bgm.pause(); return; }
   if(!bgm.src) nextMusic();
   var p=bgm.play();
-  if(p&&p.catch) p.catch(function(){ $('bMusic').textContent='音乐未播'; });
+  if(p&&p.catch) p.catch(function(){ toast('点一下屏幕才能出声'); });
 }
 
 $('tiles').addEventListener('click',function(e){
@@ -407,7 +412,7 @@ $('bHome').onclick=renderHome;
 $('bMusic').onclick=function(){
   save.muted=!save.muted; storeSave();
   if(save.muted) bgm.pause(); else ensureMusic();
-  $('bMusic').textContent=save.muted?'音乐关':'音乐开';
+  syncMusic();
 };
 var rsT=0;
 addEventListener('resize',function(){
@@ -427,5 +432,5 @@ addEventListener('resize',function(){
 });
 
 $('hLvMax').textContent=LEVELS.length; $('sMaxAll').textContent=LEVELS.length;
-$('bMusic').textContent=save.muted?'音乐关':'音乐开';
+syncMusic();
 renderHome();
