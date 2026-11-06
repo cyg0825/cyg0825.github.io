@@ -182,7 +182,7 @@ function toast(msg){
 }
 
 function toolset(on){
-  ['bHint','bShuf','bRetry','bHome'].forEach(function(id){ $(id).hidden=!on; });
+  $('act').hidden=!on; $('bHome').hidden=!on;
 }
 function renderHome(){
   $('home').hidden=false; $('game').hidden=true;
@@ -202,13 +202,17 @@ function renderHome(){
   $('sMax').textContent=save.max; $('sTotal').textContent=total;
 }
 
+function keepBottom(){
+  var a=$('act');
+  return a.hidden?12:a.offsetHeight+26;
+}
 function fitStage(){
   var top=$('stage').getBoundingClientRect().top;
-  $('stage').style.maxHeight=Math.max(240, document.documentElement.clientHeight-top-12)+'px';
+  $('stage').style.maxHeight=Math.max(240, document.documentElement.clientHeight-top-keepBottom())+'px';
 }
 function stageBox(){
   var w=Math.min(document.documentElement.clientWidth,1240)-32;
-  var h=document.documentElement.clientHeight-$('board').getBoundingClientRect().top-40;
+  var h=document.documentElement.clientHeight-$('board').getBoundingClientRect().top-keepBottom()-28;
   return {w:Math.max(w,240), h:Math.max(h,240)};
 }
 

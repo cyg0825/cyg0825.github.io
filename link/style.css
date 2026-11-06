@@ -36,8 +36,8 @@ button{
   background:var(--card); border:1px solid var(--line); border-radius:8px;
   padding:6px 11px; min-height:34px; touch-action:manipulation;
 }
-#bMusic.ico{padding:0 9px; min-width:40px; display:inline-flex; align-items:center; justify-content:center}
-#bMusic svg{width:19px; height:19px; display:block; fill:currentColor}
+#tools button.ico{padding:0 9px; min-width:40px; display:inline-flex; align-items:center; justify-content:center}
+#tools .ico svg{width:19px; height:19px; display:block; fill:currentColor}
 #bMusic .slash{fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; display:none}
 #bMusic.off .slash{display:block}
 button:hover:not(:disabled){border-color:var(--accent); color:var(--accent2)}
@@ -60,6 +60,7 @@ main{max-width:1240px; margin:0 auto; padding:18px 16px calc(40px + env(safe-are
 #bar{height:100%; width:100%; background:var(--accent); transition:width .2s linear}
 #bar.low{background:var(--danger)}
 #stage{display:block; overflow:auto; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain}
+#act{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:14px}
 #board{position:relative; margin:0 auto; border-radius:14px; background:color-mix(in srgb, var(--card) 55%, transparent); border:1px solid var(--line)}
 #tiles{position:absolute; inset:0; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none}
 #line{position:absolute; inset:0; pointer-events:none; overflow:visible}
@@ -102,5 +103,4 @@ polyline.out{transition:opacity .2s; opacity:0}
   header{padding:8px 10px; gap:8px}
   #hud{font-size:13px; gap:8px}
   main{padding:12px 8px calc(30px + env(safe-area-inset-bottom))}
-  #tools{margin-left:0; width:100%}
 }

@@ -17,11 +17,8 @@
     <span>限时 <b id="hTime">--</b></span>
   </div>
   <div id="tools">
-    <button id="bHint">提示 <span class="n" id="nHint">0</span></button>
-    <button id="bShuf">重排 <span class="n" id="nShuf">0</span></button>
-    <button id="bRetry">重玩</button>
     <button id="bMusic" class="ico" aria-label="音乐开"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1 0 14 17.55V7h4V3h-6z"/><line class="slash" x1="4.5" y1="19.5" x2="19.5" y2="4.5"/></svg></button>
-    <button id="bHome">首页</button>
+    <button id="bHome" class="ico" aria-label="首页"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></button>
   </div>
 </header>
 <main>
@@ -33,6 +30,11 @@
   <section id="game" hidden>
     <div id="barwrap"><div id="bar"></div></div>
     <div id="stage"><div id="board"><svg id="line"></svg><div id="tiles"></div></div></div>
+    <div id="act" hidden>
+      <button id="bHint">提示 <span class="n" id="nHint">0</span></button>
+      <button id="bShuf">重排 <span class="n" id="nShuf">0</span></button>
+      <button id="bRetry">重玩</button>
+    </div>
   </section>
 </main>
 <div id="toast"></div>
