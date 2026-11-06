@@ -248,6 +248,7 @@
     var bgAudio = document.getElementById('bgAudio');
     var titleText = document.getElementById('titleText');
     var greetingText = document.getElementById('greetingText');
+    var cakeStage = document.getElementById('cakeStage');
 
     var naturalW = 0;
     var naturalH = 0;
@@ -260,6 +261,7 @@
     var heartDelays = null;
     var heartRainfall = false;
     var heartRainfallDistance = 0;
+    var cakeMounted = false;
 
     function updateScale() {
         if (!bgImage.naturalWidth) return;
@@ -638,6 +640,7 @@
         stopMusic();
         closeAllBtn.classList.remove('visible');
         restartBtn.classList.add('visible');
+        mountCake();
     }
 
     function restartWishes() {
@@ -645,6 +648,19 @@
         isClosing = false;
         playRandomMusic();
         startTipWindows();
+    }
+
+    function mountCake() {
+        if (cakeMounted || !isBirthday || !cakeStage) return;
+        cakeMounted = true;
+        import('./cake3d.js').then(function(mod) {
+            if (mod && mod.mount) {
+                var cake = mod.mount(cakeStage, {});
+                if (cake) cakeStage.classList.add('on');
+            }
+        }).catch(function(e) {
+            console.log('Cake load failed:', e);
+        });
     }
 
     function createRandomTipWindow(index) {
@@ -732,6 +748,10 @@
                     if (!isClosing) {
                         createRandomTipWindow(idx);
                         wishesCreated++;
+                        if (wishesCreated >= TIP_COUNT) {
+                            var cakeTimeout = setTimeout(mountCake, 1500);
+                            timeouts.push(cakeTimeout);
+                        }
                     }
                 }, delay);
                 timeouts.push(timeout);

@@ -164,6 +164,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
+    z-index: 4;
     pointer-events: none;
 }
 
@@ -327,4 +328,25 @@ body {
     white-space: nowrap;
     -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
+}
+.cake-stage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+.cake-stage.on {
+    opacity: 1;
+}
+
+.cake-stage canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
 }

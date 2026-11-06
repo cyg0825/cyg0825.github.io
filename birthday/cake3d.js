@@ -33,10 +33,10 @@ var CTOP = 11.0;
 var CBOT = -2.0;
 var HBZ = 2.4;
 var BORIG = [0.0, 0.0, 2.4];
-var CPOS = [8.5, -9.3, 6.5];
+var CPOS = [5.3, -5.8, 4.0];
 var CTGT = [0.0, 0.0, 1.7];
 
-var PX_TO_WORLD = 0.0129;
+var PX_TO_WORLD = 0.024;
 
 function px(v) { return v * PX_TO_WORLD; }
 
@@ -209,7 +209,8 @@ function build(stage, opts) {
     var sprite = sphereTexture();
 
     var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    var pr = Math.min(window.devicePixelRatio || 1, 2);
+    renderer.setPixelRatio(pr);
     renderer.domElement.className = 'cake-canvas';
     stage.appendChild(renderer.domElement);
 
@@ -219,7 +220,7 @@ function build(stage, opts) {
     var cake = new THREE.Group();
     var z = 0.0;
     LAYERS.forEach(function (L) {
-        var n = 4200;
+        var n = 9000;
         var s = sampleCylinder(L[0], L[1], z, n, rnd);
         var c = hexRGB(L[2]);
         for (var i = 0; i < n; i++) fill(s.col, i * 3, c);
@@ -253,19 +254,21 @@ function build(stage, opts) {
     }
     cake.add(makePoints(spkPos, spkCol, 1.5, sprite));
 
-    var plateN = 5000;
+    var plateN = 20000;
     var platePos = new Float32Array(plateN * 3);
     var plateCol = new Float32Array(plateN * 3);
     var pc = hexRGB(PLATE_COLOR);
     for (var i = 0; i < plateN; i++) {
         var th = rnd() * 2 * Math.PI;
-        var rr = Math.sqrt(rnd()) * 2.35;
+        var rr = Math.sqrt(rnd()) * 2.2;
         platePos[i * 3] = rr * Math.cos(th);
         platePos[i * 3 + 1] = rr * Math.sin(th);
         platePos[i * 3 + 2] = -0.05 + (rnd() + rnd() + rnd() - 1.5) * 0.012;
         fill(plateCol, i * 3, pc);
     }
-    cake.add(makePoints(platePos, plateCol, 1.5, sprite));
+    var plate = makePoints(platePos, plateCol, 1.0, sprite);
+    plate.material.opacity = 0.32;
+    cake.add(plate);
     cake.visible = false;
     scene.add(cake);
 
@@ -281,12 +284,19 @@ function build(stage, opts) {
     var candleCol = new Float32Array(candlePos.length);
     var cc = hexRGB(CANDLE_COLOR);
     for (i = 0; i < candlePos.length; i += 3) fill(candleCol, i, cc);
+    var cMinY = Infinity, cMaxY = -Infinity;
+    for (i = 1; i < candlePos.length; i += 3) {
+        if (candlePos[i] < cMinY) cMinY = candlePos[i];
+        if (candlePos[i] > cMaxY) cMaxY = candlePos[i];
+    }
+    for (i = 1; i < candlePos.length; i += 3) candlePos[i] -= cMinY;
     var candle = makePoints(candlePos, candleCol, 2, sprite);
-    candle.position.set(0, 0, tz + 0.45);
+    candle.rotation.x = Math.PI / 2;
+    candle.position.set(0, 0, tz + 0.02);
     candle.visible = false;
     scene.add(candle);
 
-    var fzTop = tz + 0.45 + 0.85 * scale / 2;
+    var fzTop = tz + 0.02 + (cMaxY - cMinY);
     function flame(count, h, mr, colorHex, zOff) {
         var p = new Float32Array(count * 3);
         var c = new Float32Array(count * 3);
@@ -324,9 +334,10 @@ function build(stage, opts) {
         var mesh = makePoints(d.pos, col, 2.5, sprite);
         var minY = Infinity;
         for (i = 1; i < d.pos.length; i += 3) if (d.pos[i] < minY) minY = d.pos[i];
-        for (i = 1; i < d.pos.length; i += 3) d.pos[i] -= minY - HBZ;
-        d.pos[d.pos.length - 2] = 0;
+        for (i = 1; i < d.pos.length; i += 3) d.pos[i] -= minY;
         mesh.geometry.attributes.position.needsUpdate = true;
+        mesh.rotation.x = Math.PI / 2;
+        mesh.position.set(0, 0, HBZ);
         mesh.visible = false;
         scene.add(mesh);
         nums[n] = mesh;
@@ -343,6 +354,7 @@ function build(stage, opts) {
         fill(hbCol, i * 3, hbC);
     }
     var hb = makePoints(hbPos, hbCol, 2.0, sprite);
+    hb.rotation.x = Math.PI / 2;
     hb.position.set(0, 0, HBZ);
     hb.visible = false;
     scene.add(hb);
@@ -396,7 +408,7 @@ function build(stage, opts) {
         }
     }
     resetCF();
-    var confetti = makePoints(cfPos, cfCol, 7, sprite, false);
+    var confetti = makePoints(cfPos, cfCol, 4, sprite, false);
     confetti.visible = false;
     scene.add(confetti);
 
@@ -434,6 +446,7 @@ function build(stage, opts) {
         resetCF();
         confetti.geometry.attributes.position.needsUpdate = true;
         frame = 0; rot = false; fall = false; bstart = false;
+        prev = 0; acc = 0;
         st = { nf: -1, cur: 0 };
         hideAll();
         setCam();
@@ -509,6 +522,7 @@ function build(stage, opts) {
             candle.visible = bstart;
             flameO.mesh.visible = bstart;
             flameI.mesh.visible = bstart;
+            rot = true;
         }
 
         if (bstart) {
@@ -546,32 +560,53 @@ function build(stage, opts) {
         }
 
         if (rot) scene.rotation.z += 0.002;
-
-        resize();
-        renderer.render(scene, camera);
     }
 
-    var raf = 0, running = false;
-    function loop() { if (!running) return; tick(); raf = requestAnimationFrame(loop); }
+    var raf = 0, running = false, prev = 0, acc = 0;
+    var STEP = 1000 / 30;
+
+    function loop(ts) {
+        if (!running) return;
+        if (!prev) prev = ts || 0;
+        acc += (ts || 0) - prev;
+        prev = ts || 0;
+        var steps = Math.min(3, Math.floor(acc / STEP));
+        for (var i = 0; i < steps; i++) tick();
+        acc -= steps * STEP;
+        resize();
+        renderer.render(scene, camera);
+        raf = requestAnimationFrame(loop);
+    }
 
     function resize() {
-        var w = stage.clientWidth || window.innerWidth;
-        var h = stage.clientHeight || window.innerHeight;
-        if (renderer.domElement.width !== Math.round(w * renderer.getPixelRatio()) ||
-            renderer.domElement.height !== Math.round(h * renderer.getPixelRatio())) {
-            renderer.setSize(w, h, false);
+        var box = stage.getBoundingClientRect();
+        var w = box.width || stage.clientWidth || window.innerWidth;
+        var h = box.height || stage.clientHeight || window.innerHeight;
+        var maxSide = 1600;
+        var ratio = Math.min(1, maxSide / Math.max(w * pr, h * pr));
+        var pw = Math.max(1, Math.floor(w * ratio * pr));
+        var ph = Math.max(1, Math.floor(h * ratio * pr));
+        if (renderer.domElement.width !== pw || renderer.domElement.height !== ph) {
+            renderer.setSize(w * ratio, h * ratio, false);
             camera.aspect = w / h;
             camera.updateProjectionMatrix();
         }
     }
 
-    function onKey(e) { if (e.code === 'Space') { e.preventDefault(); reset(); } }
+    function onKey(e) {
+        if (e.code !== 'Space') return;
+        var t = e.target;
+        var tag = t && t.tagName;
+        if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        e.preventDefault();
+        reset();
+    }
 
     setCam();
     hideAll();
     window.addEventListener('keydown', onKey);
     running = true;
-    loop();
+    raf = requestAnimationFrame(loop);
 
     return {
         destroy: function () {

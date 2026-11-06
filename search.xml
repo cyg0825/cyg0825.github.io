@@ -939,7 +939,7 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 <p><img src="/uploads/2024/08/image-112.png"></p>
 <p>如果提示：<code>No such file or directory&nbsp;</code>说明是第一次使用git。</p>
 <p><a href="/2024/07/21/gitee/">Git安装及使用笔记</a>参考里面ssh密钥生成</p>
-<p>ssh -T <a href="mailto:&#103;&#x69;&#x74;&#64;&#x67;&#x69;&#x74;&#x68;&#117;&#x62;&#46;&#x63;&#x6f;&#109;">git@github.com</a> &#x2F;&#x2F;测试是否成功，successfully已成功，因为在之前已经使用了ssh密钥</p>
+<p>ssh -T <a href="mailto:&#x67;&#x69;&#116;&#x40;&#x67;&#x69;&#116;&#x68;&#117;&#x62;&#x2e;&#x63;&#111;&#109;">git@github.com</a> &#x2F;&#x2F;测试是否成功，successfully已成功，因为在之前已经使用了ssh密钥</p>
 <p><img src="/uploads/2024/08/image-186.png"></p>
 <h3 id="上传到-github"><a href="#上传到-github" class="headerlink" title="上传到 github"></a>上传到 github</h3><p>ssh key肯定要配置好<br>配置根目录下_config.yml中有关deploy的部分</p>
 <p>需要特别注意的地方是，<code>冒号后面必须有一个空格</code>，否则可能会出问题。</p>
