@@ -1,0 +1,435 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>04-死局与自动重排 | 学海拾茜</title><meta name="author" content="61飞兔"><meta name="copyright" content="61飞兔"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="这一篇的位置第三篇的 linkPath 回答的是「这两张图现在连不连得上」。这一篇回答另一个问题：整张盘面上还有没有至少一对连得上的图。这个问题看起来只是把前面那个多用一次，实际上它是三个界面动作的共同前提：开局发完牌要检查一次，每消掉一对要检查一次，玩家按「提示」也要检查一次。检查出来没有解，就轮到重排出场。 对应 Link&#x2F;script.js 第 127 到 134 行（tilesOf）、第">
+<meta property="og:type" content="article">
+<meta property="og:title" content="04-死局与自动重排">
+<meta property="og:url" content="https://cyg0825.github.io/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/index.html">
+<meta property="og:site_name" content="学海拾茜">
+<meta property="og:description" content="这一篇的位置第三篇的 linkPath 回答的是「这两张图现在连不连得上」。这一篇回答另一个问题：整张盘面上还有没有至少一对连得上的图。这个问题看起来只是把前面那个多用一次，实际上它是三个界面动作的共同前提：开局发完牌要检查一次，每消掉一对要检查一次，玩家按「提示」也要检查一次。检查出来没有解，就轮到重排出场。 对应 Link&#x2F;script.js 第 127 到 134 行（tilesOf）、第">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cyg0825.github.io/img/cat.png">
+<meta property="article:published_time" content="2026-11-04T01:10:00.000Z">
+<meta property="article:modified_time" content="2026-11-06T15:39:27.166Z">
+<meta property="article:author" content="61飞兔">
+<meta property="article:tag" content="算法">
+<meta property="article:tag" content="连连看">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cyg0825.github.io/img/cat.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "04-死局与自动重排",
+  "url": "https://cyg0825.github.io/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/",
+  "image": "https://cyg0825.github.io/img/cat.png",
+  "datePublished": "2026-11-04T01:10:00.000Z",
+  "dateModified": "2026-11-06T15:39:27.166Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "61飞兔",
+      "url": "https://cyg0825.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/333.png"><link rel="canonical" href="https://cyg0825.github.io/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/css/fontawesome/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '04-死局与自动重排',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><style>
+/* 手机端复用右侧收起按钮，整块侧栏（个人信息等卡片）可收起 */
+@media (max-width: 900px) {
+  #rightside #hide-aside-btn { display: block !important; }
+  html.hide-aside .layout > #aside-content { display: none; }
+  /* 个人信息卡折叠进抽屉，页面里不再单独占一块 */
+  #aside-content > .card-info { display: none; }
+}
+#sidebar-menus .sidebar-author-name { margin: 6px 0 0; font-size: 1.3em; font-weight: 700; text-align: center; }
+#sidebar-menus .sidebar-follow { display: block; margin: 14px 20px 0; padding: 9px 0; border-radius: 8px; background: var(--btn-bg); color: var(--btn-color); text-align: center; }
+#sidebar-menus .sidebar-follow i { margin-right: 6px; }
+/* 沿用线上站点：页脚透明，让背景色直接透出 */
+#footer { background: transparent !important; }
+#footer::before { background: transparent !important; }
+[data-theme="dark"] #footer::before { background: transparent !important; }
+/* 头图蒙版改成毛玻璃：轻微模糊 + 极淡压色，做出朦胧感但不挡画面 */
+#page-header:not(.not-top-img)::before {
+  background: linear-gradient(180deg, rgba(238,242,252,.16), rgba(214,222,242,.07) 55%, rgba(196,206,232,.20)) !important;
+  -webkit-backdrop-filter: blur(6px) brightness(.94) saturate(1.02);
+  backdrop-filter: blur(6px) brightness(.94) saturate(1.02);
+}
+[data-theme="dark"] #page-header:not(.not-top-img)::before {
+  background: linear-gradient(180deg, rgba(16,18,26,.20), rgba(16,18,26,.09) 55%, rgba(8,10,16,.26)) !important;
+  -webkit-backdrop-filter: blur(6px) brightness(.88);
+  backdrop-filter: blur(6px) brightness(.88);
+}
+/* 播放器遇到不可播曲目的自动跳过提示不显示 */
+.aplayer .aplayer-notice { display: none !important; }
+/* 主题只写了旧版高亮类名，补上 highlight.js 11 的这批 token，配色沿用主题的 light 色板 */
+#article-container figure.highlight pre .selector-tag,
+#article-container figure.highlight pre .selector-class,
+#article-container figure.highlight pre .selector-id,
+#article-container figure.highlight pre .selector-pseudo,
+#article-container figure.highlight pre .selector-attr,
+#article-container figure.highlight pre .property { color: #e53935; }
+#article-container figure.highlight pre .function_ { color: #6182b8; }
+#article-container figure.highlight pre .class_ { color: #ffb62c; }
+#article-container figure.highlight pre .constant_ { color: #f76d47; }
+#article-container figure.highlight pre .type { color: #6182b8; }
+#article-container figure.highlight pre .invoke__,
+#article-container figure.highlight pre .subst { color: #f76d47; }
+#article-container figure.highlight pre .language_,
+#article-container figure.highlight pre .bullet { color: #7c4dff; }
+/* 菜单图标位是原样落到 <i class="fa-fw …"> 的类名；不用 fontawesome 时把它变成一张图，
+   宽度沿用 .fa-fw 的 1.25em 以对齐同级菜单项，只补上空白 <i> 需要的高度和基线 */
+i.fa-fw.img-notelume {
+  background: url(/img/notelume.png) center / contain no-repeat;
+  height: 1em; display: inline-block; vertical-align: -.15em;
+}
+</style><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-color: #bbdefb;"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">65</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">26</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">24</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-code"></i><span> 项目</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/"><i class="fa-fw fas fa-book"></i><span> 学生选课系统</span></a></li><li><a class="site-page child" target="_blank" rel="noopener" href="https://hackersnail.github.io/NoteLume/"><i class="fa-fw img-notelume"></i><span> NoteLume</span></a></li><li><a class="site-page child" href="/birthday/"><i class="fa-fw fas fa-cake-candles"></i><span> 祝福</span></a></li><li><a class="site-page child" href="/link/"><i class="fa-fw fas fa-puzzle-piece"></i><span> 连连看</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-file-alt"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/tags/%E8%AF%B4%E8%AF%B4/"><i class="fa-fw fas fa-comment-dots"></i><span> 说说</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/img/link/lk-04-hint.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/333.png" alt="Logo"><span class="site-name">学海拾茜</span></a><a class="nav-page-title" href="/"><span class="site-name">04-死局与自动重排</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-code"></i><span> 项目</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/"><i class="fa-fw fas fa-book"></i><span> 学生选课系统</span></a></li><li><a class="site-page child" target="_blank" rel="noopener" href="https://hackersnail.github.io/NoteLume/"><i class="fa-fw img-notelume"></i><span> NoteLume</span></a></li><li><a class="site-page child" href="/birthday/"><i class="fa-fw fas fa-cake-candles"></i><span> 祝福</span></a></li><li><a class="site-page child" href="/link/"><i class="fa-fw fas fa-puzzle-piece"></i><span> 连连看</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-file-alt"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/tags/%E8%AF%B4%E8%AF%B4/"><i class="fa-fw fas fa-comment-dots"></i><span> 说说</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">04-死局与自动重排</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-11-04T01:10:00.000Z" title="发表于 2026-11-04 09:10:00">2026-11-04</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-11-06T15:39:27.166Z" title="更新于 2026-11-06 23:39:27">2026-11-06</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AD%A6%E4%B9%A0/">学习</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AD%A6%E4%B9%A0/%E8%BF%9E%E8%BF%9E%E7%9C%8B/">连连看</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h2 id="这一篇的位置"><a href="#这一篇的位置" class="headerlink" title="这一篇的位置"></a>这一篇的位置</h2><p>第三篇的 <code>linkPath</code> 回答的是「这两张图现在连不连得上」。这一篇回答另一个问题：整张盘面上还有没有至少一对连得上的图。这个问题看起来只是把前面那个多用一次，实际上它是三个界面动作的共同前提：开局发完牌要检查一次，每消掉一对要检查一次，玩家按「提示」也要检查一次。检查出来没有解，就轮到重排出场。</p>
+<p>对应 <code>Link/script.js</code> 第 127 到 134 行（<code>tilesOf</code>）、第 135 到 145 行（<code>findMove</code>）、第 151 到 161 行（<code>reshuffle</code>）、第 324 到 330 行（<code>repaint</code>），以及读它们的三处界面代码：第 314 到 321 行（每次消除之后）、第 397 到 408 行（提示按钮）、第 409 到 413 行（重排按钮）。</p>
+<p>后面几篇要用到的东西在这一篇只出现名字：<code>fitGrid</code> 与格子边长怎么随窗口变化在第五篇，HTML 与 CSS 逐行在第六篇，点击状态机、计分与存档在第七篇。</p>
+<table>
+<thead>
+<tr>
+<th>篇</th>
+<th>讲什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/">01 结构与数据形状</a></td>
+<td>文件分工、棋盘的真实形状、关卡表</td>
+</tr>
+<tr>
+<td><a href="/2026/11/02/02-%E9%9A%8F%E6%9C%BA%E6%95%B0%E4%B8%8E%E5%8F%91%E7%89%8C/">02 随机数与发牌</a></td>
+<td>自带随机数发生器、洗牌、成对发牌</td>
+</tr>
+<tr>
+<td><a href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/">03 连线判定</a></td>
+<td>拐弯不超过两次怎么判、折线怎么回溯出来</td>
+</tr>
+<tr>
+<td><a href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/">04 死局与自动重排</a></td>
+<td>有没有可连的一步、重排怎么保证不越排越死</td>
+</tr>
+<tr>
+<td><a href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/">05 布局自适应</a></td>
+<td>格子尺寸怎么算、窗口变化怎么跟</td>
+</tr>
+<tr>
+<td><a href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/">06 界面骨架与样式</a></td>
+<td>HTML 与 CSS 逐行</td>
+</tr>
+<tr>
+<td><a href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/">07 点击、计分与存档</a></td>
+<td>点击状态机、计时与分数、本地存档、音乐</td>
+</tr>
+</tbody></table>
+<h2 id="死局是怎么出现的"><a href="#死局是怎么出现的" class="headerlink" title="死局是怎么出现的"></a>死局是怎么出现的</h2><p>连连看的消除只减不加：一次消两张，<code>g</code> 里两个位置从正整数变回 <code>0</code>。看起来盘面应该越走越松，怎么会没有解？</p>
+<p>堵路的是还没消掉的图。第三篇的空格检查只允许折线穿过 <code>0</code>，所以两张相同的图能不能连，取决于它们之间有没有一条由空格组成的通路，以及这条通路能不能在两次拐弯以内拐到位。开局阶段牌面是满的，通路只有外圈那一圈空格，能连的组合本来就不多；消到中途，洞多了但剩下的图分布散，同图案的两张可能各自被围住。两种情形都可能撞上「一张都连不上」。</p>
+<p>撞上之后界面必须给出路，否则这一局只能重玩。这一篇的四段代码就是这件事：<code>tilesOf</code> 把盘面按图案分组，<code>findMove</code> 在组内两两配对试连，<code>reshuffle</code> 把现存的数字重新洗牌放回原来的位置，<code>repaint</code> 让界面跟上。</p>
+<p>先分清两个层次。「这两张连不上」是第三篇 <code>linkPath</code> 返回 <code>null</code>，盘面整体仍然可能有解，玩家换一对照样能消；「一张都连不上」才是本篇要处理的死局，此时任何一对都不行，怎么点都消不掉。</p>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-05-no-path.png" alt="单张连不上的反馈，与整盘死局是两件事"></p>
+<h2 id="tilesOf：把盘面按图案分组"><a href="#tilesOf：把盘面按图案分组" class="headerlink" title="tilesOf：把盘面按图案分组"></a>tilesOf：把盘面按图案分组</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:127-134</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">tilesOf</span>(<span class="params">g</span>)&#123;</span><br><span class="line">  <span class="keyword">var</span> map=&#123;&#125;;</span><br><span class="line">  <span class="keyword">for</span>(<span class="keyword">var</span> r=<span class="number">1</span>;r&lt;g.<span class="property">length</span>-<span class="number">1</span>;r++) <span class="keyword">for</span>(<span class="keyword">var</span> c=<span class="number">1</span>;c&lt;g[<span class="number">0</span>].<span class="property">length</span>-<span class="number">1</span>;c++)&#123;</span><br><span class="line">    <span class="keyword">var</span> f=g[r][c]; <span class="keyword">if</span>(!f) <span class="keyword">continue</span>;</span><br><span class="line">    (map[f]=map[f]||[]).<span class="title function_">push</span>(&#123;<span class="attr">r</span>:r,<span class="attr">c</span>:c&#125;);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> map;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 128 行：<code>map={}</code> 是一个空对象。对象是一堆「键对应值」的集合，键写起来像属性名，这里要用图案编号当键，所以靠第 131 行的 <code>map[f]</code> 动态取键。</li>
+<li>第 129 行：两层循环的边界是 <code>r=1</code> 到 <code>r&lt;g.length-1</code>。这个范围正好跳过外圈：<code>g</code> 含外圈是 <code>rows+2</code> 行，下标 <code>0</code> 和 <code>rows+1</code> 是外圈，中间 <code>1..rows</code> 才是牌面。列同理。外圈全是 <code>0</code>，扫了也是白扫，跳过它省掉一整圈空转。</li>
+<li>第 130 行：<code>f</code> 是这个格子的图案编号，<code>if(!f) continue</code> 把空格跳过。<code>0</code> 取反为真，所以空格不进结果。</li>
+<li>第 131 行：一行做完「没有这个键就建一个空数组，然后把位置追加进去」。<code>map[f]=map[f]||[]</code> 里 <code>||</code> 是短路求值：左边 <code>map[f]</code> 已经有数组时是真值，直接取它；还没有时是 <code>undefined</code>（假值），取右边的新空数组并赋值回去。整句外面套括号是因为 <code>.push(...)</code> 要作用在赋值的结果上。</li>
+<li>第 133 行：把攒好的对象递出去。</li>
+</ul>
+<p>结果形状是这样（示意）：编号 <code>3</code> 的图还剩三张，就有一条 <code>map[&quot;3&quot;] = [{r:2,c:5},{r:4,c:1},{r:5,c:6}]</code>。键是字符串形式的数字，值是该图案所有位置的列表。</p>
+<p>有了这张分组表，「哪些两张图值得试一次连线」就不用把全部两两组合都算一遍：只有编号相同的两张才有资格连，不同编号根本不用试。第 20 关 200 张牌、30 种图案，全部两两组合是 19900 对，分组之后只剩每种图案内部的组合，量级掉到几百。</p>
+<h2 id="findMove：有没有至少一对连得上"><a href="#findMove：有没有至少一对连得上" class="headerlink" title="findMove：有没有至少一对连得上"></a>findMove：有没有至少一对连得上</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:135-145</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">findMove</span>(<span class="params">g</span>)&#123;</span><br><span class="line">  <span class="keyword">var</span> map=<span class="title function_">tilesOf</span>(g);</span><br><span class="line">  <span class="keyword">for</span>(<span class="keyword">var</span> f <span class="keyword">in</span> map)&#123;</span><br><span class="line">    <span class="keyword">var</span> list=map[f];</span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">var</span> i=<span class="number">0</span>;i&lt;list.<span class="property">length</span>;i++) <span class="keyword">for</span>(<span class="keyword">var</span> j=i+<span class="number">1</span>;j&lt;list.<span class="property">length</span>;j++)&#123;</span><br><span class="line">      <span class="keyword">var</span> p=<span class="title function_">linkPath</span>(g,list[i],list[j]);</span><br><span class="line">      <span class="keyword">if</span>(p) <span class="keyword">return</span> &#123;<span class="attr">a</span>:list[i],<span class="attr">b</span>:list[j],<span class="attr">path</span>:p&#125;;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 136 行：先拿分组表。</li>
+<li>第 137 行：<code>for(var f in map)</code> 遍历对象的键，<code>f</code> 依次取到每个图案编号（字符串）。</li>
+<li>第 138 行：<code>list</code> 是这个图案当前所有位置的数组。</li>
+<li>第 139 行：两层循环做组内两两配对。<code>j</code> 从 <code>i+1</code> 起，不是从 <code>0</code> 起：从 <code>0</code> 起会让「A 配 B」和「B 配 A」都算一遍，还会让 <code>i===j</code> 时自己配自己。<code>j=i+1</code> 的写法每对只出现一次，且天然排除自己。</li>
+<li>第 140 行：把这一对交给第三篇的 <code>linkPath</code>。连不上给 <code>null</code>。</li>
+<li>第 141 行：一旦连上就立刻返回，交出的对象带三样：两张图的位置 <code>a</code>、<code>b</code>，和那条折线 <code>path</code>。</li>
+<li>第 144 行：所有组合试完都没连上，返回 <code>null</code>，也就是死局。</li>
+</ul>
+<p>返回 <code>{a,b,path}</code> 而不是 <code>true</code> 是关键设计。这一句让同一个函数同时服务两种需求：判断「有没有解」的调用处只看真假（<code>if(!findMove(g))</code>），需要具体解的调用处（提示按钮）直接拿到该高亮哪两张、折线怎么走。要是只返回布尔值，提示按钮就得再写一遍配对循环。</p>
+<p>第 141 行的提前返回也是性能来源。有解的盘面通常很快撞上第一对可连的组合，函数就退出了；只有真正死局才会把所有组合试完。换句话说，最坏情况恰好是「需要重排」的那一次。</p>
+<h2 id="reshuffle：把现存的数字重新洗一遍"><a href="#reshuffle：把现存的数字重新洗一遍" class="headerlink" title="reshuffle：把现存的数字重新洗一遍"></a>reshuffle：把现存的数字重新洗一遍</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:151-154</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">reshuffle</span>(<span class="params">g,rnd</span>)&#123;</span><br><span class="line">  <span class="keyword">var</span> cells=[],vals=[];</span><br><span class="line">  <span class="keyword">for</span>(<span class="keyword">var</span> r=<span class="number">1</span>;r&lt;g.<span class="property">length</span>-<span class="number">1</span>;r++) <span class="keyword">for</span>(<span class="keyword">var</span> c=<span class="number">1</span>;c&lt;g[<span class="number">0</span>].<span class="property">length</span>-<span class="number">1</span>;c++) <span class="keyword">if</span>(g[r][c])&#123; cells.<span class="title function_">push</span>([r,c]); vals.<span class="title function_">push</span>(g[r][c]); &#125;</span><br><span class="line">  <span class="keyword">if</span>(cells.<span class="property">length</span>&lt;<span class="number">4</span>) <span class="keyword">return</span> !!<span class="title function_">findMove</span>(g);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>第 152 行：两个数组。<code>cells</code> 收集「哪些位置上有图」，每项是 <code>[r,c]</code>；<code>vals</code> 收集「这些位置上的数字是什么」。两者一一对应，长度永远相等。</p>
+</li>
+<li><p>第 153 行：扫描范围同样是 <code>1..rows</code>、<code>1..cols</code>，跳过外圈。<code>if(g[r][c])</code> 为真的位置才收，空格不进。</p>
+</li>
+<li><p>第 154 行：<code>cells.length&lt;4</code> 时不做重排，直接回答有没有解。<code>!!</code> 是「取反再取反」，把一个对象或 <code>null</code> 压成 <code>true</code>&#x2F;<code>false</code>，因为这个函数的返回值当布尔用。</p>
+<p>为什么门槛是 4：牌数一定是偶数（第二篇讲过成对发牌，消除一次减两张），所以 <code>cells.length</code> 只可能是偶数。小于 4 就是 2 或 0。剩 2 张时 <code>vals</code> 里是两个一模一样的数字，交换它们得到的还是同一组，重排不可能改变任何东西；剩 0 张时压根没牌可排。这两种情况直接把 <code>findMove</code> 的结果交出去就够了，不用空跑下面的循环。</p>
+</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:155-161</span></span><br><span class="line">  <span class="keyword">for</span>(<span class="keyword">var</span> k=<span class="number">0</span>;k&lt;<span class="number">80</span>;k++)&#123;</span><br><span class="line">    <span class="keyword">var</span> v=<span class="title function_">shuffled</span>(vals,rnd);</span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">var</span> i=<span class="number">0</span>;i&lt;cells.<span class="property">length</span>;i++) g[cells[i][<span class="number">0</span>]][cells[i][<span class="number">1</span>]]=v[i];</span><br><span class="line">    <span class="keyword">if</span>(<span class="title function_">findMove</span>(g)) <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> !!<span class="title function_">findMove</span>(g);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 155 行：最多试 80 次，每次是一副全新的洗法。</li>
+<li>第 156 行：把 <code>vals</code> 交给第二篇的 <code>shuffled</code>。<code>shuffled</code> 不改传进来的数组，返回一份打乱后的新列表 <code>v</code>，所以 <code>vals</code> 本身一直是原始那一组，下一轮 <code>k</code> 还是从同一组起点重洗。这就是第二篇坚持「先复制再洗」那条约定的下游原因。</li>
+<li>第 157 行：把 <code>v</code> 一项一项写回 <code>cells</code> 记录的那些位置。<code>cells[i][0]</code> 是第 <code>i</code> 个位置的行号、<code>cells[i][1]</code> 是列号。</li>
+<li>第 158 行：写完立刻用 <code>findMove</code> 验一次，有解就返回 <code>true</code>，此时 <code>g</code> 里留下的就是这副有解的排布。</li>
+<li>第 160 行：80 次都没验出解，再验一次当前盘面并返回布尔值。</li>
+</ul>
+<p>这段代码做对的两件事，正好是「不越排越死」的两条保证。</p>
+<p>其一，位置集合不变、数字集合不变。重排只把同一批数字放回同一批位置：<code>cells</code> 在函数开头一次算好，循环里从不修改；<code>vals</code> 因为 <code>shuffled</code> 不改原数组而始终完整。于是每种图案还剩几张这件事在整个重排过程中一位没动，成对性质、剩余张数、<code>S.left</code> 全部不受影响。界面不会出现「重排一次牌变多了或变少了」。</p>
+<p>其二，验过才收手。第 158 行的 <code>findMove</code> 是接受条件，不是事后检查：只要有一副洗法有解，函数就在那一刻返回，绝不会再往下洗一遍把有解的盘面覆盖掉。80 次全灭的概率极低，真撞上时返回 <code>false</code>，调用处据此决定要不要重画界面。</p>
+<p><code>rnd</code> 是参数而不是函数内部自己造，理由和第二篇一样：随机性入口只留一个，随时可以换成固定种子复现某一次重排。</p>
+<h2 id="重排之后必须重画界面"><a href="#重排之后必须重画界面" class="headerlink" title="重排之后必须重画界面"></a>重排之后必须重画界面</h2><p><code>g</code> 是数据，屏幕上那些图块是 DOM 元素。重排只改了 <code>g</code>，元素还带着旧图案。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:324-330</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">repaint</span>(<span class="params"></span>)&#123;</span><br><span class="line">  <span class="keyword">var</span> tiles=$(<span class="string">&#x27;tiles&#x27;</span>); tiles.<span class="property">innerHTML</span>=<span class="string">&#x27;&#x27;</span>;</span><br><span class="line">  <span class="keyword">for</span>(<span class="keyword">var</span> r=<span class="number">1</span>;r&lt;=S.<span class="property">rows</span>;r++) <span class="keyword">for</span>(<span class="keyword">var</span> c=<span class="number">1</span>;c&lt;=S.<span class="property">cols</span>;c++)&#123;</span><br><span class="line">    <span class="keyword">var</span> f=S.<span class="property">g</span>[r][c]; <span class="keyword">if</span>(!f) <span class="keyword">continue</span>;</span><br><span class="line">    tiles.<span class="title function_">appendChild</span>(<span class="title function_">tileEl</span>(r,c,f,S.<span class="property">cell</span>));</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 325 行：<code>$(&#39;tiles&#39;)</code> 取到装图块的那个容器，<code>innerHTML=&#39;&#39;</code> 把里面所有子元素清空。图块是绝对定位的独立元素，位置由各自的 <code>left</code>、<code>top</code> 决定，删干净再重建比逐个改图片地址省事，也不会漏掉「原来有图现在空了」的格子。</li>
+<li>第 326 行：两层循环走牌面，<code>r</code> 从 1 到 <code>S.rows</code>，正好不含外圈。</li>
+<li>第 327 行：<code>if(!f) continue</code> 跳过空格，所以重排后留下的洞不会生成元素。</li>
+<li>第 328 行：<code>tileEl(r,c,f,S.cell)</code> 造一个新图块（第三篇没讲它，第六篇逐行），交进去的是行、列、图案编号、格子边长，元素的位置、尺寸和图片地址全由这四个数算出来，再 <code>appendChild</code> 挂进容器。</li>
+</ul>
+<p><code>repaint</code> 是整盘重建，代价比逐个更新大，但只在重排和窗口变化时调用，一次一局里屈指可数的次数，换来的是「界面和 <code>g</code> 一定一致」这条确定性。</p>
+<h2 id="三处读-findMove-的界面"><a href="#三处读-findMove-的界面" class="headerlink" title="三处读 findMove 的界面"></a>三处读 findMove 的界面</h2><p>第一处是每次消除之后。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:314-321</span></span><br><span class="line">  <span class="built_in">setTimeout</span>(<span class="keyword">function</span>(<span class="params"></span>)&#123;</span><br><span class="line">    $(<span class="string">&#x27;line&#x27;</span>).<span class="property">innerHTML</span>=<span class="string">&#x27;&#x27;</span>;</span><br><span class="line">    S.<span class="property">locked</span>=<span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">if</span>(S.<span class="property">left</span>&lt;=<span class="number">0</span>)&#123; <span class="title function_">win</span>(); <span class="keyword">return</span>; &#125;</span><br><span class="line">    <span class="keyword">if</span>(!<span class="title function_">findMove</span>(S.<span class="property">g</span>))&#123;</span><br><span class="line">      <span class="keyword">if</span>(<span class="title function_">reshuffle</span>(S.<span class="property">g</span>,<span class="title function_">rngOf</span>(<span class="title class_">Date</span>.<span class="title function_">now</span>()&amp;<span class="number">0x7fffffff</span>)))&#123; <span class="title function_">repaint</span>(); <span class="title function_">toast</span>(<span class="string">&#x27;没有可连的了，已自动重排&#x27;</span>); &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,<span class="number">220</span>);</span><br></pre></td></tr></table></figure>
+
+<p>这段在 <code>tap</code> 的末尾，220 毫秒的延时是给消除动画和那条折线留的时间（第三篇的 <code>drawPath</code> 淡出是 120 毫秒加 220 毫秒清空）。四件事按顺序：</p>
+<ul>
+<li>清空折线画布，把 <code>locked</code> 放开，玩家才能点下一对。<code>locked</code> 是「这一对正在结算」的闸门，见第七篇。</li>
+<li><code>S.left&lt;=0</code> 就通关，直接 <code>return</code>，不再检查死局。顺序很重要：消完最后一对的盘面必然「没有可连的」，先判通关才不会把通关弹成重排。</li>
+<li>没通关就 <code>findMove</code>。有解什么都不做；没解调 <code>reshuffle</code>。</li>
+<li><code>reshuffle</code> 返回 <code>true</code> 才 <code>repaint()</code> 加提示。返回 <code>false</code> 时既不重画也不提示，盘面停在最后一次洗的结果上，等玩家自己按重排按钮。这是 80 次全灭那条极少走的分支，代码没有假装它不存在，只是把补救留给界面。</li>
+</ul>
+<p>提示文案是「没有可连的了，已自动重排」，一句话把原因和已经做过的事都说清，不用玩家判断发生了什么。</p>
+<p>第二处是提示按钮。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:397-401</span></span><br><span class="line">$(<span class="string">&#x27;bHint&#x27;</span>).<span class="property">onclick</span>=<span class="keyword">function</span>(<span class="params"></span>)&#123;</span><br><span class="line">  <span class="keyword">if</span>(!S||S.<span class="property">hint</span>&lt;=<span class="number">0</span>) <span class="keyword">return</span>;</span><br><span class="line">  <span class="keyword">var</span> mv=<span class="title function_">findMove</span>(S.<span class="property">g</span>);</span><br><span class="line">  <span class="keyword">if</span>(!mv)&#123; <span class="title function_">toast</span>(<span class="string">&#x27;没有可连的&#x27;</span>); <span class="keyword">return</span>; &#125;</span><br><span class="line">  S.<span class="property">hint</span>--; <span class="title function_">syncTools</span>();</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 398 行：<code>S.hint</code> 是这一关剩下的提示次数，来自关卡表的 <code>h</code> 字段（第 1 关 <code>h:5</code>）。次数用完直接返回，按钮本身也已经被 <code>syncTools</code> 置成禁用状态。</li>
+<li>第 399 行：<code>findMove</code> 在这里不只是判断有无解，返回的 <code>mv.a</code>、<code>mv.b</code> 就是要点亮的两张图，<code>mv.path</code> 是那条折线。</li>
+<li>第 400 行：<code>findMove</code> 给 <code>null</code> 说明当前是死局，提示按钮不会去改盘面，只浮一句「没有可连的」，把重排留给重排按钮或者下一次消除后的自动重排。</li>
+<li>第 401 行：确认有解之后才扣次数，<code>syncTools()</code> 刷新按钮上的计数和禁用状态。先验再扣，扣错了没法退。</li>
+</ul>
+<p>后面第 403 到 407 行把这两张图加一个 <code>hint</code> 类描边、1800 毫秒后去掉，并且在棋盘超出可视区时把它们滚进视野。</p>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-04-hint.png" alt="提示点亮的一对图"></p>
+<p>第三处是重排按钮。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:409-413</span></span><br><span class="line">$(<span class="string">&#x27;bShuf&#x27;</span>).<span class="property">onclick</span>=<span class="keyword">function</span>(<span class="params"></span>)&#123;</span><br><span class="line">  <span class="keyword">if</span>(!S||S.<span class="property">shuf</span>&lt;=<span class="number">0</span>) <span class="keyword">return</span>;</span><br><span class="line">  S.<span class="property">shuf</span>--; <span class="title function_">clearSel</span>();</span><br><span class="line">  <span class="title function_">reshuffle</span>(S.<span class="property">g</span>,<span class="title function_">rngOf</span>(<span class="title class_">Date</span>.<span class="title function_">now</span>()&amp;<span class="number">0x7fffffff</span>)); <span class="title function_">repaint</span>(); <span class="title function_">syncTools</span>();</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 410 行：<code>S.shuf</code> 是剩余重排次数，来自关卡表的 <code>s</code> 字段。</li>
+<li>第 411 行：先扣次数，再 <code>clearSel()</code> 取消当前选中的那张。选中状态记的是位置，重排之后那个位置上的图换了，不清掉会让「已选中的那张」和实际图案对不上。</li>
+<li>第 412 行：<code>reshuffle</code> 之后无条件 <code>repaint()</code>。这里和自动重排那处的区别是有意的：玩家主动按重排，就算 80 次都没洗出有解的盘面，界面也要跟着最后一次洗的结果重画，否则屏幕上还是旧盘面，玩家会以为按钮没生效。自动重排是系统在背后动作，没洗出解就不动界面，避免「盘面莫名其妙变了」。</li>
+<li>同一行不读 <code>reshuffle</code> 的返回值，也不提示。次数经济由 <code>syncTools</code> 表达：按钮上写着还剩几次，用完置灰。</li>
+</ul>
+<p>关卡表里这两个次数的分配看得出难度曲线：第 1 关 <code>h:5、s:3</code>，第 6 关 <code>h:3、s:2</code>，第 11 关 <code>h:2、s:1</code>，第 18 关起 <code>h:1、s:0</code>。越往后越指望开局那副牌本身不排成死局，也就是第二篇第 75 行那道开局保险。</p>
+<h2 id="最坏情况算一次"><a href="#最坏情况算一次" class="headerlink" title="最坏情况算一次"></a>最坏情况算一次</h2><p>死局检测的成本集中在「真的没解」那一次，因为那时 <code>findMove</code> 要把所有组合试完。按第 20 关估：牌面 20 列 10 行、30 种图案、200 张牌，每种图案剩六到八张，组内配对数在 <code>C(6,2)</code> 到 <code>C(8,2)</code> 之间。10 种图案各 4 对、20 种各 3 对，合起来是 <code>10*C(8,2)+20*C(6,2)</code> 即 580 对。每一对都要走一遍第三篇的 0-1 广度优先，状态数是 <code>(20+2)*(10+2)*4</code> 即 1056 个，每个状态展开四个方向。</p>
+<p>这个量级下有两处剪枝在真正起作用。第 97 行的 <code>t&gt;2</code> 把拐弯超两次的分支当场掐掉，不让它继续占队列；第 108 行的松弛判断让「走回头路再绕回来」这类更省的走法进不了队列。少了这两条，一次 <code>linkPath</code> 会退化成在棋盘上无限制地走，配对数一乘就变成玩家能感觉到的卡顿。</p>
+<p>自动重排把成本又乘了一次：最坏情况是 80 副洗法，每副都要 <code>findMove</code> 验一次。这也是 <code>reshuffle</code> 用 80 当上限而不是「一直洗到有解」的原因，第二篇讲过同一条理由：循环必须有出口，浏览器不能卡死。</p>
+<h2 id="本篇新名词"><a href="#本篇新名词" class="headerlink" title="本篇新名词"></a>本篇新名词</h2><table>
+<thead>
+<tr>
+<th>名词</th>
+<th>一句话解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>死局</td>
+<td>盘面上任意两张相同的图之间都没有合法通路，一步都走不动的状态</td>
+</tr>
+<tr>
+<td>分组</td>
+<td>按某个属性把元素归堆，这里是按图案编号把位置归到同一个列表</td>
+</tr>
+<tr>
+<td>键值对</td>
+<td>对象里「键对应值」的一对，<code>map[&quot;3&quot;]</code> 取的就是键 <code>&quot;3&quot;</code> 对应的值</td>
+</tr>
+<tr>
+<td>遍历对象的键</td>
+<td><code>for(var f in map)</code>，<code>f</code> 依次取到对象里所有键，是字符串</td>
+</tr>
+<tr>
+<td>组合数 <code>C(n,2)</code></td>
+<td><code>n</code> 个里取 2 个不重复不计顺序的方案数，等于 <code>n*(n-1)/2</code></td>
+</tr>
+<tr>
+<td>短路惯用法</td>
+<td>&#96;x&#x3D;x</td>
+</tr>
+<tr>
+<td>布尔化</td>
+<td><code>!!x</code> 把任意值压成 <code>true</code> 或 <code>false</code>，两次取反</td>
+</tr>
+<tr>
+<td>位置集合</td>
+<td>哪些格子上有图这件事的全体，重排过程中保持不变</td>
+</tr>
+<tr>
+<td>数字集合</td>
+<td>这些位置上分别是什么图案的全体，重排过程中同样不变</td>
+</tr>
+<tr>
+<td>重绘</td>
+<td>把界面上的元素清掉重建，让显示严格跟上数据</td>
+</tr>
+<tr>
+<td>结算闸门</td>
+<td><code>S.locked</code>：一对图正在消、动画正在放时不接受新的点击</td>
+</tr>
+<tr>
+<td>次数经济</td>
+<td>关卡表用 <code>h</code>、<code>s</code> 两列限制提示与重排，难度靠这个收紧</td>
+</tr>
+</tbody></table>
+<h2 id="自测"><a href="#自测" class="headerlink" title="自测"></a>自测</h2><ol>
+<li>牌面越走越空，为什么还会出现一张都连不上的情况？<br>答：通路只允许走空格，能不能连取决于同图案的两张之间有没有一条两次拐弯以内拐到位的空路。开局牌满，通路只有外圈那一圈；消到中途洞多了，但剩下的图分布散，同图案的两张可能各自被围住。两种情形都可能撞上没有合法通路。</li>
+<li><code>tilesOf</code> 为什么能省掉大量配对？<br>答：只有编号相同的两张才有资格连。分组之后每种图案内部才做两两配对，不同编号之间一次都不用试。第 20 关 200 张牌全部两两组合是 19900 对，分组后只剩各图案内部组合，量级掉到几百。</li>
+<li>第 139 行的内层循环为什么从 <code>j=i+1</code> 开始？从 0 开始会怎样？<br>答：从 <code>i+1</code> 开始保证每对只被算一次，且不会出现 <code>i===j</code> 自己配自己。从 0 开始会把「A 配 B」和「B 配 A」各算一遍，配对数翻倍，还要额外处理自己配自己这种无意义组合。</li>
+<li><code>findMove</code> 返回 <code>{a,b,path}</code> 而不是 <code>true</code>，这个选择换来了什么？<br>答：一个函数同时满足两种调用。只判断有无解的地方看真假（<code>if(!findMove(g))</code>），需要具体解的地方（提示按钮）直接拿到该点亮哪两张、折线怎么走。只返回布尔值的话，提示按钮要再写一遍分组加配对的循环。</li>
+<li><code>reshuffle</code> 里 <code>if(cells.length&lt;4) return !!findMove(g);</code> 兜的是哪种情况，为什么不进循环？<br>答：牌数必为偶数，小于 4 就是剩 2 张或 0 张。剩 2 张时 <code>vals</code> 是两个一模一样的数字，交换它们得到的还是同一组，重排改变不了任何东西；剩 0 张没有可排的。这两种情况直接回答有没有解就够，进循环只是空跑。</li>
+<li>重排为什么不会把牌越排越少、也不会改变每种图案的张数？<br>答：位置集合和数字集合都不变。<code>cells</code> 在函数开头一次算好，循环里从不修改；<code>vals</code> 因为 <code>shuffled</code> 先复制再洗而始终完整。每轮只是把同一批数字放回同一批位置，所以每种图案还剩几张、总张数、<code>S.left</code> 都不受影响。</li>
+<li>自动重排那处（第 319 行）只有 <code>reshuffle</code> 返回真才重画界面，重排按钮那处（第 412 行）无条件重画。为什么两处不一样？<br>答：自动重排是系统在背后动作，80 次都没洗出有解的盘面时不动界面，避免盘面莫名其妙变化却没有任何解释；玩家还能再按重排按钮。玩家主动按重排时，即使没洗出解，界面也要跟上最后一次洗的结果，否则屏幕显示的还是旧盘面，看起来像按钮没生效。</li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io">61飞兔</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/">https://cyg0825.github.io/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://cyg0825.github.io" target="_blank">学海拾茜</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E8%BF%9E%E8%BF%9E%E7%9C%8B/">连连看</a><a class="post-meta__tags" href="/tags/%E7%AE%97%E6%B3%95/">算法</a></div><div class="post-share"><div class="social-share" data-image="/img/cat.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="/assets/css/share.min.css" media="print" onload="this.media='all'"><script src="/assets/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/" title="05-布局自适应"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">05-布局自适应</div></div><div class="info-2"><div class="info-item-1">这一篇的位置前三篇把棋盘当成一张已经存在的表来讲：行列是多少、数字怎么填、折线怎么走。这一篇回答这张表是怎么在屏幕上放下的。同一份关卡表要在 27 寸显示器和手机竖屏上都玩得动，靠的不是两套代码，而是一段在开局时挑行列、在窗口变化时换边长的计算。 对应 Link/script.js 第 36 到 61 行（fitGrid，挑行列与边长）、第 205 到 217 行（keepBottom、fitStage、stageBox，算可用宽高）、第 230 到 234 行（start 里定盒子）、第 247 到 258 行（tileEl，把格子换成像素）、第 421 到 436 行（resize 监听）。样式侧只有三行相关：#stage 的 overflow:auto、#board 的 margin:0 auto、@media (max-width:640px) 那一段，逐行归第六篇。 后面几篇要用到的东西在这一篇只出现名字：HTML 骨架与样式在第六篇，点击状态机、计分与存档在第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌...</div></div></div></a><a class="pagination-related" href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/" title="03-连线判定"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">03-连线判定</div></div><div class="info-2"><div class="info-item-1">这一篇的位置前两篇把棋盘这张表的形状（横竖各多两行两列的外圈，0 是空格、正整数是图案编号）和表里的数字怎么填进去讲完了。这一篇回答玩家真正在意的那个问题：两张相同的图按下去，凭什么算连上、凭什么算连不上，以及连上之后屏幕上那条折线是怎么来的。 对应 Link/script.js 第 78 到 116 行（linkPath，判定与找路）、第 117 到 126 行（simplify，把逐格路径压成拐点）、第 331 到 338 行（drawPath，把拐点画成一条线）。方向表 DIRS 在第 25 行。 后面几篇要用到的东西在这一篇只出现名字：findMove 怎么判断「这一局还有没有可连的一步」、死局之后 reshuffle 怎么重排，在第四篇；fitGrid 怎么挑行列、格子边长 cell 从哪来在第五篇；HTML 与 CSS 逐行在第六篇；点击状态机、计分与存档在第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   03 连线判定 拐弯不超过两次怎么判、折线怎么回溯出来   0...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/11/02/02-%E9%9A%8F%E6%9C%BA%E6%95%B0%E4%B8%8E%E5%8F%91%E7%89%8C/" title="02-随机数与发牌"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-02</div><div class="info-item-2">02-随机数与发牌</div></div><div class="info-2"><div class="info-item-1">这一篇的位置第一篇把最底层的形状定下来了：棋盘在代码里是一张横竖各多两行两列的表，表里的 0 是空格、1 到 30 是图案编号，关卡表 LEVELS 一行一关。这一篇讲这张表内部的数字是怎么被填进去的，也就是「发一副牌」这件事，对应 Link/script.js 第 27 到 35 行（rngOf、shuffled）和第 62 到 77 行（deal）。 后面几篇要用到的东西在这一篇只出现名字：连线判定在第三篇，findMove 与 reshuffle 的内部机制在第四篇，fitGrid 怎么挑行列、格子尺寸怎么算在第五篇，界面与样式在第六篇，点击、计分与存档在第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   03 连线判定 拐弯不超过两次怎么判、折线怎么回溯出来   04 死局与自动重排 有没有可连的一步、重排怎么保证不越排越死   05 布局自适应 格子尺寸怎么算、窗口变化怎么跟   06 界面骨架与样式 HTML 与 CSS 逐行   07 点击、计分与存档 点击状态机、计...</div></div></div></a><a class="pagination-related" href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/" title="03-连线判定"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-03</div><div class="info-item-2">03-连线判定</div></div><div class="info-2"><div class="info-item-1">这一篇的位置前两篇把棋盘这张表的形状（横竖各多两行两列的外圈，0 是空格、正整数是图案编号）和表里的数字怎么填进去讲完了。这一篇回答玩家真正在意的那个问题：两张相同的图按下去，凭什么算连上、凭什么算连不上，以及连上之后屏幕上那条折线是怎么来的。 对应 Link/script.js 第 78 到 116 行（linkPath，判定与找路）、第 117 到 126 行（simplify，把逐格路径压成拐点）、第 331 到 338 行（drawPath，把拐点画成一条线）。方向表 DIRS 在第 25 行。 后面几篇要用到的东西在这一篇只出现名字：findMove 怎么判断「这一局还有没有可连的一步」、死局之后 reshuffle 怎么重排，在第四篇；fitGrid 怎么挑行列、格子边长 cell 从哪来在第五篇；HTML 与 CSS 逐行在第六篇；点击状态机、计分与存档在第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   03 连线判定 拐弯不超过两次怎么判、折线怎么回溯出来   0...</div></div></div></a><a class="pagination-related" href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/" title="07-点击计分与存档"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-06</div><div class="info-item-2">07-点击计分与存档</div></div><div class="info-2"><div class="info-item-1">这一篇的位置前六篇把棋盘怎么生成、线怎么判、死局怎么解、格子怎么算、壳子怎么搭讲完了，还差把这几件事串起来的那根线：点下去的一张图块，怎么变成分数、变成进度条、变成下一次打开页面时还在的存档。这一篇讲的就是这根线，全部落在 Link/script.js 第 162 行往下的界面层。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   03 连线判定 拐弯不超过两次怎么判、折线怎么回溯出来   04 死局与自动重排 有没有可连的一步、重排怎么保证不越排越死   05 布局自适应 格子尺寸怎么算、窗口变化怎么跟   06 界面骨架与样式 HTML 与 CSS 逐行   07 点击、计分与存档 点击状态机、计时与分数、本地存档、音乐   一局游戏的全部事实123456// Link/script.js:162-166/* ==== 界面 ==== */var $=function(id)&#123;return document.getElementById(id);&#125;;var SAVE...</div></div></div></a><a class="pagination-related" href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/" title="05-布局自适应"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-05</div><div class="info-item-2">05-布局自适应</div></div><div class="info-2"><div class="info-item-1">这一篇的位置前三篇把棋盘当成一张已经存在的表来讲：行列是多少、数字怎么填、折线怎么走。这一篇回答这张表是怎么在屏幕上放下的。同一份关卡表要在 27 寸显示器和手机竖屏上都玩得动，靠的不是两套代码，而是一段在开局时挑行列、在窗口变化时换边长的计算。 对应 Link/script.js 第 36 到 61 行（fitGrid，挑行列与边长）、第 205 到 217 行（keepBottom、fitStage、stageBox，算可用宽高）、第 230 到 234 行（start 里定盒子）、第 247 到 258 行（tileEl，把格子换成像素）、第 421 到 436 行（resize 监听）。样式侧只有三行相关：#stage 的 overflow:auto、#board 的 margin:0 auto、@media (max-width:640px) 那一段，逐行归第六篇。 后面几篇要用到的东西在这一篇只出现名字：HTML 骨架与样式在第六篇，点击状态机、计分与存档在第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌...</div></div></div></a><a class="pagination-related" href="/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/" title="01-结构与数据形状"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-01</div><div class="info-item-2">01-结构与数据形状</div></div><div class="info-2"><div class="info-item-1">这一篇的位置这是一页连连看：点两张相同的图，若能用一条不超过两个拐弯的折线连起来，这两张就消掉，消完过关。 整页由三个文件组成，浏览器直接执行。    文件 管什么    Link/index.html 页面骨架：有哪些块、块之间的层级   Link/style.css 外观：颜色、圆角、动画、深浅色   Link/script.js 逻辑与算法：发牌、连线判定、计分、存档   这一篇定最底层的东西：文件怎么分工、棋盘在代码里到底是什么形状、关卡表里的六个数字各控制什么。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   03 连线判定 拐弯不超过两次怎么判、折线怎么回溯出来   04 死局与自动重排 有没有可连的一步、重排怎么保证不越排越死   05 布局自适应 格子尺寸怎么算、窗口变化怎么跟   06 界面骨架与样式 HTML 与 CSS 逐行   07 点击、计分与存档 点击状态机、计时与分数、本地存档、音乐   首页与一盘棋首页是一排关卡按钮，每个按钮上写着这一关的牌数、图案种类、...</div></div></div></a><a class="pagination-related" href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/" title="06-界面骨架与样式"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-05</div><div class="info-item-2">06-界面骨架与样式</div></div><div class="info-2"><div class="info-item-1">这一篇的位置前五篇讲的都是数据与算法：棋盘的形状、发牌、连线判定、死局与重排、格子尺寸。这一篇讲承载它们的那层：Link/index.html 的骨架和 Link/style.css 的样式。这两份文件都很短，却决定了前面所有计算能不能被看见、被点着。 这一篇的顺序是先骨架后样式：先把 HTML 里每个块是什么、为什么在这儿讲清，再按样式文件的书写顺序讲它做了哪几件事。代码与数据怎么把这些空壳填满，归第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   03 连线判定 拐弯不超过两次怎么判、折线怎么回溯出来   04 死局与自动重排 有没有可连的一步、重排怎么保证不越排越死   05 布局自适应 格子尺寸怎么算、窗口变化怎么跟   06 界面骨架与样式 HTML 与 CSS 逐行   07 点击、计分与存档 点击状态机、计时与分数、本地存档、音乐   骨架：一个文件装两个界面12345678910// Link/index.html:1-9&lt;!DOCTYPE html&gt;&...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">61飞兔</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">65</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">26</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">24</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/cyg0825"><i class="fab fa-github"></i><span>关注我</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%99%E4%B8%80%E7%AF%87%E7%9A%84%E4%BD%8D%E7%BD%AE"><span class="toc-number">1.</span> <span class="toc-text">这一篇的位置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%AD%BB%E5%B1%80%E6%98%AF%E6%80%8E%E4%B9%88%E5%87%BA%E7%8E%B0%E7%9A%84"><span class="toc-number">2.</span> <span class="toc-text">死局是怎么出现的</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#tilesOf%EF%BC%9A%E6%8A%8A%E7%9B%98%E9%9D%A2%E6%8C%89%E5%9B%BE%E6%A1%88%E5%88%86%E7%BB%84"><span class="toc-number">3.</span> <span class="toc-text">tilesOf：把盘面按图案分组</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#findMove%EF%BC%9A%E6%9C%89%E6%B2%A1%E6%9C%89%E8%87%B3%E5%B0%91%E4%B8%80%E5%AF%B9%E8%BF%9E%E5%BE%97%E4%B8%8A"><span class="toc-number">4.</span> <span class="toc-text">findMove：有没有至少一对连得上</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#reshuffle%EF%BC%9A%E6%8A%8A%E7%8E%B0%E5%AD%98%E7%9A%84%E6%95%B0%E5%AD%97%E9%87%8D%E6%96%B0%E6%B4%97%E4%B8%80%E9%81%8D"><span class="toc-number">5.</span> <span class="toc-text">reshuffle：把现存的数字重新洗一遍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%87%8D%E6%8E%92%E4%B9%8B%E5%90%8E%E5%BF%85%E9%A1%BB%E9%87%8D%E7%94%BB%E7%95%8C%E9%9D%A2"><span class="toc-number">6.</span> <span class="toc-text">重排之后必须重画界面</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E5%A4%84%E8%AF%BB-findMove-%E7%9A%84%E7%95%8C%E9%9D%A2"><span class="toc-number">7.</span> <span class="toc-text">三处读 findMove 的界面</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%80%E5%9D%8F%E6%83%85%E5%86%B5%E7%AE%97%E4%B8%80%E6%AC%A1"><span class="toc-number">8.</span> <span class="toc-text">最坏情况算一次</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%AC%E7%AF%87%E6%96%B0%E5%90%8D%E8%AF%8D"><span class="toc-number">9.</span> <span class="toc-text">本篇新名词</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%87%AA%E6%B5%8B"><span class="toc-number">10.</span> <span class="toc-text">自测</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/" title="07-点击计分与存档">07-点击计分与存档</a><time datetime="2026-11-06T00:20:00.000Z" title="发表于 2026-11-06 08:20:00">2026-11-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/" title="06-界面骨架与样式">06-界面骨架与样式</a><time datetime="2026-11-05T08:40:00.000Z" title="发表于 2026-11-05 16:40:00">2026-11-05</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/" title="05-布局自适应">05-布局自适应</a><time datetime="2026-11-05T01:30:00.000Z" title="发表于 2026-11-05 09:30:00">2026-11-05</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/" title="04-死局与自动重排">04-死局与自动重排</a><time datetime="2026-11-04T01:10:00.000Z" title="发表于 2026-11-04 09:10:00">2026-11-04</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/" title="03-连线判定">03-连线判定</a><time datetime="2026-11-03T01:20:00.000Z" title="发表于 2026-11-03 09:20:00">2026-11-03</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2024 - 2026 By 61飞兔</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.3</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
+(function () {
+  var menus = document.getElementById('sidebar-menus')
+  var card = document.querySelector('#aside-content .card-info')
+  if (!menus || !card || menus.dataset.profileIn) return
+  var name = card.querySelector('.author-info-name')
+  var btn = card.querySelector('#card-info-btn')
+  if (name) {
+    var n = name.cloneNode(true)
+    n.className = 'sidebar-author-name'
+    menus.querySelector('.avatar-img').after(n)
+  }
+  if (btn) {
+    var b = btn.cloneNode(true)
+    b.removeAttribute('id')
+    b.className = 'sidebar-follow'
+    menus.querySelector('.site-data').after(b)
+  }
+  menus.dataset.profileIn = '1'
+})()
+</script><div class="aplayer no-destroy" data-id="9086662585" data-server="netease" data-type="playlist" data-fixed="true" data-autoplay="false" data-order="random" data-mini="true" data-api="https://api.injahow.cn/meting/?server=:server&amp;type=:type&amp;id=:id&amp;r=:r">
+</div><link rel="stylesheet" href="/assets/css/APlayer.min.css" media="print" onload="this.media='all'"><script src="/assets/js/APlayer.min.js"></script><script src="/assets/js/Meting.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索文章" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>

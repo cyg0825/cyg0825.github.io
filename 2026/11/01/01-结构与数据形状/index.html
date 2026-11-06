@@ -1,0 +1,557 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>01-结构与数据形状 | 学海拾茜</title><meta name="author" content="61飞兔"><meta name="copyright" content="61飞兔"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="这一篇的位置这是一页连连看：点两张相同的图，若能用一条不超过两个拐弯的折线连起来，这两张就消掉，消完过关。 整页由三个文件组成，浏览器直接执行。    文件 管什么    Link&#x2F;index.html 页面骨架：有哪些块、块之间的层级   Link&#x2F;style.css 外观：颜色、圆角、动画、深浅色   Link&#x2F;script.js 逻辑与算法：发牌、连线判定、计分、存档   这一篇定最底层的东">
+<meta property="og:type" content="article">
+<meta property="og:title" content="01-结构与数据形状">
+<meta property="og:url" content="https://cyg0825.github.io/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/index.html">
+<meta property="og:site_name" content="学海拾茜">
+<meta property="og:description" content="这一篇的位置这是一页连连看：点两张相同的图，若能用一条不超过两个拐弯的折线连起来，这两张就消掉，消完过关。 整页由三个文件组成，浏览器直接执行。    文件 管什么    Link&#x2F;index.html 页面骨架：有哪些块、块之间的层级   Link&#x2F;style.css 外观：颜色、圆角、动画、深浅色   Link&#x2F;script.js 逻辑与算法：发牌、连线判定、计分、存档   这一篇定最底层的东">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cyg0825.github.io/img/cat.png">
+<meta property="article:published_time" content="2026-11-01T01:40:00.000Z">
+<meta property="article:modified_time" content="2026-11-06T15:50:44.722Z">
+<meta property="article:author" content="61飞兔">
+<meta property="article:tag" content="JavaScript">
+<meta property="article:tag" content="连连看">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cyg0825.github.io/img/cat.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "01-结构与数据形状",
+  "url": "https://cyg0825.github.io/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/",
+  "image": "https://cyg0825.github.io/img/cat.png",
+  "datePublished": "2026-11-01T01:40:00.000Z",
+  "dateModified": "2026-11-06T15:50:44.722Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "61飞兔",
+      "url": "https://cyg0825.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/333.png"><link rel="canonical" href="https://cyg0825.github.io/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/css/fontawesome/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '01-结构与数据形状',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><style>
+/* 手机端复用右侧收起按钮，整块侧栏（个人信息等卡片）可收起 */
+@media (max-width: 900px) {
+  #rightside #hide-aside-btn { display: block !important; }
+  html.hide-aside .layout > #aside-content { display: none; }
+  /* 个人信息卡折叠进抽屉，页面里不再单独占一块 */
+  #aside-content > .card-info { display: none; }
+}
+#sidebar-menus .sidebar-author-name { margin: 6px 0 0; font-size: 1.3em; font-weight: 700; text-align: center; }
+#sidebar-menus .sidebar-follow { display: block; margin: 14px 20px 0; padding: 9px 0; border-radius: 8px; background: var(--btn-bg); color: var(--btn-color); text-align: center; }
+#sidebar-menus .sidebar-follow i { margin-right: 6px; }
+/* 沿用线上站点：页脚透明，让背景色直接透出 */
+#footer { background: transparent !important; }
+#footer::before { background: transparent !important; }
+[data-theme="dark"] #footer::before { background: transparent !important; }
+/* 头图蒙版改成毛玻璃：轻微模糊 + 极淡压色，做出朦胧感但不挡画面 */
+#page-header:not(.not-top-img)::before {
+  background: linear-gradient(180deg, rgba(238,242,252,.16), rgba(214,222,242,.07) 55%, rgba(196,206,232,.20)) !important;
+  -webkit-backdrop-filter: blur(6px) brightness(.94) saturate(1.02);
+  backdrop-filter: blur(6px) brightness(.94) saturate(1.02);
+}
+[data-theme="dark"] #page-header:not(.not-top-img)::before {
+  background: linear-gradient(180deg, rgba(16,18,26,.20), rgba(16,18,26,.09) 55%, rgba(8,10,16,.26)) !important;
+  -webkit-backdrop-filter: blur(6px) brightness(.88);
+  backdrop-filter: blur(6px) brightness(.88);
+}
+/* 播放器遇到不可播曲目的自动跳过提示不显示 */
+.aplayer .aplayer-notice { display: none !important; }
+/* 主题只写了旧版高亮类名，补上 highlight.js 11 的这批 token，配色沿用主题的 light 色板 */
+#article-container figure.highlight pre .selector-tag,
+#article-container figure.highlight pre .selector-class,
+#article-container figure.highlight pre .selector-id,
+#article-container figure.highlight pre .selector-pseudo,
+#article-container figure.highlight pre .selector-attr,
+#article-container figure.highlight pre .property { color: #e53935; }
+#article-container figure.highlight pre .function_ { color: #6182b8; }
+#article-container figure.highlight pre .class_ { color: #ffb62c; }
+#article-container figure.highlight pre .constant_ { color: #f76d47; }
+#article-container figure.highlight pre .type { color: #6182b8; }
+#article-container figure.highlight pre .invoke__,
+#article-container figure.highlight pre .subst { color: #f76d47; }
+#article-container figure.highlight pre .language_,
+#article-container figure.highlight pre .bullet { color: #7c4dff; }
+/* 菜单图标位是原样落到 <i class="fa-fw …"> 的类名；不用 fontawesome 时把它变成一张图，
+   宽度沿用 .fa-fw 的 1.25em 以对齐同级菜单项，只补上空白 <i> 需要的高度和基线 */
+i.fa-fw.img-notelume {
+  background: url(/img/notelume.png) center / contain no-repeat;
+  height: 1em; display: inline-block; vertical-align: -.15em;
+}
+</style><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-color: #bbdefb;"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">65</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">26</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">24</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-code"></i><span> 项目</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/"><i class="fa-fw fas fa-book"></i><span> 学生选课系统</span></a></li><li><a class="site-page child" target="_blank" rel="noopener" href="https://hackersnail.github.io/NoteLume/"><i class="fa-fw img-notelume"></i><span> NoteLume</span></a></li><li><a class="site-page child" href="/birthday/"><i class="fa-fw fas fa-cake-candles"></i><span> 祝福</span></a></li><li><a class="site-page child" href="/link/"><i class="fa-fw fas fa-puzzle-piece"></i><span> 连连看</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-file-alt"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/tags/%E8%AF%B4%E8%AF%B4/"><i class="fa-fw fas fa-comment-dots"></i><span> 说说</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/img/link/lk-01-home.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/333.png" alt="Logo"><span class="site-name">学海拾茜</span></a><a class="nav-page-title" href="/"><span class="site-name">01-结构与数据形状</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-code"></i><span> 项目</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/"><i class="fa-fw fas fa-book"></i><span> 学生选课系统</span></a></li><li><a class="site-page child" target="_blank" rel="noopener" href="https://hackersnail.github.io/NoteLume/"><i class="fa-fw img-notelume"></i><span> NoteLume</span></a></li><li><a class="site-page child" href="/birthday/"><i class="fa-fw fas fa-cake-candles"></i><span> 祝福</span></a></li><li><a class="site-page child" href="/link/"><i class="fa-fw fas fa-puzzle-piece"></i><span> 连连看</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-file-alt"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/tags/%E8%AF%B4%E8%AF%B4/"><i class="fa-fw fas fa-comment-dots"></i><span> 说说</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">01-结构与数据形状</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-11-01T01:40:00.000Z" title="发表于 2026-11-01 09:40:00">2026-11-01</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-11-06T15:50:44.722Z" title="更新于 2026-11-06 23:50:44">2026-11-06</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AD%A6%E4%B9%A0/">学习</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AD%A6%E4%B9%A0/%E8%BF%9E%E8%BF%9E%E7%9C%8B/">连连看</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h2 id="这一篇的位置"><a href="#这一篇的位置" class="headerlink" title="这一篇的位置"></a>这一篇的位置</h2><p>这是一页连连看：点两张相同的图，若能用一条不超过两个拐弯的折线连起来，这两张就消掉，消完过关。</p>
+<p>整页由三个文件组成，浏览器直接执行。</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>管什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Link/index.html</code></td>
+<td>页面骨架：有哪些块、块之间的层级</td>
+</tr>
+<tr>
+<td><code>Link/style.css</code></td>
+<td>外观：颜色、圆角、动画、深浅色</td>
+</tr>
+<tr>
+<td><code>Link/script.js</code></td>
+<td>逻辑与算法：发牌、连线判定、计分、存档</td>
+</tr>
+</tbody></table>
+<p>这一篇定最底层的东西：文件怎么分工、棋盘在代码里到底是什么形状、关卡表里的六个数字各控制什么。</p>
+<table>
+<thead>
+<tr>
+<th>篇</th>
+<th>讲什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/">01 结构与数据形状</a></td>
+<td>文件分工、棋盘的真实形状、关卡表</td>
+</tr>
+<tr>
+<td><a href="/2026/11/02/02-%E9%9A%8F%E6%9C%BA%E6%95%B0%E4%B8%8E%E5%8F%91%E7%89%8C/">02 随机数与发牌</a></td>
+<td>自带随机数发生器、洗牌、成对发牌</td>
+</tr>
+<tr>
+<td><a href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/">03 连线判定</a></td>
+<td>拐弯不超过两次怎么判、折线怎么回溯出来</td>
+</tr>
+<tr>
+<td><a href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/">04 死局与自动重排</a></td>
+<td>有没有可连的一步、重排怎么保证不越排越死</td>
+</tr>
+<tr>
+<td><a href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/">05 布局自适应</a></td>
+<td>格子尺寸怎么算、窗口变化怎么跟</td>
+</tr>
+<tr>
+<td><a href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/">06 界面骨架与样式</a></td>
+<td>HTML 与 CSS 逐行</td>
+</tr>
+<tr>
+<td><a href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/">07 点击、计分与存档</a></td>
+<td>点击状态机、计时与分数、本地存档、音乐</td>
+</tr>
+</tbody></table>
+<h2 id="首页与一盘棋"><a href="#首页与一盘棋" class="headerlink" title="首页与一盘棋"></a>首页与一盘棋</h2><p>首页是一排关卡按钮，每个按钮上写着这一关的牌数、图案种类、限时，有过成绩还会带上最高分。</p>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-01-home.png" alt="首页的二十个关卡按钮"></p>
+<p>点进去之后页面只剩三块：顶部一行状态（关卡、剩余张数、倒计时、分数），中间棋盘，棋盘下面三个按钮。</p>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-02-board.png" alt="第 1 关开局后的棋盘"></p>
+<h2 id="棋盘在代码里是一张比棋盘大一圈的表"><a href="#棋盘在代码里是一张比棋盘大一圈的表" class="headerlink" title="棋盘在代码里是一张比棋盘大一圈的表"></a>棋盘在代码里是一张比棋盘大一圈的表</h2><p>页面上看到的是一张 <code>列数 × 行数</code> 的格子图，代码里存的不是这张图，而是一张横竖各多两行两列的表。多出来的那一圈永远留空，专门给连线绕路用。</p>
+<p>以 <code>4 列 3 行</code> 为例，<code>#</code> 是有图的格子，<code>.</code> 是那圈空格：</p>
+<pre><code>. . . . . .
+. # # # # .
+. # # # # .
+. # # # # .
+. . . . . .
+</code></pre>
+<p>代码里这张表的行号是 <code>0..4</code>、列号是 <code>0..5</code>，真正的图只放在行 <code>1..3</code>、列 <code>1..4</code> 里面。</p>
+<p>这圈空格不是摆设。连连看的连线允许从棋盘外面绕过去，最常见的例子是第一行左右两端各有一张相同的图：中间所有直线和折线都堵住了也没用，连线可以往上抬到棋盘外那一行，横着走一段再下来，两个拐弯，照样算连上。</p>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-03-two-turns.png" alt="连线抬到棋盘外那一行再下来"></p>
+<p>少了这圈空格，边界上的图就少了一整条绕行路线，很多实际能连的组合会被判成连不上。</p>
+<p>建这张表的代码在发牌函数里：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:69-73</span></span><br><span class="line">  <span class="keyword">var</span> C=cols+<span class="number">2</span>, R=rows+<span class="number">2</span>;</span><br><span class="line">  <span class="keyword">var</span> g=[];</span><br><span class="line">  <span class="keyword">for</span>(<span class="keyword">var</span> r=<span class="number">0</span>;r&lt;R;r++)&#123; <span class="keyword">var</span> row=[]; <span class="keyword">for</span>(<span class="keyword">var</span> c=<span class="number">0</span>;c&lt;C;c++) row.<span class="title function_">push</span>(<span class="number">0</span>); g.<span class="title function_">push</span>(row); &#125;</span><br><span class="line">  <span class="keyword">var</span> k=<span class="number">0</span>;</span><br><span class="line">  <span class="keyword">for</span>(<span class="keyword">var</span> r1=<span class="number">1</span>;r1&lt;=rows;r1++) <span class="keyword">for</span>(<span class="keyword">var</span> c1=<span class="number">1</span>;c1&lt;=cols;c1++) g[r1][c1]=deck[k++];</span><br></pre></td></tr></table></figure>
+
+<p>逐行看：</p>
+<ul>
+<li><code>var C=cols+2, R=rows+2;</code>：<code>var</code> 是声明一个变量，一行里用逗号可以连着声明多个。<code>C</code> 是这张表的列数，<code>R</code> 是行数，各比棋盘多 2，就是左右各一圈、上下各一圈。用大写是因为下面几行里 <code>c</code>、<code>r</code> 已经被拿去当小写循环变量了，同一个名字不能两用。</li>
+<li><code>var g=[];</code>：<code>g</code> 是这张表本身，<code>[]</code> 是一个空数组。数组就是一排格子，按顺序编号，编号从 <code>0</code> 开始。</li>
+<li>第三行是两层循环，外层 <code>r</code> 从 <code>0</code> 走到 <code>R-1</code>，每一轮里层 <code>c</code> 从 <code>0</code> 走到 <code>C-1</code>，<code>row.push(0)</code> 往一行的末尾塞一个 <code>0</code>，<code>g.push(row)</code> 把这一行接到表的末尾。循环跑完，<code>g</code> 是一个 <code>R</code> 项的数组，每一项又是一个 <code>C</code> 项的数组，这就是二维数组：数组的元素还是数组。取值写 <code>g[r][c]</code>，读第 <code>r</code> 行的第 <code>c</code> 个。</li>
+<li>这里的 <code>0</code> 是「空格子」的意思，见下一节。</li>
+<li>最后两行填图。<code>deck</code> 是一副洗好的牌（第二篇讲怎么洗），<code>k</code> 是发到哪张的计数。<code>r1</code> 从 <code>1</code> 到 <code>rows</code>、<code>c1</code> 从 <code>1</code> 到 <code>cols</code>，正好是那圈空格围起来的内部区域。<code>g[r1][c1]=deck[k++]</code> 里的 <code>k++</code> 是「先用当前值、再自增」，等价于取 <code>deck[k]</code> 然后 <code>k=k+1</code>，于是一行一行地把牌填满内部区域。</li>
+</ul>
+<p>外圈那一圈格子从来不会被写入任何图，也从来不用清空，这就是「绕外圈」能成立的物理原因。</p>
+<h2 id="表里存的值：0-是空，1-到-30-是图案编号"><a href="#表里存的值：0-是空，1-到-30-是图案编号" class="headerlink" title="表里存的值：0 是空，1 到 30 是图案编号"></a>表里存的值：0 是空，1 到 30 是图案编号</h2><p><code>g[r][c]</code> 只有两种含义：</p>
+<table>
+<thead>
+<tr>
+<th>值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>0</code></td>
+<td>空格。包括外圈那圈，以及已被消掉的格子</td>
+</tr>
+<tr>
+<td><code>1</code> 到 <code>30</code></td>
+<td>这张格子的图是哪一种。同一个编号在整个棋盘里成对出现</td>
+</tr>
+</tbody></table>
+<p>判定两张图能不能连，第一步就是比编号相同（第三篇），编号不同直接算连不上，不用去比像素、也不用管图片文件叫什么名字。</p>
+<p>编号与图片文件的对应关系写在生成图块元素的那行：编号 <code>f</code> 对应 <code>img/image</code> + <code>(f-1)</code> + <code>.jpg</code>，也就是编号 1 用 <code>image0.jpg</code>，编号 30 用 <code>image29.jpg</code>。之所以不是编号直接当文件名，是因为图片是从 0 开始编号的一批素材，而代码里 <code>0</code> 已经用来表示空格，编号必须从 1 起，两套编号差了一个 1。</p>
+<p>素材总数记在一个常量里，与方向表放在一起：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:24-25</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">NFACE</span>=<span class="number">30</span>;</span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">DIRS</span>=[[-<span class="number">1</span>,<span class="number">0</span>],[<span class="number">1</span>,<span class="number">0</span>],[<span class="number">0</span>,-<span class="number">1</span>],[<span class="number">0</span>,<span class="number">1</span>]];</span><br></pre></td></tr></table></figure>
+
+<p><code>DIRS</code> 下一节单说。<code>NFACE</code> 是「素材一共准备了 30 种」这条事实的记号，写在代码里备查，发牌并不读它：每关用前几种由关卡表里的 <code>f</code> 决定（第 16 关起 <code>f:30</code> 才用满），编号越界的图不会发出来。<code>img/</code> 目录里如果缺某一张，图块会在生成时退化成占位的数字，见第五篇。</p>
+<h2 id="四个方向-DIRS"><a href="#四个方向-DIRS" class="headerlink" title="四个方向 DIRS"></a>四个方向 DIRS</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:25</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">DIRS</span>=[[-<span class="number">1</span>,<span class="number">0</span>],[<span class="number">1</span>,<span class="number">0</span>],[<span class="number">0</span>,-<span class="number">1</span>],[<span class="number">0</span>,<span class="number">1</span>]];</span><br></pre></td></tr></table></figure>
+
+<p>每一项是一对数字 <code>[行变化, 列变化]</code>，把当前位置加上一对就得到相邻格子：</p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>[-1,0]</code></td>
+<td>行减 1，往上一格</td>
+</tr>
+<tr>
+<td><code>[1,0]</code></td>
+<td>行加 1，往下一格</td>
+</tr>
+<tr>
+<td><code>[0,-1]</code></td>
+<td>列减 1，往左一格</td>
+</tr>
+<tr>
+<td><code>[0,1]</code></td>
+<td>列加 1，往右一格</td>
+</tr>
+</tbody></table>
+<p>只有四个，线段只有横着走和竖着走两种形态。判定连线时反复用到这四个，用法是 <code>cur.r+DIRS[d][0]</code> 与 <code>cur.c+DIRS[d][1]</code>，见第三篇。</p>
+<h2 id="关卡表-LEVELS"><a href="#关卡表-LEVELS" class="headerlink" title="关卡表 LEVELS"></a>关卡表 LEVELS</h2><p>二十行，一行一关：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:2-23</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">LEVELS</span>=[</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">6</span>,<span class="attr">r</span>:<span class="number">4</span>,<span class="attr">f</span>:<span class="number">6</span>,<span class="attr">t</span>:<span class="number">90</span>,<span class="attr">h</span>:<span class="number">5</span>,<span class="attr">s</span>:<span class="number">3</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">8</span>,<span class="attr">r</span>:<span class="number">4</span>,<span class="attr">f</span>:<span class="number">8</span>,<span class="attr">t</span>:<span class="number">100</span>,<span class="attr">h</span>:<span class="number">5</span>,<span class="attr">s</span>:<span class="number">3</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">8</span>,<span class="attr">r</span>:<span class="number">5</span>,<span class="attr">f</span>:<span class="number">10</span>,<span class="attr">t</span>:<span class="number">115</span>,<span class="attr">h</span>:<span class="number">4</span>,<span class="attr">s</span>:<span class="number">3</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">10</span>,<span class="attr">r</span>:<span class="number">5</span>,<span class="attr">f</span>:<span class="number">12</span>,<span class="attr">t</span>:<span class="number">130</span>,<span class="attr">h</span>:<span class="number">4</span>,<span class="attr">s</span>:<span class="number">3</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">10</span>,<span class="attr">r</span>:<span class="number">6</span>,<span class="attr">f</span>:<span class="number">14</span>,<span class="attr">t</span>:<span class="number">145</span>,<span class="attr">h</span>:<span class="number">4</span>,<span class="attr">s</span>:<span class="number">2</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">12</span>,<span class="attr">r</span>:<span class="number">6</span>,<span class="attr">f</span>:<span class="number">16</span>,<span class="attr">t</span>:<span class="number">165</span>,<span class="attr">h</span>:<span class="number">3</span>,<span class="attr">s</span>:<span class="number">2</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">12</span>,<span class="attr">r</span>:<span class="number">7</span>,<span class="attr">f</span>:<span class="number">18</span>,<span class="attr">t</span>:<span class="number">185</span>,<span class="attr">h</span>:<span class="number">3</span>,<span class="attr">s</span>:<span class="number">2</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">12</span>,<span class="attr">r</span>:<span class="number">8</span>,<span class="attr">f</span>:<span class="number">20</span>,<span class="attr">t</span>:<span class="number">210</span>,<span class="attr">h</span>:<span class="number">3</span>,<span class="attr">s</span>:<span class="number">2</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">14</span>,<span class="attr">r</span>:<span class="number">8</span>,<span class="attr">f</span>:<span class="number">22</span>,<span class="attr">t</span>:<span class="number">240</span>,<span class="attr">h</span>:<span class="number">2</span>,<span class="attr">s</span>:<span class="number">2</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">16</span>,<span class="attr">r</span>:<span class="number">8</span>,<span class="attr">f</span>:<span class="number">24</span>,<span class="attr">t</span>:<span class="number">270</span>,<span class="attr">h</span>:<span class="number">2</span>,<span class="attr">s</span>:<span class="number">2</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">14</span>,<span class="attr">r</span>:<span class="number">10</span>,<span class="attr">f</span>:<span class="number">24</span>,<span class="attr">t</span>:<span class="number">285</span>,<span class="attr">h</span>:<span class="number">2</span>,<span class="attr">s</span>:<span class="number">1</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">16</span>,<span class="attr">r</span>:<span class="number">9</span>,<span class="attr">f</span>:<span class="number">26</span>,<span class="attr">t</span>:<span class="number">300</span>,<span class="attr">h</span>:<span class="number">2</span>,<span class="attr">s</span>:<span class="number">1</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">18</span>,<span class="attr">r</span>:<span class="number">8</span>,<span class="attr">f</span>:<span class="number">26</span>,<span class="attr">t</span>:<span class="number">310</span>,<span class="attr">h</span>:<span class="number">2</span>,<span class="attr">s</span>:<span class="number">1</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">16</span>,<span class="attr">r</span>:<span class="number">10</span>,<span class="attr">f</span>:<span class="number">28</span>,<span class="attr">t</span>:<span class="number">325</span>,<span class="attr">h</span>:<span class="number">1</span>,<span class="attr">s</span>:<span class="number">1</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">18</span>,<span class="attr">r</span>:<span class="number">9</span>,<span class="attr">f</span>:<span class="number">28</span>,<span class="attr">t</span>:<span class="number">335</span>,<span class="attr">h</span>:<span class="number">1</span>,<span class="attr">s</span>:<span class="number">1</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">20</span>,<span class="attr">r</span>:<span class="number">8</span>,<span class="attr">f</span>:<span class="number">30</span>,<span class="attr">t</span>:<span class="number">350</span>,<span class="attr">h</span>:<span class="number">1</span>,<span class="attr">s</span>:<span class="number">1</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">18</span>,<span class="attr">r</span>:<span class="number">10</span>,<span class="attr">f</span>:<span class="number">30</span>,<span class="attr">t</span>:<span class="number">365</span>,<span class="attr">h</span>:<span class="number">1</span>,<span class="attr">s</span>:<span class="number">1</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">20</span>,<span class="attr">r</span>:<span class="number">9</span>,<span class="attr">f</span>:<span class="number">30</span>,<span class="attr">t</span>:<span class="number">380</span>,<span class="attr">h</span>:<span class="number">1</span>,<span class="attr">s</span>:<span class="number">0</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">22</span>,<span class="attr">r</span>:<span class="number">8</span>,<span class="attr">f</span>:<span class="number">30</span>,<span class="attr">t</span>:<span class="number">395</span>,<span class="attr">h</span>:<span class="number">1</span>,<span class="attr">s</span>:<span class="number">0</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">20</span>,<span class="attr">r</span>:<span class="number">10</span>,<span class="attr">f</span>:<span class="number">30</span>,<span class="attr">t</span>:<span class="number">410</span>,<span class="attr">h</span>:<span class="number">1</span>,<span class="attr">s</span>:<span class="number">0</span>&#125;</span><br><span class="line">];</span><br></pre></td></tr></table></figure>
+
+<p><code>{c:6,r:4,...}</code> 是一个对象。对象是一堆有名字的值，靠 <code>名字: 值</code> 成对写，用点号取值：<code>level.c</code> 拿到 6，<code>level.t</code> 拿到 90。数组里放对象，就是「一关一条记录」。</p>
+<table>
+<thead>
+<tr>
+<th>键</th>
+<th>含义</th>
+<th>用在哪</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>c</code></td>
+<td>棋盘列数</td>
+<td>发牌、首页那行说明文字</td>
+</tr>
+<tr>
+<td><code>r</code></td>
+<td>棋盘行数</td>
+<td>同上</td>
+</tr>
+<tr>
+<td><code>f</code></td>
+<td>这一关用前几种图案</td>
+<td>发牌时决定图案编号的循环上限</td>
+</tr>
+<tr>
+<td><code>t</code></td>
+<td>限时，单位秒</td>
+<td>倒计时起始值、首页文字、剩余时间的奖励</td>
+</tr>
+<tr>
+<td><code>h</code></td>
+<td>提示次数</td>
+<td>提示按钮的次数与禁用条件</td>
+</tr>
+<tr>
+<td><code>s</code></td>
+<td>重排次数</td>
+<td>重排按钮的次数与禁用条件</td>
+</tr>
+</tbody></table>
+<p>几个从这张表里能读出来的取舍：</p>
+<ul>
+<li><code>c</code> 与 <code>r</code> 的乘积一定是偶数。牌要成对发，总数必须是偶数，所以这张表里每一关的列数都取了偶数。乘积一旦是奇数，最后一张会落单，永远消不掉。</li>
+<li><code>c</code> 与 <code>r</code> 是设计目标，不是最终行列数。发牌时会在「乘积等于这个牌数」的所有因数分解里，挑一个在当前窗口下放得最大、又最接近设计列数的组合，所以第 19 关那个 <code>c:22</code> 在手机上是按别的行列铺开的，挑法见第五篇。牌数始终不变，变的只是横竖怎么分配。</li>
+<li>从第一关到最后一关，牌数（<code>c*r</code>）和图案种类（<code>f</code>）一起涨。图多、花样也多，难度自然上去了，但真正卡人的是后两项：<code>h</code> 从 5 降到 1、<code>s</code> 从 3 降到 0。最后三关 <code>s:0</code> 意味着没有重排次数，排成死局只能重玩。</li>
+<li>关卡表里没有图的名字，只有编号。换一批素材只要把 <code>img/</code> 目录里的图片换成同样编号的文件，这张表不用动。</li>
+</ul>
+<p>首页那一排关卡按钮上的文字就是按这张表拼出来的：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:196-197</span></span><br><span class="line">    b.<span class="property">innerHTML</span>=<span class="string">&#x27;&lt;div class=&quot;t&quot;&gt;第 &#x27;</span>+n+<span class="string">&#x27; 关&lt;/div&gt;&lt;div class=&quot;d&quot;&gt;&#x27;</span>+lv.<span class="property">c</span>+<span class="string">&#x27;×&#x27;</span>+lv.<span class="property">r</span>+<span class="string">&#x27; · &#x27;</span>+lv.<span class="property">f</span>+<span class="string">&#x27; 种图 · &#x27;</span>+<span class="title function_">fmt</span>(lv.<span class="property">t</span>)+</span><br><span class="line">      (best?<span class="string">&#x27; · 最高 &#x27;</span>+<span class="attr">best</span>:<span class="string">&#x27;&#x27;</span>)+(unlocked?<span class="string">&#x27;&#x27;</span>:<span class="string">&#x27; · 未解锁&#x27;</span>)+<span class="string">&#x27;&lt;/div&gt;&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p><code>&#39;文字&#39; + 变量</code> 是字符串拼接，把数字和文字接成一整句。<code>lv.c+&#39;×&#39;+lv.r</code> 得出 <code>6×4</code> 这种形状，<code>fmt(lv.t)</code> 把 90 秒换算成 <code>01:30</code> 的写法（换算函数在第七篇）。<code>(best?&#39; · 最高 &#39;+best:&#39;&#39;)</code> 是三元表达式，形如 <code>条件 ? A : B</code>，条件成立取 A 否则取 B，这里的意思是「这一关有过最高分才追加那半句」。</p>
+<h2 id="一局游戏的当前状态：S"><a href="#一局游戏的当前状态：S" class="headerlink" title="一局游戏的当前状态：S"></a>一局游戏的当前状态：S</h2><p>代码里没有第二份棋盘。整局游戏的所有可变成量集中放在一个对象 <code>S</code> 里，开局那一刻整个换成新的：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:166</span></span><br><span class="line"><span class="keyword">var</span> S=<span class="literal">null</span>, timer=<span class="number">0</span>, lastMatch=<span class="number">0</span>, combo=<span class="number">0</span>, runBase=<span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:226-227</span></span><br><span class="line">  S=&#123;<span class="attr">lv</span>:lv,<span class="attr">no</span>:level,<span class="attr">g</span>:d.<span class="property">g</span>,<span class="attr">rows</span>:d.<span class="property">rows</span>,<span class="attr">cols</span>:d.<span class="property">cols</span>,<span class="attr">cell</span>:d.<span class="property">cell</span>,<span class="attr">total</span>:d.<span class="property">total</span>,</span><br><span class="line">     <span class="attr">left</span>:d.<span class="property">total</span>,<span class="attr">time</span>:lv.<span class="property">t</span>,<span class="attr">hint</span>:lv.<span class="property">h</span>,<span class="attr">shuf</span>:lv.<span class="property">s</span>,<span class="attr">score</span>:<span class="number">0</span>,<span class="attr">sel</span>:<span class="literal">null</span>,<span class="attr">locked</span>:<span class="literal">false</span>&#125;;</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>lv</code></td>
+<td>本关的参数表，就是 <code>LEVELS</code> 里那一行</td>
+</tr>
+<tr>
+<td><code>no</code></td>
+<td>第几关，从 1 开始</td>
+</tr>
+<tr>
+<td><code>g</code></td>
+<td>那张大一圈的棋盘表本身</td>
+</tr>
+<tr>
+<td><code>rows</code> &#x2F; <code>cols</code></td>
+<td>棋盘的行数与列数，不含外圈</td>
+</tr>
+<tr>
+<td><code>cell</code></td>
+<td>一格多少像素，第五篇算的就是这个数</td>
+</tr>
+<tr>
+<td><code>total</code></td>
+<td>开局共有多少张图</td>
+</tr>
+<tr>
+<td><code>left</code></td>
+<td>还剩多少张没消</td>
+</tr>
+<tr>
+<td><code>time</code></td>
+<td>剩余秒数，每 0.1 秒减一次</td>
+</tr>
+<tr>
+<td><code>hint</code> &#x2F; <code>shuf</code></td>
+<td>剩余的提示与重排次数</td>
+</tr>
+<tr>
+<td><code>score</code></td>
+<td>本关分数</td>
+</tr>
+<tr>
+<td><code>sel</code></td>
+<td>当前选中哪张，没选中是 <code>null</code></td>
+</tr>
+<tr>
+<td><code>locked</code></td>
+<td>是否正在播放消除动画，用来挡住新的点击</td>
+</tr>
+</tbody></table>
+<p><code>null</code> 是「这里没有东西」，不是 0、也不是空字符串。<code>locked:false</code> 里的 <code>false</code>&#x2F;<code>true</code> 是布尔值，只有这两个状态，专门用来当开关。</p>
+<p>第一行里那几个变量：<code>timer</code> 是定时器的编号（第七篇用它停计时），<code>lastMatch</code> 与 <code>combo</code> 管连续消除的加分。<code>S=null</code> 的含义是「开局前根本不存在任何一局」，所以点击处理进来第一件事都是检查 <code>S</code> 在不在，见第七篇的 <code>tap</code>。</p>
+<p>同一段里还剩一个 <code>runBase=S.score</code>，赋值之后没有任何地方读这个变量，属于遗留写法。留着不影响运行，但别按「本关起始分」去理解计分。</p>
+<h2 id="本篇新名词"><a href="#本篇新名词" class="headerlink" title="本篇新名词"></a>本篇新名词</h2><table>
+<thead>
+<tr>
+<th>名词</th>
+<th>一句话解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>数组</td>
+<td>一排按顺序编号的值，编号从 0 起，写 <code>a[2]</code> 取第三个</td>
+</tr>
+<tr>
+<td>二维数组</td>
+<td>数组的元素还是数组，写 <code>g[行][列]</code></td>
+</tr>
+<tr>
+<td>对象</td>
+<td>一堆有名字的值，写 <code>{名字: 值}</code>，用点号取</td>
+</tr>
+<tr>
+<td>索引</td>
+<td>数组里的位置编号</td>
+</tr>
+<tr>
+<td>循环</td>
+<td><code>for(起点; 条件; 每轮怎么变)</code>，条件成立就一直执行</td>
+</tr>
+<tr>
+<td>函数</td>
+<td>一段起名字、可以带参数、可以返回值的代码</td>
+</tr>
+<tr>
+<td>参数</td>
+<td>调用函数时递进去的值</td>
+</tr>
+<tr>
+<td>返回值</td>
+<td>函数算完递出来的那个值</td>
+</tr>
+<tr>
+<td>三元表达式</td>
+<td><code>条件 ? A : B</code>，二选一</td>
+</tr>
+<tr>
+<td>布尔值</td>
+<td>只有 <code>true</code> 与 <code>false</code> 两种状态的值</td>
+</tr>
+<tr>
+<td><code>null</code></td>
+<td>表示「没有值」的那个特殊值</td>
+</tr>
+<tr>
+<td>字符串拼接</td>
+<td>用 <code>+</code> 把文字与数字接成一整段文字</td>
+</tr>
+<tr>
+<td>相对路径 &#x2F; 绝对路径</td>
+<td>不带 <code>/</code> 开头的按当前目录找，带 <code>/</code> 开头的从根路径找</td>
+</tr>
+</tbody></table>
+<h2 id="自测"><a href="#自测" class="headerlink" title="自测"></a>自测</h2><ol>
+<li>代码里那张表为什么比棋盘横竖各多两行两列？少这一圈会怎样？<br>答：这一圈是留给连线绕棋盘外用的通道。少了这一圈，边界上的图就没有绕行路线，很多本该连得上的组合会被判成连不上。</li>
+<li><code>g[0][3]</code> 上的值有可能不是 0 吗？<br>答：不可能。第 0 行是外圈，填牌从行 1 开始，外圈永远是空格。</li>
+<li>表里存的值是 <code>7</code>，代表什么？<br>答：这张格子的图是第 7 种图案，对应 <code>img/image6.jpg</code>。编号相同的图在棋盘上成对出现。</li>
+<li>关卡表里的 <code>s:0</code> 是什么意思？<br>答：这一关的重排次数是 0，重排按钮一开始就是禁用状态，排成死局只能重玩。</li>
+<li><code>c</code> 与 <code>r</code> 的乘积如果是奇数会发生什么？<br>答：牌数无法成对，最后一张落单，永远消不掉，那一关不可能过。</li>
+<li>第 19 关写着 <code>c:22</code>，手机上也是 22 列吗？<br>答：不是。<code>c</code> 是设计目标，实际行列由牌数的因数分解在当前窗口里重新挑，第 19 关窄屏下是 16 行 11 列，见第五篇。</li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io">61飞兔</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/">https://cyg0825.github.io/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://cyg0825.github.io" target="_blank">学海拾茜</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E8%BF%9E%E8%BF%9E%E7%9C%8B/">连连看</a><a class="post-meta__tags" href="/tags/JavaScript/">JavaScript</a></div><div class="post-share"><div class="social-share" data-image="/img/cat.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="/assets/css/share.min.css" media="print" onload="this.media='all'"><script src="/assets/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/11/02/02-%E9%9A%8F%E6%9C%BA%E6%95%B0%E4%B8%8E%E5%8F%91%E7%89%8C/" title="02-随机数与发牌"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">02-随机数与发牌</div></div><div class="info-2"><div class="info-item-1">这一篇的位置第一篇把最底层的形状定下来了：棋盘在代码里是一张横竖各多两行两列的表，表里的 0 是空格、1 到 30 是图案编号，关卡表 LEVELS 一行一关。这一篇讲这张表内部的数字是怎么被填进去的，也就是「发一副牌」这件事，对应 Link/script.js 第 27 到 35 行（rngOf、shuffled）和第 62 到 77 行（deal）。 后面几篇要用到的东西在这一篇只出现名字：连线判定在第三篇，findMove 与 reshuffle 的内部机制在第四篇，fitGrid 怎么挑行列、格子尺寸怎么算在第五篇，界面与样式在第六篇，点击、计分与存档在第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   03 连线判定 拐弯不超过两次怎么判、折线怎么回溯出来   04 死局与自动重排 有没有可连的一步、重排怎么保证不越排越死   05 布局自适应 格子尺寸怎么算、窗口变化怎么跟   06 界面骨架与样式 HTML 与 CSS 逐行   07 点击、计分与存档 点击状态机、计...</div></div></div></a><a class="pagination-related" href="/2026/10/22/hexo-%E6%9C%AC%E5%9C%B0%E5%90%8E%E5%8F%B0/" title="Hexo 本地后台"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Hexo 本地后台</div></div><div class="info-2"><div class="info-item-1">这是什么给 Hexo 源目录配一个只在本机跑的编辑后台，管到 source/ 的全部内容加上根目录的配置文件：文章、草稿、独立页面、主题自定义集合、source/_data/ 里的数据文件、scaffolds/ 里的模板、静态资源都能增删改；_config.yml 与主题配置铺成中文标签的表单。构建和部署仍在命令行做，后台不落 public/，也不执行任何 hexo 命令。 覆盖面靠目录约定自动发现：source/_posts/ 是文章，source/_drafts/ 是草稿，source/_&lt;名&gt;/ 是主题自定义的集合，其余 markdown 与 html 文件是页面，剩下的都归资源。后台不认识的 front-matter 键、读不懂的配置结构，一律降级成原文编辑而不是拒绝。将来站点加集合、加配置键，后台不用改代码，这是「通用」在这里的全部含义。 出发点是把「改一篇内容」的代价压到最低。命令行侧手工改一篇要同时盯住 front-matter 的键名与引号风格、分类要写成数组、嵌套缩进要对、配图要先算出站内相对路径，任何一处漏了都要等构建才发现。源目录不是 git 仓...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/" title="05-布局自适应"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-05</div><div class="info-item-2">05-布局自适应</div></div><div class="info-2"><div class="info-item-1">这一篇的位置前三篇把棋盘当成一张已经存在的表来讲：行列是多少、数字怎么填、折线怎么走。这一篇回答这张表是怎么在屏幕上放下的。同一份关卡表要在 27 寸显示器和手机竖屏上都玩得动，靠的不是两套代码，而是一段在开局时挑行列、在窗口变化时换边长的计算。 对应 Link/script.js 第 36 到 61 行（fitGrid，挑行列与边长）、第 205 到 217 行（keepBottom、fitStage、stageBox，算可用宽高）、第 230 到 234 行（start 里定盒子）、第 247 到 258 行（tileEl，把格子换成像素）、第 421 到 436 行（resize 监听）。样式侧只有三行相关：#stage 的 overflow:auto、#board 的 margin:0 auto、@media (max-width:640px) 那一段，逐行归第六篇。 后面几篇要用到的东西在这一篇只出现名字：HTML 骨架与样式在第六篇，点击状态机、计分与存档在第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌...</div></div></div></a><a class="pagination-related" href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/" title="07-点击计分与存档"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-06</div><div class="info-item-2">07-点击计分与存档</div></div><div class="info-2"><div class="info-item-1">这一篇的位置前六篇把棋盘怎么生成、线怎么判、死局怎么解、格子怎么算、壳子怎么搭讲完了，还差把这几件事串起来的那根线：点下去的一张图块，怎么变成分数、变成进度条、变成下一次打开页面时还在的存档。这一篇讲的就是这根线，全部落在 Link/script.js 第 162 行往下的界面层。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   03 连线判定 拐弯不超过两次怎么判、折线怎么回溯出来   04 死局与自动重排 有没有可连的一步、重排怎么保证不越排越死   05 布局自适应 格子尺寸怎么算、窗口变化怎么跟   06 界面骨架与样式 HTML 与 CSS 逐行   07 点击、计分与存档 点击状态机、计时与分数、本地存档、音乐   一局游戏的全部事实123456// Link/script.js:162-166/* ==== 界面 ==== */var $=function(id)&#123;return document.getElementById(id);&#125;;var SAVE...</div></div></div></a><a class="pagination-related" href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/" title="06-界面骨架与样式"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-05</div><div class="info-item-2">06-界面骨架与样式</div></div><div class="info-2"><div class="info-item-1">这一篇的位置前五篇讲的都是数据与算法：棋盘的形状、发牌、连线判定、死局与重排、格子尺寸。这一篇讲承载它们的那层：Link/index.html 的骨架和 Link/style.css 的样式。这两份文件都很短，却决定了前面所有计算能不能被看见、被点着。 这一篇的顺序是先骨架后样式：先把 HTML 里每个块是什么、为什么在这儿讲清，再按样式文件的书写顺序讲它做了哪几件事。代码与数据怎么把这些空壳填满，归第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   03 连线判定 拐弯不超过两次怎么判、折线怎么回溯出来   04 死局与自动重排 有没有可连的一步、重排怎么保证不越排越死   05 布局自适应 格子尺寸怎么算、窗口变化怎么跟   06 界面骨架与样式 HTML 与 CSS 逐行   07 点击、计分与存档 点击状态机、计时与分数、本地存档、音乐   骨架：一个文件装两个界面12345678910// Link/index.html:1-9&lt;!DOCTYPE html&gt;&...</div></div></div></a><a class="pagination-related" href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/" title="04-死局与自动重排"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-04</div><div class="info-item-2">04-死局与自动重排</div></div><div class="info-2"><div class="info-item-1">这一篇的位置第三篇的 linkPath 回答的是「这两张图现在连不连得上」。这一篇回答另一个问题：整张盘面上还有没有至少一对连得上的图。这个问题看起来只是把前面那个多用一次，实际上它是三个界面动作的共同前提：开局发完牌要检查一次，每消掉一对要检查一次，玩家按「提示」也要检查一次。检查出来没有解，就轮到重排出场。 对应 Link/script.js 第 127 到 134 行（tilesOf）、第 135 到 145 行（findMove）、第 151 到 161 行（reshuffle）、第 324 到 330 行（repaint），以及读它们的三处界面代码：第 314 到 321 行（每次消除之后）、第 397 到 408 行（提示按钮）、第 409 到 413 行（重排按钮）。 后面几篇要用到的东西在这一篇只出现名字：fitGrid 与格子边长怎么随窗口变化在第五篇，HTML 与 CSS 逐行在第六篇，点击状态机、计分与存档在第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   ...</div></div></div></a><a class="pagination-related" href="/2026/11/02/02-%E9%9A%8F%E6%9C%BA%E6%95%B0%E4%B8%8E%E5%8F%91%E7%89%8C/" title="02-随机数与发牌"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-02</div><div class="info-item-2">02-随机数与发牌</div></div><div class="info-2"><div class="info-item-1">这一篇的位置第一篇把最底层的形状定下来了：棋盘在代码里是一张横竖各多两行两列的表，表里的 0 是空格、1 到 30 是图案编号，关卡表 LEVELS 一行一关。这一篇讲这张表内部的数字是怎么被填进去的，也就是「发一副牌」这件事，对应 Link/script.js 第 27 到 35 行（rngOf、shuffled）和第 62 到 77 行（deal）。 后面几篇要用到的东西在这一篇只出现名字：连线判定在第三篇，findMove 与 reshuffle 的内部机制在第四篇，fitGrid 怎么挑行列、格子尺寸怎么算在第五篇，界面与样式在第六篇，点击、计分与存档在第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   03 连线判定 拐弯不超过两次怎么判、折线怎么回溯出来   04 死局与自动重排 有没有可连的一步、重排怎么保证不越排越死   05 布局自适应 格子尺寸怎么算、窗口变化怎么跟   06 界面骨架与样式 HTML 与 CSS 逐行   07 点击、计分与存档 点击状态机、计...</div></div></div></a><a class="pagination-related" href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/" title="03-连线判定"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-03</div><div class="info-item-2">03-连线判定</div></div><div class="info-2"><div class="info-item-1">这一篇的位置前两篇把棋盘这张表的形状（横竖各多两行两列的外圈，0 是空格、正整数是图案编号）和表里的数字怎么填进去讲完了。这一篇回答玩家真正在意的那个问题：两张相同的图按下去，凭什么算连上、凭什么算连不上，以及连上之后屏幕上那条折线是怎么来的。 对应 Link/script.js 第 78 到 116 行（linkPath，判定与找路）、第 117 到 126 行（simplify，把逐格路径压成拐点）、第 331 到 338 行（drawPath，把拐点画成一条线）。方向表 DIRS 在第 25 行。 后面几篇要用到的东西在这一篇只出现名字：findMove 怎么判断「这一局还有没有可连的一步」、死局之后 reshuffle 怎么重排，在第四篇；fitGrid 怎么挑行列、格子边长 cell 从哪来在第五篇；HTML 与 CSS 逐行在第六篇；点击状态机、计分与存档在第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   03 连线判定 拐弯不超过两次怎么判、折线怎么回溯出来   0...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">61飞兔</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">65</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">26</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">24</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/cyg0825"><i class="fab fa-github"></i><span>关注我</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%99%E4%B8%80%E7%AF%87%E7%9A%84%E4%BD%8D%E7%BD%AE"><span class="toc-number">1.</span> <span class="toc-text">这一篇的位置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A6%96%E9%A1%B5%E4%B8%8E%E4%B8%80%E7%9B%98%E6%A3%8B"><span class="toc-number">2.</span> <span class="toc-text">首页与一盘棋</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A3%8B%E7%9B%98%E5%9C%A8%E4%BB%A3%E7%A0%81%E9%87%8C%E6%98%AF%E4%B8%80%E5%BC%A0%E6%AF%94%E6%A3%8B%E7%9B%98%E5%A4%A7%E4%B8%80%E5%9C%88%E7%9A%84%E8%A1%A8"><span class="toc-number">3.</span> <span class="toc-text">棋盘在代码里是一张比棋盘大一圈的表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A1%A8%E9%87%8C%E5%AD%98%E7%9A%84%E5%80%BC%EF%BC%9A0-%E6%98%AF%E7%A9%BA%EF%BC%8C1-%E5%88%B0-30-%E6%98%AF%E5%9B%BE%E6%A1%88%E7%BC%96%E5%8F%B7"><span class="toc-number">4.</span> <span class="toc-text">表里存的值：0 是空，1 到 30 是图案编号</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E4%B8%AA%E6%96%B9%E5%90%91-DIRS"><span class="toc-number">5.</span> <span class="toc-text">四个方向 DIRS</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E8%A1%A8-LEVELS"><span class="toc-number">6.</span> <span class="toc-text">关卡表 LEVELS</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E5%B1%80%E6%B8%B8%E6%88%8F%E7%9A%84%E5%BD%93%E5%89%8D%E7%8A%B6%E6%80%81%EF%BC%9AS"><span class="toc-number">7.</span> <span class="toc-text">一局游戏的当前状态：S</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%AC%E7%AF%87%E6%96%B0%E5%90%8D%E8%AF%8D"><span class="toc-number">8.</span> <span class="toc-text">本篇新名词</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%87%AA%E6%B5%8B"><span class="toc-number">9.</span> <span class="toc-text">自测</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/" title="07-点击计分与存档">07-点击计分与存档</a><time datetime="2026-11-06T00:20:00.000Z" title="发表于 2026-11-06 08:20:00">2026-11-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/" title="06-界面骨架与样式">06-界面骨架与样式</a><time datetime="2026-11-05T08:40:00.000Z" title="发表于 2026-11-05 16:40:00">2026-11-05</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/" title="05-布局自适应">05-布局自适应</a><time datetime="2026-11-05T01:30:00.000Z" title="发表于 2026-11-05 09:30:00">2026-11-05</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/" title="04-死局与自动重排">04-死局与自动重排</a><time datetime="2026-11-04T01:10:00.000Z" title="发表于 2026-11-04 09:10:00">2026-11-04</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/" title="03-连线判定">03-连线判定</a><time datetime="2026-11-03T01:20:00.000Z" title="发表于 2026-11-03 09:20:00">2026-11-03</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2024 - 2026 By 61飞兔</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.3</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
+(function () {
+  var menus = document.getElementById('sidebar-menus')
+  var card = document.querySelector('#aside-content .card-info')
+  if (!menus || !card || menus.dataset.profileIn) return
+  var name = card.querySelector('.author-info-name')
+  var btn = card.querySelector('#card-info-btn')
+  if (name) {
+    var n = name.cloneNode(true)
+    n.className = 'sidebar-author-name'
+    menus.querySelector('.avatar-img').after(n)
+  }
+  if (btn) {
+    var b = btn.cloneNode(true)
+    b.removeAttribute('id')
+    b.className = 'sidebar-follow'
+    menus.querySelector('.site-data').after(b)
+  }
+  menus.dataset.profileIn = '1'
+})()
+</script><div class="aplayer no-destroy" data-id="9086662585" data-server="netease" data-type="playlist" data-fixed="true" data-autoplay="false" data-order="random" data-mini="true" data-api="https://api.injahow.cn/meting/?server=:server&amp;type=:type&amp;id=:id&amp;r=:r">
+</div><link rel="stylesheet" href="/assets/css/APlayer.min.css" media="print" onload="this.media='all'"><script src="/assets/js/APlayer.min.js"></script><script src="/assets/js/Meting.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索文章" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>

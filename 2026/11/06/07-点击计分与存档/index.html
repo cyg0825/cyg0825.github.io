@@ -1,0 +1,589 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>07-点击计分与存档 | 学海拾茜</title><meta name="author" content="61飞兔"><meta name="copyright" content="61飞兔"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="这一篇的位置前六篇把棋盘怎么生成、线怎么判、死局怎么解、格子怎么算、壳子怎么搭讲完了，还差把这几件事串起来的那根线：点下去的一张图块，怎么变成分数、变成进度条、变成下一次打开页面时还在的存档。这一篇讲的就是这根线，全部落在 Link&#x2F;script.js 第 162 行往下的界面层。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发">
+<meta property="og:type" content="article">
+<meta property="og:title" content="07-点击计分与存档">
+<meta property="og:url" content="https://cyg0825.github.io/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/index.html">
+<meta property="og:site_name" content="学海拾茜">
+<meta property="og:description" content="这一篇的位置前六篇把棋盘怎么生成、线怎么判、死局怎么解、格子怎么算、壳子怎么搭讲完了，还差把这几件事串起来的那根线：点下去的一张图块，怎么变成分数、变成进度条、变成下一次打开页面时还在的存档。这一篇讲的就是这根线，全部落在 Link&#x2F;script.js 第 162 行往下的界面层。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cyg0825.github.io/img/cat.png">
+<meta property="article:published_time" content="2026-11-06T00:20:00.000Z">
+<meta property="article:modified_time" content="2026-11-06T15:50:44.731Z">
+<meta property="article:author" content="61飞兔">
+<meta property="article:tag" content="JavaScript">
+<meta property="article:tag" content="连连看">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cyg0825.github.io/img/cat.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "07-点击计分与存档",
+  "url": "https://cyg0825.github.io/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/",
+  "image": "https://cyg0825.github.io/img/cat.png",
+  "datePublished": "2026-11-06T00:20:00.000Z",
+  "dateModified": "2026-11-06T15:50:44.731Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "61飞兔",
+      "url": "https://cyg0825.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/333.png"><link rel="canonical" href="https://cyg0825.github.io/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/css/fontawesome/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '07-点击计分与存档',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><style>
+/* 手机端复用右侧收起按钮，整块侧栏（个人信息等卡片）可收起 */
+@media (max-width: 900px) {
+  #rightside #hide-aside-btn { display: block !important; }
+  html.hide-aside .layout > #aside-content { display: none; }
+  /* 个人信息卡折叠进抽屉，页面里不再单独占一块 */
+  #aside-content > .card-info { display: none; }
+}
+#sidebar-menus .sidebar-author-name { margin: 6px 0 0; font-size: 1.3em; font-weight: 700; text-align: center; }
+#sidebar-menus .sidebar-follow { display: block; margin: 14px 20px 0; padding: 9px 0; border-radius: 8px; background: var(--btn-bg); color: var(--btn-color); text-align: center; }
+#sidebar-menus .sidebar-follow i { margin-right: 6px; }
+/* 沿用线上站点：页脚透明，让背景色直接透出 */
+#footer { background: transparent !important; }
+#footer::before { background: transparent !important; }
+[data-theme="dark"] #footer::before { background: transparent !important; }
+/* 头图蒙版改成毛玻璃：轻微模糊 + 极淡压色，做出朦胧感但不挡画面 */
+#page-header:not(.not-top-img)::before {
+  background: linear-gradient(180deg, rgba(238,242,252,.16), rgba(214,222,242,.07) 55%, rgba(196,206,232,.20)) !important;
+  -webkit-backdrop-filter: blur(6px) brightness(.94) saturate(1.02);
+  backdrop-filter: blur(6px) brightness(.94) saturate(1.02);
+}
+[data-theme="dark"] #page-header:not(.not-top-img)::before {
+  background: linear-gradient(180deg, rgba(16,18,26,.20), rgba(16,18,26,.09) 55%, rgba(8,10,16,.26)) !important;
+  -webkit-backdrop-filter: blur(6px) brightness(.88);
+  backdrop-filter: blur(6px) brightness(.88);
+}
+/* 播放器遇到不可播曲目的自动跳过提示不显示 */
+.aplayer .aplayer-notice { display: none !important; }
+/* 主题只写了旧版高亮类名，补上 highlight.js 11 的这批 token，配色沿用主题的 light 色板 */
+#article-container figure.highlight pre .selector-tag,
+#article-container figure.highlight pre .selector-class,
+#article-container figure.highlight pre .selector-id,
+#article-container figure.highlight pre .selector-pseudo,
+#article-container figure.highlight pre .selector-attr,
+#article-container figure.highlight pre .property { color: #e53935; }
+#article-container figure.highlight pre .function_ { color: #6182b8; }
+#article-container figure.highlight pre .class_ { color: #ffb62c; }
+#article-container figure.highlight pre .constant_ { color: #f76d47; }
+#article-container figure.highlight pre .type { color: #6182b8; }
+#article-container figure.highlight pre .invoke__,
+#article-container figure.highlight pre .subst { color: #f76d47; }
+#article-container figure.highlight pre .language_,
+#article-container figure.highlight pre .bullet { color: #7c4dff; }
+/* 菜单图标位是原样落到 <i class="fa-fw …"> 的类名；不用 fontawesome 时把它变成一张图，
+   宽度沿用 .fa-fw 的 1.25em 以对齐同级菜单项，只补上空白 <i> 需要的高度和基线 */
+i.fa-fw.img-notelume {
+  background: url(/img/notelume.png) center / contain no-repeat;
+  height: 1em; display: inline-block; vertical-align: -.15em;
+}
+</style><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-color: #bbdefb;"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">65</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">26</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">24</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-code"></i><span> 项目</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/"><i class="fa-fw fas fa-book"></i><span> 学生选课系统</span></a></li><li><a class="site-page child" target="_blank" rel="noopener" href="https://hackersnail.github.io/NoteLume/"><i class="fa-fw img-notelume"></i><span> NoteLume</span></a></li><li><a class="site-page child" href="/birthday/"><i class="fa-fw fas fa-cake-candles"></i><span> 祝福</span></a></li><li><a class="site-page child" href="/link/"><i class="fa-fw fas fa-puzzle-piece"></i><span> 连连看</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-file-alt"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/tags/%E8%AF%B4%E8%AF%B4/"><i class="fa-fw fas fa-comment-dots"></i><span> 说说</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/img/link/lk-06-win.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/333.png" alt="Logo"><span class="site-name">学海拾茜</span></a><a class="nav-page-title" href="/"><span class="site-name">07-点击计分与存档</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-code"></i><span> 项目</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/"><i class="fa-fw fas fa-book"></i><span> 学生选课系统</span></a></li><li><a class="site-page child" target="_blank" rel="noopener" href="https://hackersnail.github.io/NoteLume/"><i class="fa-fw img-notelume"></i><span> NoteLume</span></a></li><li><a class="site-page child" href="/birthday/"><i class="fa-fw fas fa-cake-candles"></i><span> 祝福</span></a></li><li><a class="site-page child" href="/link/"><i class="fa-fw fas fa-puzzle-piece"></i><span> 连连看</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-file-alt"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/tags/%E8%AF%B4%E8%AF%B4/"><i class="fa-fw fas fa-comment-dots"></i><span> 说说</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">07-点击计分与存档</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-11-06T00:20:00.000Z" title="发表于 2026-11-06 08:20:00">2026-11-06</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-11-06T15:50:44.731Z" title="更新于 2026-11-06 23:50:44">2026-11-06</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AD%A6%E4%B9%A0/">学习</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AD%A6%E4%B9%A0/%E8%BF%9E%E8%BF%9E%E7%9C%8B/">连连看</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h2 id="这一篇的位置"><a href="#这一篇的位置" class="headerlink" title="这一篇的位置"></a>这一篇的位置</h2><p>前六篇把棋盘怎么生成、线怎么判、死局怎么解、格子怎么算、壳子怎么搭讲完了，还差把这几件事串起来的那根线：点下去的一张图块，怎么变成分数、变成进度条、变成下一次打开页面时还在的存档。这一篇讲的就是这根线，全部落在 <code>Link/script.js</code> 第 162 行往下的界面层。</p>
+<table>
+<thead>
+<tr>
+<th>篇</th>
+<th>讲什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/">01 结构与数据形状</a></td>
+<td>文件分工、棋盘的真实形状、关卡表</td>
+</tr>
+<tr>
+<td><a href="/2026/11/02/02-%E9%9A%8F%E6%9C%BA%E6%95%B0%E4%B8%8E%E5%8F%91%E7%89%8C/">02 随机数与发牌</a></td>
+<td>自带随机数发生器、洗牌、成对发牌</td>
+</tr>
+<tr>
+<td><a href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/">03 连线判定</a></td>
+<td>拐弯不超过两次怎么判、折线怎么回溯出来</td>
+</tr>
+<tr>
+<td><a href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/">04 死局与自动重排</a></td>
+<td>有没有可连的一步、重排怎么保证不越排越死</td>
+</tr>
+<tr>
+<td><a href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/">05 布局自适应</a></td>
+<td>格子尺寸怎么算、窗口变化怎么跟</td>
+</tr>
+<tr>
+<td><a href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/">06 界面骨架与样式</a></td>
+<td>HTML 与 CSS 逐行</td>
+</tr>
+<tr>
+<td><a href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/">07 点击、计分与存档</a></td>
+<td>点击状态机、计时与分数、本地存档、音乐</td>
+</tr>
+</tbody></table>
+<h2 id="一局游戏的全部事实"><a href="#一局游戏的全部事实" class="headerlink" title="一局游戏的全部事实"></a>一局游戏的全部事实</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:162-166</span></span><br><span class="line"><span class="comment">/* ==== 界面 ==== */</span></span><br><span class="line"><span class="keyword">var</span> $=<span class="keyword">function</span>(<span class="params">id</span>)&#123;<span class="keyword">return</span> <span class="variable language_">document</span>.<span class="title function_">getElementById</span>(id);&#125;;</span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">SAVE_KEY</span>=<span class="string">&#x27;link-save&#x27;</span>;</span><br><span class="line"><span class="keyword">var</span> save=<span class="title function_">loadSave</span>();</span><br><span class="line"><span class="keyword">var</span> S=<span class="literal">null</span>, timer=<span class="number">0</span>, lastMatch=<span class="number">0</span>, combo=<span class="number">0</span>, runBase=<span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 163 行：<code>$(id)</code> 是 <code>document.getElementById</code> 的简写。整份文件里取元素全靠它，写短一点能让后面几十行都清爽。</li>
+<li>第 164 到 165 行：<code>SAVE_KEY</code> 是本地存储的键名，<code>save</code> 在页面加载时立刻读一次。这两个是不同的东西：<code>save</code> 是内存里的对象，<code>SAVE_KEY</code> 是它在浏览器里的门牌号。</li>
+<li>第 166 行一次声明五个变量。<code>S</code> 是「当前这一局」的全部状态，初始 <code>null</code> 表示还没开局；<code>timer</code> 存定时器的编号，用来关掉计时；<code>lastMatch</code> 记上一次消除成功的时刻（毫秒时间戳）；<code>combo</code> 是连击数；<code>runBase</code> 见本节末尾。</li>
+</ul>
+<p><code>S</code> 在开局那一刻被整体造出来：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:219-229</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">start</span>(<span class="params">level</span>)&#123;</span><br><span class="line">  <span class="keyword">var</span> lv=<span class="variable constant_">LEVELS</span>[level-<span class="number">1</span>];</span><br><span class="line">  $(<span class="string">&#x27;home&#x27;</span>).<span class="property">hidden</span>=<span class="literal">true</span>; $(<span class="string">&#x27;game&#x27;</span>).<span class="property">hidden</span>=<span class="literal">false</span>;</span><br><span class="line">  $(<span class="string">&#x27;hud&#x27;</span>).<span class="property">hidden</span>=<span class="literal">false</span>; $(<span class="string">&#x27;tools&#x27;</span>).<span class="property">hidden</span>=<span class="literal">false</span>; <span class="title function_">toolset</span>(<span class="literal">true</span>);</span><br><span class="line">  <span class="title function_">fitStage</span>();</span><br><span class="line">  <span class="keyword">var</span> box=<span class="title function_">stageBox</span>();</span><br><span class="line">  <span class="keyword">var</span> d=<span class="title function_">deal</span>(lv,box.<span class="property">w</span>,box.<span class="property">h</span>,<span class="title function_">rngOf</span>(<span class="title class_">Date</span>.<span class="title function_">now</span>()&amp;<span class="number">0x7fffffff</span>));</span><br><span class="line">  S=&#123;<span class="attr">lv</span>:lv,<span class="attr">no</span>:level,<span class="attr">g</span>:d.<span class="property">g</span>,<span class="attr">rows</span>:d.<span class="property">rows</span>,<span class="attr">cols</span>:d.<span class="property">cols</span>,<span class="attr">cell</span>:d.<span class="property">cell</span>,<span class="attr">total</span>:d.<span class="property">total</span>,</span><br><span class="line">     <span class="attr">left</span>:d.<span class="property">total</span>,<span class="attr">time</span>:lv.<span class="property">t</span>,<span class="attr">hint</span>:lv.<span class="property">h</span>,<span class="attr">shuf</span>:lv.<span class="property">s</span>,<span class="attr">score</span>:<span class="number">0</span>,<span class="attr">sel</span>:<span class="literal">null</span>,<span class="attr">locked</span>:<span class="literal">false</span>&#125;;</span><br><span class="line">  runBase=S.<span class="property">score</span>;</span><br><span class="line">  combo=<span class="number">0</span>; lastMatch=<span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<p>第 226 到 227 行这十四个字段就是这一局的全部事实，后面所有函数只读它们、改它们，不再另存副本：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+<th>在哪里改</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>lv</code></td>
+<td>关卡表里的那一行，含 <code>c</code>&#x2F;<code>r</code>&#x2F;<code>f</code>&#x2F;<code>t</code>&#x2F;<code>h</code>&#x2F;<code>s</code></td>
+<td>只读</td>
+</tr>
+<tr>
+<td><code>no</code></td>
+<td>第几关，从 1 开始</td>
+<td>只读</td>
+</tr>
+<tr>
+<td><code>g</code></td>
+<td>二维数组棋盘，含最外圈空格</td>
+<td>消除时置 0、重排时洗牌</td>
+</tr>
+<tr>
+<td><code>rows</code>&#x2F;<code>cols</code></td>
+<td>实际行列，由第五篇的 <code>fitGrid</code> 挑出</td>
+<td>只读</td>
+</tr>
+<tr>
+<td><code>cell</code></td>
+<td>格子边长像素</td>
+<td>窗口变化时改</td>
+</tr>
+<tr>
+<td><code>total</code></td>
+<td>开局牌数</td>
+<td>只读</td>
+</tr>
+<tr>
+<td><code>left</code></td>
+<td>剩余牌数，按张计</td>
+<td>每消一对减 2</td>
+</tr>
+<tr>
+<td><code>time</code></td>
+<td>剩余秒数，可以是小数</td>
+<td>每 100 毫秒减 0.1</td>
+</tr>
+<tr>
+<td><code>hint</code>&#x2F;<code>shuf</code></td>
+<td>提示与重排的剩余次数</td>
+<td>按一次减一次</td>
+</tr>
+<tr>
+<td><code>score</code></td>
+<td>本关分数</td>
+<td>每次消除累加</td>
+</tr>
+<tr>
+<td><code>sel</code></td>
+<td>当前选中的格子坐标，没选中是 <code>null</code></td>
+<td>点击时改</td>
+</tr>
+<tr>
+<td><code>locked</code></td>
+<td>消除动画期间锁住点击</td>
+<td>消除时置真，220 毫秒后置假</td>
+</tr>
+</tbody></table>
+<p><code>left</code> 按张计而不是按对计，是因为它直接来自棋盘上的非零格子数；界面上显示的「剩余 11 对」是除以 2 之后的值（第 265 行）。</p>
+<p>两处留下的空，读代码时会撞上，说明在此：<code>runBase</code> 在第 228 行被赋成开局分数，之后没有任何地方读它；<code>countTiles</code>（第 146 到 150 行）统计棋盘剩余牌数，但全文没有调用点，剩余数一直由 <code>left</code> 累减维护。两者都不影响运行，属于开发过程中改路线后没删干净的痕迹。</p>
+<h2 id="存档：关掉浏览器还在"><a href="#存档：关掉浏览器还在" class="headerlink" title="存档：关掉浏览器还在"></a>存档：关掉浏览器还在</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:168-172</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">loadSave</span>(<span class="params"></span>)&#123;</span><br><span class="line">  <span class="keyword">try</span>&#123; <span class="keyword">var</span> s=<span class="title class_">JSON</span>.<span class="title function_">parse</span>(<span class="variable language_">localStorage</span>.<span class="title function_">getItem</span>(<span class="variable constant_">SAVE_KEY</span>)||<span class="string">&#x27;&#123;&#125;&#x27;</span>); &#125;<span class="keyword">catch</span>(e)&#123; <span class="keyword">var</span> s=&#123;&#125;; &#125;</span><br><span class="line">  <span class="keyword">return</span> &#123;<span class="attr">max</span>:s.<span class="property">max</span>||<span class="number">0</span>, <span class="attr">best</span>:s.<span class="property">best</span>||&#123;&#125;, <span class="attr">muted</span>:s.<span class="property">muted</span>===<span class="literal">true</span>&#125;;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">storeSave</span>(<span class="params"></span>)&#123; <span class="keyword">try</span>&#123; <span class="variable language_">localStorage</span>.<span class="title function_">setItem</span>(<span class="variable constant_">SAVE_KEY</span>,<span class="title class_">JSON</span>.<span class="title function_">stringify</span>(save)); &#125;<span class="keyword">catch</span>(e)&#123;&#125; &#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>localStorage</code> 是浏览器提供的键值存储：一个字符串键对应一个字符串值，写在这台机器上，关掉标签页、关掉浏览器都还在，除非清站点数据。它只能存字符串，所以对象进去要先 <code>JSON.stringify</code> 变成文本，出来要 <code>JSON.parse</code> 变回对象。</p>
+<ul>
+<li>第 169 行：<code>getItem</code> 取不到时返回 <code>null</code>，<code>||&#39;{}&#39;</code> 把 <code>null</code> 换成一个空对象的文本，再交给 <code>JSON.parse</code>。外面包 <code>try/catch</code> 是因为两件事都可能失败：从没存过（值不是合法 JSON）、隐私模式下浏览器直接抛异常。失败就把 <code>s</code> 当空对象处理。</li>
+<li>第 170 行：这一段是「兜形状」。哪怕读回来的是一团乱码，函数也保证返回一个有 <code>max</code>、<code>best</code>、<code>muted</code> 三个字段的东西，后面代码可以放心读 <code>save.max</code> 而不用逐次判空。<code>s.max||0</code> 对 <code>undefined</code> 和 <code>0</code> 都给出 0，语义正确；<code>s.muted===true</code> 用严格比较，避免把 <code>undefined</code>、字符串 <code>&quot;false&quot;</code> 之类当成真。</li>
+<li>第 172 行：写回去同样包 <code>try/catch</code>，写失败（配额满、隐私模式）就什么也不做。存档丢了不影响这一局继续玩，所以这里不需要提示。</li>
+</ul>
+<p>三个字段各管一件事：<code>max</code> 是已通过的最高关卡号，<code>best</code> 是「关卡号到最高分」的映射（形如 <code>{&quot;1&quot;:541}</code>），<code>muted</code> 是音乐开关。之所以只存这三样，是因为它们跨局有意义；当前这局的棋盘、分数、剩余时间都不存，刷新页面就回到首页。</p>
+<h2 id="首页：把存档摊成二十张卡片"><a href="#首页：把存档摊成二十张卡片" class="headerlink" title="首页：把存档摊成二十张卡片"></a>首页：把存档摊成二十张卡片</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:184-203</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">toolset</span>(<span class="params">on</span>)&#123;</span><br><span class="line">  $(<span class="string">&#x27;act&#x27;</span>).<span class="property">hidden</span>=!on; $(<span class="string">&#x27;bHome&#x27;</span>).<span class="property">hidden</span>=!on;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">renderHome</span>(<span class="params"></span>)&#123;</span><br><span class="line">  $(<span class="string">&#x27;home&#x27;</span>).<span class="property">hidden</span>=<span class="literal">false</span>; $(<span class="string">&#x27;game&#x27;</span>).<span class="property">hidden</span>=<span class="literal">true</span>;</span><br><span class="line">  $(<span class="string">&#x27;hud&#x27;</span>).<span class="property">hidden</span>=<span class="literal">true</span>; $(<span class="string">&#x27;tools&#x27;</span>).<span class="property">hidden</span>=<span class="literal">false</span>; <span class="title function_">toolset</span>(<span class="literal">false</span>);</span><br><span class="line">  <span class="title function_">stopTimer</span>();</span><br><span class="line">  <span class="keyword">var</span> box=$(<span class="string">&#x27;levels&#x27;</span>); box.<span class="property">innerHTML</span>=<span class="string">&#x27;&#x27;</span>;</span><br><span class="line">  <span class="variable constant_">LEVELS</span>.<span class="title function_">forEach</span>(<span class="keyword">function</span>(<span class="params">lv,i</span>)&#123;</span><br><span class="line">    <span class="keyword">var</span> n=i+<span class="number">1</span>, unlocked=n&lt;=save.<span class="property">max</span>+<span class="number">1</span>, b=<span class="variable language_">document</span>.<span class="title function_">createElement</span>(<span class="string">&#x27;button&#x27;</span>);</span><br><span class="line">    b.<span class="property">className</span>=<span class="string">&#x27;lv&#x27;</span>; b.<span class="property">disabled</span>=!unlocked;</span><br><span class="line">    <span class="keyword">var</span> best=save.<span class="property">best</span>[n];</span><br><span class="line">    b.<span class="property">innerHTML</span>=<span class="string">&#x27;&lt;div class=&quot;t&quot;&gt;第 &#x27;</span>+n+<span class="string">&#x27; 关&lt;/div&gt;&lt;div class=&quot;d&quot;&gt;&#x27;</span>+lv.<span class="property">c</span>+<span class="string">&#x27;×&#x27;</span>+lv.<span class="property">r</span>+<span class="string">&#x27; · &#x27;</span>+lv.<span class="property">f</span>+<span class="string">&#x27; 种图 · &#x27;</span>+<span class="title function_">fmt</span>(lv.<span class="property">t</span>)+</span><br><span class="line">      (best?<span class="string">&#x27; · 最高 &#x27;</span>+<span class="attr">best</span>:<span class="string">&#x27;&#x27;</span>)+(unlocked?<span class="string">&#x27;&#x27;</span>:<span class="string">&#x27; · 未解锁&#x27;</span>)+<span class="string">&#x27;&lt;/div&gt;&#x27;</span>;</span><br><span class="line">    b.<span class="property">onclick</span>=<span class="keyword">function</span>(<span class="params"></span>)&#123; <span class="title function_">start</span>(n); &#125;;</span><br><span class="line">    box.<span class="title function_">appendChild</span>(b);</span><br><span class="line">  &#125;);</span><br><span class="line">  <span class="keyword">var</span> total=<span class="number">0</span>; <span class="keyword">for</span>(<span class="keyword">var</span> k <span class="keyword">in</span> save.<span class="property">best</span>) total+=save.<span class="property">best</span>[k];</span><br><span class="line">  $(<span class="string">&#x27;sMax&#x27;</span>).<span class="property">textContent</span>=save.<span class="property">max</span>; $(<span class="string">&#x27;sTotal&#x27;</span>).<span class="property">textContent</span>=total;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 184 到 186 行：<code>toolset</code> 一次管两个东西：棋盘下的三个按钮和顶栏那个「首页」图标。首页时都不需要：已经在首页了，没有「回首页」可点。第六篇说过 <code>#act</code> 的 <code>hidden</code> 会被 <code>keepBottom()</code> 读到，所以这里改的正是第五篇预留高度所依赖的那个状态。</li>
+<li>第 188 到 189 行：四个 <code>hidden</code> 完成界面切换。整份文件里没有路由、没有第二个 HTML 页面，「在首页」和「在对局」就是这四个布尔属性的组合。</li>
+<li>第 189 行：状态条 <code>#hud</code> 在首页是藏起来的，顶栏只剩站名和音乐图标；<code>#tools</code> 本身不藏，因为音乐按钮在首页也要能按。首页的关卡总数不靠状态条显示，靠下面第 202 行那行汇总。</li>
+<li>第 190 行：回首页第一件事是停表。不停的话计时器还在跑，<code>S.time</code> 继续减，减到 0 会触发 <code>fail()</code>，弹出「时间到」的窗，而人已经不在对局里了。</li>
+<li>第 191 行：<code>innerHTML=&#39;&#39;</code> 清空容器。<code>renderHome</code> 每次调用都重建二十个按钮，不做「只更新变化了的那几个」。二十个节点的成本可以忽略，代码却因此只有一条路径，不会出现「存档变了但卡片没变」的同步漏洞。</li>
+<li>第 193 行：<code>n=i+1</code> 是因为关卡从 1 数，数组下标从 0 数。<code>unlocked=n&lt;=save.max+1</code> 是解锁规则：过了第 1 关（<code>max=1</code>）就放开第 2 关，即「已通的最高关 + 1」始终可玩。第 1 关在 <code>max=0</code> 时也满足，不需要特判。</li>
+<li>第 194 行：<code>b.disabled=!unlocked</code>。禁用的是原生 <code>button</code> 的 <code>disabled</code> 属性，浏览器会一并挡掉点击，不需要额外写 <code>if(unlocked)</code>。</li>
+<li>第 196 到 197 行：说明行由四段拼出来，后两段是条件拼接。<code>best?&#39; · 最高 &#39;+best:&#39;&#39;</code> 在有记录时才追加，<code>unlocked?&#39;&#39;:&#39; · 未解锁&#39;</code> 在锁住时才追加。空字符串拼上去等于不拼。</li>
+<li>第 198 行：<code>b.onclick=function(){ start(n); }</code> 用闭包记住 <code>n</code>。<code>forEach</code> 的回调每轮都新建自己的 <code>n</code>，所以每个按钮拿到的是自己那一关。</li>
+<li>第 201 行：<code>for(var k in save.best)</code> 遍历对象的键，<code>k</code> 是字符串（<code>&quot;1&quot;</code>），<code>save.best[k]</code> 取出数字，累加得到总分。</li>
+<li>第 202 行：把汇总写进首页底部那一行。</li>
+</ul>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-07-home-score.png" alt="首页的三种状态：第 1 关带最高分、第 2 关可点、第 3 关起标着未解锁"></p>
+<p>图里底部那行「已过 1&#x2F;20 关 · 总分 541」就是第 202 行写的，右上角只剩音乐图标，因为 <code>toolset(false)</code> 把首页图标收掉了。</p>
+<h2 id="时间：一个每-100-毫秒的闹钟"><a href="#时间：一个每-100-毫秒的闹钟" class="headerlink" title="时间：一个每 100 毫秒的闹钟"></a>时间：一个每 100 毫秒的闹钟</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:264-285</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">syncHud</span>(<span class="params"></span>)&#123;</span><br><span class="line">  $(<span class="string">&#x27;hLeft&#x27;</span>).<span class="property">textContent</span>=S.<span class="property">left</span>/<span class="number">2</span>; $(<span class="string">&#x27;hScore&#x27;</span>).<span class="property">textContent</span>=S.<span class="property">score</span>;</span><br><span class="line">  $(<span class="string">&#x27;hTime&#x27;</span>).<span class="property">textContent</span>=<span class="title function_">fmt</span>(S.<span class="property">time</span>);</span><br><span class="line">  <span class="keyword">var</span> pct=<span class="title class_">Math</span>.<span class="title function_">max</span>(<span class="number">0</span>,<span class="title class_">Math</span>.<span class="title function_">min</span>(<span class="number">100</span>,S.<span class="property">time</span>/S.<span class="property">lv</span>.<span class="property">t</span>*<span class="number">100</span>));</span><br><span class="line">  <span class="keyword">var</span> bar=$(<span class="string">&#x27;bar&#x27;</span>); bar.<span class="property">style</span>.<span class="property">width</span>=pct+<span class="string">&#x27;%&#x27;</span>;</span><br><span class="line">  bar.<span class="property">classList</span>.<span class="title function_">toggle</span>(<span class="string">&#x27;low&#x27;</span>,S.<span class="property">time</span>&lt;=<span class="number">10</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">syncTools</span>(<span class="params"></span>)&#123;</span><br><span class="line">  $(<span class="string">&#x27;nHint&#x27;</span>).<span class="property">textContent</span>=S.<span class="property">hint</span>; $(<span class="string">&#x27;nShuf&#x27;</span>).<span class="property">textContent</span>=S.<span class="property">shuf</span>;</span><br><span class="line">  $(<span class="string">&#x27;bHint&#x27;</span>).<span class="property">disabled</span>=S.<span class="property">hint</span>&lt;=<span class="number">0</span>; $(<span class="string">&#x27;bShuf&#x27;</span>).<span class="property">disabled</span>=S.<span class="property">shuf</span>&lt;=<span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">startTimer</span>(<span class="params"></span>)&#123;</span><br><span class="line">  <span class="title function_">stopTimer</span>();</span><br><span class="line">  timer=<span class="built_in">setInterval</span>(<span class="keyword">function</span>(<span class="params"></span>)&#123;</span><br><span class="line">    <span class="keyword">if</span>(<span class="variable language_">document</span>.<span class="property">hidden</span>||!$(<span class="string">&#x27;mask&#x27;</span>).<span class="property">hidden</span>) <span class="keyword">return</span>;</span><br><span class="line">    S.<span class="property">time</span>-=<span class="number">0.1</span>;</span><br><span class="line">    <span class="keyword">if</span>(S.<span class="property">time</span>&lt;=<span class="number">0</span>)&#123; S.<span class="property">time</span>=<span class="number">0</span>; <span class="title function_">syncHud</span>(); <span class="title function_">fail</span>(); <span class="keyword">return</span>; &#125;</span><br><span class="line">    <span class="title function_">syncHud</span>();</span><br><span class="line">  &#125;,<span class="number">100</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">stopTimer</span>(<span class="params"></span>)&#123; <span class="keyword">if</span>(timer)&#123; <span class="built_in">clearInterval</span>(timer); timer=<span class="number">0</span>; &#125; &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 265 行：<code>S.left/2</code> 把「张」换成「对」再显示。</li>
+<li>第 266 行：<code>fmt</code> 只取整数部分（第 175 行两个 <code>Math.floor</code>），所以界面上 <code>01:22</code> 实际可能是 <code>82.6</code> 秒。这个差异在结算那节会用到。</li>
+<li>第 267 行：<code>S.time/S.lv.t*100</code> 是剩余比例，<code>Math.min(100, ...)</code> 和 <code>Math.max(0, ...)</code> 把它夹在 0 到 100 之间。不加这层夹子，开局瞬间或时间归零时算出的比例可能超出，进度条会顶出外框。</li>
+<li>第 269 行：<code>classList.toggle(名, 条件)</code> 的两个参数写法是「条件为真就加上，为假就去掉」，比手写 <code>if/else</code> 短。剩余 10 秒以内挂上 <code>low</code>，样式第 61 行把它换成 <code>--danger</code>。</li>
+<li>第 272 到 273 行：<code>syncTools</code> 同时更新数字和禁用状态。第四篇里提示与重排用完会置灰，置灰就是这一行做的。</li>
+<li>第 277 行：<code>startTimer</code> 开头先 <code>stopTimer</code>。重玩、下一关都会再次调用 <code>start</code>，不先关掉旧闹钟的话两个 <code>setInterval</code> 同时跑，时间会双倍往下掉。</li>
+<li>第 279 行：两个暂停条件。<code>document.hidden</code> 是页面切到别的标签页或手机切到后台时为真；<code>!$(&#39;mask&#39;).hidden</code> 是结算弹窗正开着。任一命中就 <code>return</code>，这一次不减时间。切走再回来不会发现时间被偷跑，弹窗开着也不会因为倒计时归零而把窗关掉。</li>
+<li>第 280 行：减 0.1 而不是 1，因为间隔是 100 毫秒。用小数累减的代价是浮点误差，但只在「剩余秒数」这一层，显示时会被 <code>fmt</code> 抹平，判断归零用的是 <code>&lt;=0</code>，不会漏。</li>
+<li>第 281 行：归零时先把 <code>S.time</code> 摆正成 0（否则显示 <code>-0.0</code>），刷一次界面，再交给 <code>fail()</code>，然后 <code>return</code> 跳过后面的普通刷新。</li>
+<li>第 285 行：<code>stopTimer</code> 判过 <code>timer</code> 才清，重复调用不会报错；清完把 <code>timer</code> 归 0，好让下一次判断知道「现在没有闹钟在跑」。</li>
+</ul>
+<h2 id="提示与反馈：格式化数字和一句话"><a href="#提示与反馈：格式化数字和一句话" class="headerlink" title="提示与反馈：格式化数字和一句话"></a>提示与反馈：格式化数字和一句话</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:174-182</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">fmt</span>(<span class="params">sec</span>)&#123;</span><br><span class="line">  <span class="keyword">var</span> m=<span class="title class_">Math</span>.<span class="title function_">floor</span>(sec/<span class="number">60</span>), s=<span class="title class_">Math</span>.<span class="title function_">floor</span>(sec%<span class="number">60</span>);</span><br><span class="line">  <span class="keyword">return</span> (m&lt;<span class="number">10</span>?<span class="string">&#x27;0&#x27;</span>:<span class="string">&#x27;&#x27;</span>)+m+<span class="string">&#x27;:&#x27;</span>+(s&lt;<span class="number">10</span>?<span class="string">&#x27;0&#x27;</span>:<span class="string">&#x27;&#x27;</span>)+s;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> toastT=<span class="number">0</span>;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">toast</span>(<span class="params">msg</span>)&#123;</span><br><span class="line">  <span class="keyword">var</span> t=$(<span class="string">&#x27;toast&#x27;</span>); t.<span class="property">textContent</span>=msg; t.<span class="property">classList</span>.<span class="title function_">add</span>(<span class="string">&#x27;on&#x27;</span>);</span><br><span class="line">  <span class="built_in">clearTimeout</span>(toastT); toastT=<span class="built_in">setTimeout</span>(<span class="keyword">function</span>(<span class="params"></span>)&#123;t.<span class="property">classList</span>.<span class="title function_">remove</span>(<span class="string">&#x27;on&#x27;</span>);&#125;,<span class="number">1800</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 175 行：<code>Math.floor(sec/60)</code> 取整分钟，<code>sec%60</code> 取剩下的秒，两者都向下取整。<code>82.6</code> 变成 <code>1</code> 分 <code>22</code> 秒。</li>
+<li>第 176 行：<code>(m&lt;10?&#39;0&#39;:&#39;&#39;)+m</code> 是补零写法：不满 10 就前面加一个 <code>0</code>。拼出 <code>01:22</code> 而不是 <code>1:22</code>，宽度固定，倒计时不会左右晃。</li>
+<li>第 178 行：<code>toastT</code> 存当前那个「1800 毫秒后关掉」的定时器编号。</li>
+<li>第 180 到 181 行：先 <code>clearTimeout</code> 再重新计时。连着弹两条提示时，如果不清，第一条的关闭时间会把第二条中途掐掉。这是浮层类组件最容易漏的一行。</li>
+</ul>
+<h2 id="点击：一次点下去的七种结果"><a href="#点击：一次点下去的七种结果" class="headerlink" title="点击：一次点下去的七种结果"></a>点击：一次点下去的七种结果</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:287-295</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">clearSel</span>(<span class="params"></span>)&#123; <span class="keyword">if</span>(S&amp;&amp;S.<span class="property">sel</span>)&#123; <span class="keyword">var</span> e=<span class="title function_">tileAt</span>(S.<span class="property">sel</span>.<span class="property">r</span>,S.<span class="property">sel</span>.<span class="property">c</span>); <span class="keyword">if</span>(e) e.<span class="property">classList</span>.<span class="title function_">remove</span>(<span class="string">&#x27;sel&#x27;</span>); S.<span class="property">sel</span>=<span class="literal">null</span>; &#125; &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">tap</span>(<span class="params">r,c</span>)&#123;</span><br><span class="line">  <span class="keyword">if</span>(!S||S.<span class="property">locked</span>) <span class="keyword">return</span>;</span><br><span class="line">  <span class="keyword">var</span> f=S.<span class="property">g</span>[r][c]; <span class="keyword">if</span>(!f) <span class="keyword">return</span>;</span><br><span class="line">  <span class="keyword">if</span>(S.<span class="property">sel</span>&amp;&amp;S.<span class="property">sel</span>.<span class="property">r</span>===r&amp;&amp;S.<span class="property">sel</span>.<span class="property">c</span>===c)&#123; <span class="title function_">clearSel</span>(); <span class="keyword">return</span>; &#125;</span><br><span class="line">  <span class="keyword">if</span>(!S.<span class="property">sel</span>)&#123; S.<span class="property">sel</span>=&#123;<span class="attr">r</span>:r,<span class="attr">c</span>:c&#125;; <span class="title function_">tileAt</span>(r,c).<span class="property">classList</span>.<span class="title function_">add</span>(<span class="string">&#x27;sel&#x27;</span>); <span class="keyword">return</span>; &#125;</span><br><span class="line">  <span class="keyword">var</span> a=S.<span class="property">sel</span>;</span><br><span class="line">  <span class="keyword">if</span>(S.<span class="property">g</span>[a.<span class="property">r</span>][a.<span class="property">c</span>]!==f)&#123; <span class="title function_">clearSel</span>(); S.<span class="property">sel</span>=&#123;<span class="attr">r</span>:r,<span class="attr">c</span>:c&#125;; <span class="title function_">tileAt</span>(r,c).<span class="property">classList</span>.<span class="title function_">add</span>(<span class="string">&#x27;sel&#x27;</span>); <span class="keyword">return</span>; &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 287 行：<code>clearSel</code> 负责把选中态从界面上摘掉。<code>if(e)</code> 是必要的：数据上记着某格有选中，但那一格可能刚被消除、元素已经从页面删了，<code>tileAt</code> 返回 <code>null</code>。</li>
+<li>第 290 行：两道门。<code>!S</code> 是还没开局（在首页），<code>S.locked</code> 是上一次消除的 220 毫秒动画还没走完。锁的用处见下一段。</li>
+<li>第 291 行：<code>f</code> 是这张图块的花色编号，<code>0</code> 表示空格。空格直接返回，所以棋盘上被消出来的洞点了没反应。</li>
+<li>第 292 行：点的正是已选中的那张，等于取消选择。没有这一条，再点同一张会走到「图案相同」的分支去和自己连线。</li>
+<li>第 293 行：手上没有选中，就把这张选中并 <code>return</code>。一次点击只做一件事，函数从这里往后都是「已经有了一张，又点了第二张」的情形。</li>
+<li>第 295 行：两张图案不同，换选。这里不是「取消上一次」而是「以新点这张为准」，符合连点时的直觉：点错了直接点对的，不需要先取消。</li>
+</ul>
+<p>图案相同之后才轮到连线判定：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:296-303</span></span><br><span class="line">  <span class="keyword">var</span> path=<span class="title function_">linkPath</span>(S.<span class="property">g</span>,a,&#123;<span class="attr">r</span>:r,<span class="attr">c</span>:c&#125;);</span><br><span class="line">  <span class="keyword">if</span>(!path)&#123;</span><br><span class="line">    <span class="keyword">var</span> e1=<span class="title function_">tileAt</span>(a.<span class="property">r</span>,a.<span class="property">c</span>), e2=<span class="title function_">tileAt</span>(r,c);</span><br><span class="line">    [e1,e2].<span class="title function_">forEach</span>(<span class="keyword">function</span>(<span class="params">e</span>)&#123; <span class="keyword">if</span>(!e)<span class="keyword">return</span>; e.<span class="property">classList</span>.<span class="title function_">add</span>(<span class="string">&#x27;bad&#x27;</span>); <span class="built_in">setTimeout</span>(<span class="keyword">function</span>(<span class="params"></span>)&#123;e.<span class="property">classList</span>.<span class="title function_">remove</span>(<span class="string">&#x27;bad&#x27;</span>);&#125;,<span class="number">240</span>); &#125;);</span><br><span class="line">    <span class="title function_">clearSel</span>(); S.<span class="property">sel</span>=&#123;<span class="attr">r</span>:r,<span class="attr">c</span>:c&#125;; e2.<span class="property">classList</span>.<span class="title function_">add</span>(<span class="string">&#x27;sel&#x27;</span>);</span><br><span class="line">    <span class="title function_">toast</span>(<span class="string">&#x27;连不上，拐弯不能超过两次&#x27;</span>);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 296 行：第三篇的 <code>linkPath</code> 只吃棋盘数组和两个坐标，不碰界面，所以这里可以直接调。</li>
+<li>第 299 行：连不上给三样反馈。<code>bad</code> 类挂 240 毫秒，样式第 83 行那条 0.22 秒的抖动正好走完；<code>if(!e)return</code> 挡住已删除的元素；数组 <code>forEach</code> 让两张图块走同一段代码。</li>
+<li>第 300 行：<code>clearSel()</code> 先摘掉旧的选中类，再把新点的这张设为选中。于是「连不上」之后手上还留着第二张，可以直接去找它的另一对，不用重新点一次。</li>
+<li>第 301 行：<code>toast</code> 说明原因。这一句只说规则，不说「这两张之间有什么挡着」，因为挡路的图块可能有很多个，指不清。</li>
+</ul>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-05-no-path.png" alt="连不上时：两张图块抖一下，底部浮出一句提示，后点的那张保持选中"></p>
+<p>图里顶栏是「剩余 11 对 分数 10」，说明已经成功消掉一对（12 对减 1 对），那 10 分就是下面第 309 行加的最基础一档。</p>
+<p>连上了走另一条路：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:304-313</span></span><br><span class="line">  S.<span class="property">locked</span>=<span class="literal">true</span>;</span><br><span class="line">  <span class="title function_">clearSel</span>();</span><br><span class="line">  <span class="title function_">drawPath</span>(path);</span><br><span class="line">  <span class="keyword">var</span> now=<span class="title class_">Date</span>.<span class="title function_">now</span>();</span><br><span class="line">  combo=(now-lastMatch&lt;<span class="number">4000</span>)?combo+<span class="number">1</span>:<span class="number">1</span>; lastMatch=now;</span><br><span class="line">  S.<span class="property">score</span>+=<span class="number">10</span>+<span class="title class_">Math</span>.<span class="title function_">min</span>(<span class="number">30</span>,(combo-<span class="number">1</span>)*<span class="number">5</span>);</span><br><span class="line">  <span class="title function_">removeTile</span>(a.<span class="property">r</span>,a.<span class="property">c</span>); <span class="title function_">removeTile</span>(r,c);</span><br><span class="line">  S.<span class="property">g</span>[a.<span class="property">r</span>][a.<span class="property">c</span>]=<span class="number">0</span>; S.<span class="property">g</span>[r][c]=<span class="number">0</span>;</span><br><span class="line">  S.<span class="property">left</span>-=<span class="number">2</span>;</span><br><span class="line">  <span class="title function_">syncHud</span>();</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 304 行：立刻锁住。连线要画 220 毫秒，这期间棋盘数据已经变了但动画还没落，如果允许继续点，会出现「点在一块正在消失的图块上」或者「同一对消两次」。</li>
+<li>第 306 行：<code>drawPath</code> 是第三篇那个函数，只负责把折点画成 SVG 折线，不改数据。</li>
+<li>第 308 行：连击的判定是「距上一次成功不到 4 秒」。<code>now-lastMatch</code> 是毫秒差，<code>4000</code> 就是 4 秒；不满足就重置成 1，满足就加 1。第一次消除时 <code>lastMatch</code> 是 0，差值远大于 4000，<code>combo</code> 自然从 1 起。</li>
+<li>第 309 行：得分公式 <code>10 + min(30, (combo-1)*5)</code>。基础 10 分，连击每加一档多 5 分，最多 30 分封顶，即单次最高 40 分。连击到第 7 次时 <code>(7-1)*5=30</code> 已经顶格，后面再连也是 40。</li>
+<li>第 310 行：<code>removeTile</code> 只动界面（加 <code>gone</code> 类，220 毫秒后把元素删掉）。</li>
+<li>第 311 行：数据置 0 是立刻做的，不等动画。连线判定、找可连的一步、重排全都读 <code>S.g</code>，数据慢一步就会出现「已经消掉的牌还能被连上」。界面慢、数据快，是这个页面的一致取向。</li>
+<li>第 312 行：<code>left</code> 减 2。用累减而不是每次重新数棋盘，是因为数一遍要扫全部格子（第 146 到 150 行那个函数），而这里只需要一个减法。</li>
+<li>第 313 行：刷顶栏和进度条。</li>
+</ul>
+<p>消除之后还有一段延时收尾：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:314-323</span></span><br><span class="line">  <span class="built_in">setTimeout</span>(<span class="keyword">function</span>(<span class="params"></span>)&#123;</span><br><span class="line">    $(<span class="string">&#x27;line&#x27;</span>).<span class="property">innerHTML</span>=<span class="string">&#x27;&#x27;</span>;</span><br><span class="line">    S.<span class="property">locked</span>=<span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">if</span>(S.<span class="property">left</span>&lt;=<span class="number">0</span>)&#123; <span class="title function_">win</span>(); <span class="keyword">return</span>; &#125;</span><br><span class="line">    <span class="keyword">if</span>(!<span class="title function_">findMove</span>(S.<span class="property">g</span>))&#123;</span><br><span class="line">      <span class="keyword">if</span>(<span class="title function_">reshuffle</span>(S.<span class="property">g</span>,<span class="title function_">rngOf</span>(<span class="title class_">Date</span>.<span class="title function_">now</span>()&amp;<span class="number">0x7fffffff</span>)))&#123; <span class="title function_">repaint</span>(); <span class="title function_">toast</span>(<span class="string">&#x27;没有可连的了，已自动重排&#x27;</span>); &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,<span class="number">220</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">removeTile</span>(<span class="params">r,c</span>)&#123; <span class="keyword">var</span> e=<span class="title function_">tileAt</span>(r,c); <span class="keyword">if</span>(e)&#123; e.<span class="property">classList</span>.<span class="title function_">add</span>(<span class="string">&#x27;gone&#x27;</span>); <span class="built_in">setTimeout</span>(<span class="keyword">function</span>(<span class="params"></span>)&#123; e.<span class="title function_">remove</span>(); &#125;,<span class="number">220</span>); &#125; &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 314 行：220 毫秒是这段逻辑的全部时长依据：折线的淡出、图块的缩小都在这 220 毫秒里演完，演完才清空画布、解锁、检查结局。</li>
+<li>第 315 行：清空 SVG 里那条折线。第三篇里 120 毫秒给它挂 <code>out</code> 类开始淡出，这里到点删除，画布不留残影。</li>
+<li>第 316 行：解锁，允许下一次点击。</li>
+<li>第 317 行：剩余为 0 就结算并 <code>return</code>，不再检查死局：牌都消完了，<code>findMove</code> 必然返回 <code>null</code>，不挡的话会白跑一次重排。</li>
+<li>第 318 到 320 行：第四篇的死局兜底。<code>findMove</code> 找不到可连的一步就重排，重排成功才重画棋盘并提示；<code>rngOf(Date.now()&amp;0x7fffffff)</code> 换一个新种子，避免和开局用同一条随机序列。</li>
+<li>第 323 行：<code>removeTile</code> 里再套一个 220 毫秒才 <code>e.remove()</code>，是为了让 <code>gone</code> 那条过渡（透明度归零加缩到 0.55）先播完。立刻删元素的话动画会被截断。</li>
+</ul>
+<h2 id="结算：把这一局换成数字"><a href="#结算：把这一局换成数字" class="headerlink" title="结算：把这一局换成数字"></a>结算：把这一局换成数字</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:340-359</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">win</span>(<span class="params"></span>)&#123;</span><br><span class="line">  <span class="title function_">stopTimer</span>();</span><br><span class="line">  <span class="keyword">var</span> bonus=<span class="title class_">Math</span>.<span class="title function_">round</span>(S.<span class="property">time</span>)*<span class="number">2</span>;</span><br><span class="line">  S.<span class="property">score</span>+=bonus;</span><br><span class="line">  <span class="keyword">if</span>(!save.<span class="property">best</span>[S.<span class="property">no</span>]||S.<span class="property">score</span>&gt;save.<span class="property">best</span>[S.<span class="property">no</span>]) save.<span class="property">best</span>[S.<span class="property">no</span>]=S.<span class="property">score</span>;</span><br><span class="line">  <span class="keyword">if</span>(S.<span class="property">no</span>&gt;save.<span class="property">max</span>) save.<span class="property">max</span>=S.<span class="property">no</span>;</span><br><span class="line">  <span class="title function_">storeSave</span>();</span><br><span class="line">  <span class="keyword">var</span> last=S.<span class="property">no</span>&gt;=<span class="variable constant_">LEVELS</span>.<span class="property">length</span>;</span><br><span class="line">  <span class="title function_">dialog</span>(last?<span class="string">&#x27;全部通关&#x27;</span>:<span class="string">&#x27;第 &#x27;</span>+S.<span class="property">no</span>+<span class="string">&#x27; 关完成&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;用时 &#x27;</span>+<span class="title function_">fmt</span>(S.<span class="property">lv</span>.<span class="property">t</span>-S.<span class="property">time</span>)+<span class="string">&#x27;，限时奖励 &#x27;</span>+bonus+<span class="string">&#x27; 分，本关 &#x27;</span>+S.<span class="property">score</span>+<span class="string">&#x27; 分。&#x27;</span>,</span><br><span class="line">    last?<span class="string">&#x27;首页&#x27;</span>:<span class="string">&#x27;下一关&#x27;</span>,</span><br><span class="line">    last?<span class="attr">null</span>:<span class="string">&#x27;首页&#x27;</span>,</span><br><span class="line">    last?<span class="attr">renderHome</span>:<span class="keyword">function</span>(<span class="params"></span>)&#123; <span class="title function_">start</span>(S.<span class="property">no</span>+<span class="number">1</span>); &#125;,</span><br><span class="line">    last?<span class="attr">null</span>:renderHome);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">fail</span>(<span class="params"></span>)&#123;</span><br><span class="line">  <span class="title function_">stopTimer</span>();</span><br><span class="line">  <span class="title function_">dialog</span>(<span class="string">&#x27;时间到&#x27;</span>,<span class="string">&#x27;还剩 &#x27;</span>+S.<span class="property">left</span>/<span class="number">2</span>+<span class="string">&#x27; 对没消完。&#x27;</span>,<span class="string">&#x27;再来一次&#x27;</span>,<span class="string">&#x27;首页&#x27;</span>,</span><br><span class="line">    <span class="keyword">function</span>(<span class="params"></span>)&#123; <span class="title function_">start</span>(S.<span class="property">no</span>); &#125;, renderHome);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 341 行：第一件事是停表。不停的话弹窗开着，闹钟虽然会因为 <code>!$(&#39;mask&#39;).hidden</code> 自己暂停，但语义上这一局已经结束，该关就关。</li>
+<li>第 342 行：<code>Math.round(S.time)*2</code> 是限时奖励，剩余一秒给 2 分。这里用 <code>round</code> 而顶栏显示用 <code>floor</code>，所以会出现「显示 01:22、奖励按 83 秒算」的情况：剩余 82.6 秒显示成 <code>01:22</code>，四舍五入是 83，奖励 166 分。</li>
+<li>第 343 行：奖励并进本关分数，之后所有汇总都读这个合起来的值。</li>
+<li>第 344 行：<code>!save.best[S.no]||S.score&gt;save.best[S.no]</code> 两个条件。前者处理「这一关从没打过」，后者处理「打过但没破纪录」。只有破纪录才写回。</li>
+<li>第 345 行：<code>max</code> 只增不减。重打第 1 关不会把已解锁到第 5 关的进度拉回去。</li>
+<li>第 346 行：<code>storeSave()</code> 在这里调一次就够。<code>best</code> 和 <code>max</code> 改完立刻落盘，弹窗期间刷新页面也不会丢。</li>
+<li>第 347 行：<code>last</code> 判定是不是最后一关。关卡数只有 <code>LEVELS.length</code> 这一处来源，将来加关卡不用改这里。</li>
+<li>第 348 到 353 行：一次 <code>dialog</code> 调用，六个参数全都按 <code>last</code> 分岔。非最后一关是「下一关」加「首页」两个按钮，最后一关只剩「首页」一个。传 <code>null</code> 表示这个位置不放按钮，<code>dialog</code> 内部负责把它藏掉。</li>
+<li>第 358 行：失败的「再来一次」调 <code>start(S.no)</code>，重开同一关；发牌用的随机种子来自当前时刻，所以重玩拿到的是另一副牌。</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:360-367</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">dialog</span>(<span class="params">title,text,aTxt,bTxt,aFn,bFn</span>)&#123;</span><br><span class="line">  <span class="keyword">var</span> close=<span class="keyword">function</span>(<span class="params">fn</span>)&#123; <span class="keyword">return</span> <span class="keyword">function</span>(<span class="params"></span>)&#123; $(<span class="string">&#x27;mask&#x27;</span>).<span class="property">hidden</span>=<span class="literal">true</span>; <span class="title function_">fn</span>(); &#125;; &#125;;</span><br><span class="line">  $(<span class="string">&#x27;dTitle&#x27;</span>).<span class="property">textContent</span>=title; $(<span class="string">&#x27;dText&#x27;</span>).<span class="property">textContent</span>=text;</span><br><span class="line">  <span class="keyword">var</span> a=$(<span class="string">&#x27;dA&#x27;</span>), b=$(<span class="string">&#x27;dB&#x27;</span>);</span><br><span class="line">  a.<span class="property">textContent</span>=aTxt; a.<span class="property">hidden</span>=!aTxt; a.<span class="property">onclick</span>=aFn?<span class="title function_">close</span>(aFn):<span class="literal">null</span>;</span><br><span class="line">  b.<span class="property">textContent</span>=bTxt||<span class="string">&#x27;&#x27;</span>; b.<span class="property">hidden</span>=!bTxt; b.<span class="property">onclick</span>=bFn?<span class="title function_">close</span>(bFn):<span class="literal">null</span>;</span><br><span class="line">  $(<span class="string">&#x27;mask&#x27;</span>).<span class="property">hidden</span>=<span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 361 行：<code>close</code> 是一个「造函数的函数」。传进一个动作 <code>fn</code>，返回一个先关窗再执行动作的新函数。之所以必须包这一层，是因为按钮要的是「点一下」时做的事，而传进去的是「做什么」；中间得插入「关窗」这一步。</li>
+<li>第 364 行：<code>a.hidden=!aTxt</code> 让传 <code>null</code> 或空串的那个按钮整块消失，包括它占的位置。第六篇样式里 <code>.row</code> 是 <code>flex</code> 加 <code>gap</code>，<code>display:none</code> 的元素不吃间距，所以只剩一个按钮时不会留出一块空。</li>
+<li>第 364 行：<code>a.onclick=aFn?close(aFn):null</code>。<code>onclick</code> 赋 <code>null</code> 就是解绑，比留着旧函数更保险：弹窗是复用的，上一次「下一关」的函数不能留到下一次「首页」的窗上。</li>
+<li>第 365 行：<code>b.textContent=bTxt||&#39;&#39;</code> 先把文字清成空串，避免上一次的文案残留在一个已隐藏的按钮里。</li>
+<li>第 366 行：最后一步才把遮罩显示出来。顺序反了会看到弹窗内容在旧文案上闪一下。</li>
+</ul>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-06-win.png" alt="通关结算：用时、限时奖励、本关分数三个数，主按钮是下一关"></p>
+<p>图里三个数能对上公式：顶栏「限时 01:22」而奖励 166 分，是 <code>round</code> 与 <code>floor</code> 的差；「本关 541」等于顶栏「分数 375」加 166；首页那张卡片上的「最高 541」就是第 344 行写进 <code>save.best[1]</code> 的值。</p>
+<h2 id="音乐：四首循环，且不能连续两首相同"><a href="#音乐：四首循环，且不能连续两首相同" class="headerlink" title="音乐：四首循环，且不能连续两首相同"></a>音乐：四首循环，且不能连续两首相同</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:369-391</span></span><br><span class="line"><span class="keyword">var</span> bgm=$(<span class="string">&#x27;bgm&#x27;</span>);</span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">MUSIC</span>=[<span class="string">&#x27;/vo/1.mp3&#x27;</span>,<span class="string">&#x27;/vo/2.mp3&#x27;</span>,<span class="string">&#x27;/vo/3.mp3&#x27;</span>,<span class="string">&#x27;/vo/4.mp3&#x27;</span>], musN=-<span class="number">1</span>;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">nextMusic</span>(<span class="params"></span>)&#123;</span><br><span class="line">  <span class="keyword">var</span> i=<span class="title class_">Math</span>.<span class="title function_">floor</span>(<span class="title class_">Math</span>.<span class="title function_">random</span>()*<span class="variable constant_">MUSIC</span>.<span class="property">length</span>);</span><br><span class="line">  <span class="keyword">if</span>(<span class="variable constant_">MUSIC</span>.<span class="property">length</span>&gt;<span class="number">1</span>) <span class="keyword">while</span>(i===musN) i=<span class="title class_">Math</span>.<span class="title function_">floor</span>(<span class="title class_">Math</span>.<span class="title function_">random</span>()*<span class="variable constant_">MUSIC</span>.<span class="property">length</span>);</span><br><span class="line">  musN=i; bgm.<span class="property">src</span>=<span class="variable constant_">MUSIC</span>[i];</span><br><span class="line">&#125;</span><br><span class="line">bgm.<span class="title function_">addEventListener</span>(<span class="string">&#x27;ended&#x27;</span>,<span class="keyword">function</span>(<span class="params"></span>)&#123;</span><br><span class="line">  <span class="title function_">nextMusic</span>();</span><br><span class="line">  <span class="keyword">if</span>(!save.<span class="property">muted</span>) bgm.<span class="title function_">play</span>().<span class="title function_">catch</span>(<span class="keyword">function</span>(<span class="params"></span>)&#123;&#125;);</span><br><span class="line">&#125;);</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">syncMusic</span>(<span class="params"></span>)&#123;</span><br><span class="line">  <span class="keyword">var</span> b=$(<span class="string">&#x27;bMusic&#x27;</span>), lab=save.<span class="property">muted</span>?<span class="string">&#x27;音乐关&#x27;</span>:<span class="string">&#x27;音乐开&#x27;</span>;</span><br><span class="line">  b.<span class="property">classList</span>.<span class="title function_">toggle</span>(<span class="string">&#x27;off&#x27;</span>,!!save.<span class="property">muted</span>);</span><br><span class="line">  b.<span class="property">title</span>=lab; b.<span class="title function_">setAttribute</span>(<span class="string">&#x27;aria-label&#x27;</span>,lab);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">ensureMusic</span>(<span class="params"></span>)&#123;</span><br><span class="line">  <span class="title function_">syncMusic</span>();</span><br><span class="line">  <span class="keyword">if</span>(save.<span class="property">muted</span>)&#123; bgm.<span class="title function_">pause</span>(); <span class="keyword">return</span>; &#125;</span><br><span class="line">  <span class="keyword">if</span>(!bgm.<span class="property">src</span>) <span class="title function_">nextMusic</span>();</span><br><span class="line">  <span class="keyword">var</span> p=bgm.<span class="title function_">play</span>();</span><br><span class="line">  <span class="keyword">if</span>(p&amp;&amp;p.<span class="property">catch</span>) p.<span class="title function_">catch</span>(<span class="keyword">function</span>(<span class="params"></span>)&#123; <span class="title function_">toast</span>(<span class="string">&#x27;点一下屏幕才能出声&#x27;</span>); &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 369 行：<code>bgm</code> 是第六篇 HTML 里那个 <code>&lt;audio preload=&quot;none&quot;&gt;</code>。<code>preload=&quot;none&quot;</code> 意味着页面加载时不下载音频，第一次真正要播才去取。</li>
+<li>第 370 行：四个地址都指向 <code>/vo/</code> 目录下的音频文件，这一页自己不带音频。<code>musN=-1</code> 表示「还没播过任何一首」，于是第一次 <code>nextMusic</code> 时 <code>i===musN</code> 不可能成立，循环不会空转。</li>
+<li>第 372 到 373 行：随机取一首，如果和上一首相同就重取。<code>while</code> 前面那句 <code>MUSIC.length&gt;1</code> 是防死循环的门槛：曲库只剩一首时这个条件永远满足不了，没有这行判断就会卡死。四首的曲库里连续抽到同一首的概率是四分之一，重抽一次通常就够了。</li>
+<li>第 374 行：改 <code>src</code> 就是换曲，浏览器会自己去加载新的。</li>
+<li>第 376 到 379 行：<code>ended</code> 事件在一首播完时触发，于是「播完自动接下一首」不需要任何定时器。<code>if(!save.muted)</code> 让静音时不接续；<code>.catch(function(){})</code> 空吞掉异常，因为浏览器可能拒绝自动播放，而这里已经是播完的下一轮，被拒也只是安静着，不值得打扰。</li>
+<li>第 381 到 384 行：<code>syncMusic</code> 只负责把状态画到按钮上。<code>off</code> 类让样式第 42 行那条静音斜杠显示出来；<code>title</code> 是鼠标悬停的提示，<code>aria-label</code> 是读屏软件念出来的名字，两处都用同一个词，避免不一致。</li>
+<li>第 386 行：<code>ensureMusic</code> 先同步按钮，因为「函数被调了」不代表状态变了。</li>
+<li>第 387 行：静音就直接暂停并返回，不去加载音频。</li>
+<li>第 388 行：<code>if(!bgm.src)</code> 只在从没设过地址时挑第一首。已经播着的时候再调这个函数（比如静音后又取消静音），不应该中途换歌。</li>
+<li>第 389 到 390 行：<code>play()</code> 返回一个 Promise。浏览器规定「没有交互动作就不能出声」，被拒时 Promise 失败，这里接一个 <code>catch</code> 提示「点一下屏幕才能出声」。<code>if(p&amp;&amp;p.catch)</code> 是兼容老浏览器：那些版本的 <code>play()</code> 不返回 Promise，直接 <code>.catch</code> 会报错。</li>
+</ul>
+<h2 id="事件：把点、按、转都接上"><a href="#事件：把点、按、转都接上" class="headerlink" title="事件：把点、按、转都接上"></a>事件：把点、按、转都接上</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:393-396</span></span><br><span class="line">$(<span class="string">&#x27;tiles&#x27;</span>).<span class="title function_">addEventListener</span>(<span class="string">&#x27;click&#x27;</span>,<span class="keyword">function</span>(<span class="params">e</span>)&#123;</span><br><span class="line">  <span class="keyword">var</span> t=e.<span class="property">target</span>.<span class="title function_">closest</span>(<span class="string">&#x27;.tile&#x27;</span>); <span class="keyword">if</span>(!t) <span class="keyword">return</span>;</span><br><span class="line">  <span class="title function_">tap</span>(+t.<span class="property">dataset</span>.<span class="property">r</span>,+t.<span class="property">dataset</span>.<span class="property">c</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 393 行：监听器挂在容器 <code>#tiles</code> 上，不是每个图块各挂一个。这叫事件委托：点击事件会从被点的元素往上冒泡，容器因此能收到里面任何一颗的点击。二十关最大 200 颗图块，重排和窗口变化时图块整批重建（第 324 到 330 行 <code>repaint</code>），逐个绑定就得每次重建都重绑一次，委托只绑一次。</li>
+<li>第 394 行：<code>e.target</code> 是实际被点中的元素，可能是图块本身，也可能是里面的 <code>span</code> 或 <code>img</code>。<code>closest(&#39;.tile&#39;)</code> 从自己开始往上找第一个匹配的祖先，于是三种情况都归到那颗图块。第六篇样式里给 <code>.tile img</code> 写了 <code>pointer-events:none</code>，是这件事的另一半保险。</li>
+<li>第 395 行：<code>dataset.r</code> 取出来是字符串，前面的 <code>+</code> 把它转成数字。<code>linkPath</code> 里比较用的是 <code>===</code>，字符串和数字不会相等，所以必须转。</li>
+</ul>
+<p>棋盘之外的按钮：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:397-408</span></span><br><span class="line">$(<span class="string">&#x27;bHint&#x27;</span>).<span class="property">onclick</span>=<span class="keyword">function</span>(<span class="params"></span>)&#123;</span><br><span class="line">  <span class="keyword">if</span>(!S||S.<span class="property">hint</span>&lt;=<span class="number">0</span>) <span class="keyword">return</span>;</span><br><span class="line">  <span class="keyword">var</span> mv=<span class="title function_">findMove</span>(S.<span class="property">g</span>);</span><br><span class="line">  <span class="keyword">if</span>(!mv)&#123; <span class="title function_">toast</span>(<span class="string">&#x27;没有可连的&#x27;</span>); <span class="keyword">return</span>; &#125;</span><br><span class="line">  S.<span class="property">hint</span>--; <span class="title function_">syncTools</span>();</span><br><span class="line">  <span class="keyword">var</span> b=$(<span class="string">&#x27;board&#x27;</span>);</span><br><span class="line">  [<span class="title function_">tileAt</span>(mv.<span class="property">a</span>.<span class="property">r</span>,mv.<span class="property">a</span>.<span class="property">c</span>),<span class="title function_">tileAt</span>(mv.<span class="property">b</span>.<span class="property">r</span>,mv.<span class="property">b</span>.<span class="property">c</span>)].<span class="title function_">forEach</span>(<span class="keyword">function</span>(<span class="params">e</span>)&#123;</span><br><span class="line">    <span class="keyword">if</span>(!e) <span class="keyword">return</span>; e.<span class="property">classList</span>.<span class="title function_">add</span>(<span class="string">&#x27;hint&#x27;</span>);</span><br><span class="line">    <span class="keyword">var</span> st=$(<span class="string">&#x27;stage&#x27;</span>); <span class="keyword">if</span>(b.<span class="property">offsetWidth</span>&gt;st.<span class="property">clientWidth</span>||b.<span class="property">offsetHeight</span>&gt;st.<span class="property">clientHeight</span>) e.<span class="title function_">scrollIntoView</span>(&#123;<span class="attr">block</span>:<span class="string">&#x27;nearest&#x27;</span>,<span class="attr">inline</span>:<span class="string">&#x27;nearest&#x27;</span>&#125;);</span><br><span class="line">    <span class="built_in">setTimeout</span>(<span class="keyword">function</span>(<span class="params"></span>)&#123;e.<span class="property">classList</span>.<span class="title function_">remove</span>(<span class="string">&#x27;hint&#x27;</span>);&#125;,<span class="number">1800</span>);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 398 行：再判一次次数。第 273 行已经把按钮禁用，浏览器不会触发点击，这一行是给「禁用还没生效」和后续改动留的底线。</li>
+<li>第 400 行：<code>findMove</code> 找不到可连的一步，说明此刻是死局。正常流程走不到这里（第 318 行每次消除后都会自动重排），但手动重排失败等边缘情况会碰到，所以给一句提示而不是什么都不发生。</li>
+<li>第 401 行：先减次数再刷界面，顺序反了会显示「还没减」的旧值。</li>
+<li>第 405 行：棋盘比可视区大时（第五篇里格子缩到下限 24 像素以内就会出滚动条），提示的那两颗可能在屏幕外。<code>scrollIntoView</code> 把元素滚进视野，<code>block:&#39;nearest&#39;</code> 和 <code>inline:&#39;nearest&#39;</code> 的意思是「离哪边近就往哪边滚」，不会把棋盘甩到另一端。</li>
+<li>第 406 行：1800 毫秒后去掉 <code>hint</code> 类。样式第 82 行那条呼吸动画是 0.9 秒一轮，1800 毫秒正好两轮。</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:414-420</span></span><br><span class="line">$(<span class="string">&#x27;bRetry&#x27;</span>).<span class="property">onclick</span>=<span class="keyword">function</span>(<span class="params"></span>)&#123; <span class="keyword">if</span>(S) <span class="title function_">start</span>(S.<span class="property">no</span>); &#125;;</span><br><span class="line">$(<span class="string">&#x27;bHome&#x27;</span>).<span class="property">onclick</span>=renderHome;</span><br><span class="line">$(<span class="string">&#x27;bMusic&#x27;</span>).<span class="property">onclick</span>=<span class="keyword">function</span>(<span class="params"></span>)&#123;</span><br><span class="line">  save.<span class="property">muted</span>=!save.<span class="property">muted</span>; <span class="title function_">storeSave</span>();</span><br><span class="line">  <span class="keyword">if</span>(save.<span class="property">muted</span>) bgm.<span class="title function_">pause</span>(); <span class="keyword">else</span> <span class="title function_">ensureMusic</span>();</span><br><span class="line">  <span class="title function_">syncMusic</span>();</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第 414 行：<code>if(S)</code> 挡住在首页点重玩。这个按钮在首页已经被 <code>toolset(false)</code> 藏掉，正常点不到，判一下是为了将来改动留底。</li>
+<li>第 415 行：<code>$(&#39;bHome&#39;).onclick=renderHome</code> 直接给函数名，不加匿名包装。这里不需要传参，也不需要先做别的事，所以最省的写法就是对的。</li>
+<li>第 417 行：先改内存里的 <code>muted</code>，紧接着 <code>storeSave()</code> 落盘。音乐开关是跨局的偏好，不写下去下次打开又是默认开。</li>
+<li>第 418 行：静音就暂停，取消静音走 <code>ensureMusic</code>（它会挑第一首并尝试播放）。两条路都走完之后才 <code>syncMusic()</code> 画按钮，界面永远反映的是已经生效的状态。</li>
+</ul>
+<h2 id="页面加载完做的三件事"><a href="#页面加载完做的三件事" class="headerlink" title="页面加载完做的三件事"></a>页面加载完做的三件事</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:438-440</span></span><br><span class="line">$(<span class="string">&#x27;hLvMax&#x27;</span>).<span class="property">textContent</span>=<span class="variable constant_">LEVELS</span>.<span class="property">length</span>; $(<span class="string">&#x27;sMaxAll&#x27;</span>).<span class="property">textContent</span>=<span class="variable constant_">LEVELS</span>.<span class="property">length</span>;</span><br><span class="line"><span class="title function_">syncMusic</span>();</span><br><span class="line"><span class="title function_">renderHome</span>();</span><br></pre></td></tr></table></figure>
+
+<p>第六篇说过脚本放在 <code>&lt;/body&gt;</code> 之前，所以这三行执行时页面元素已经全部就位，不需要等任何事件。</p>
+<ul>
+<li>第 438 行：两处「&#x2F;20」的总数都从关卡表的长度来。表加一行，顶栏和首页汇总自己跟着变。</li>
+<li>第 439 行：只画按钮状态，不播音乐。开局时还没有交互动作，浏览器会拒绝播放，这里播了也只是白挨一次拒绝。</li>
+<li>第 440 行：从首页开始。开局、结算、回首页这三条路各自负责后面的状态流转，入口只有一个。</li>
+</ul>
+<h2 id="本篇新名词"><a href="#本篇新名词" class="headerlink" title="本篇新名词"></a>本篇新名词</h2><table>
+<thead>
+<tr>
+<th>名词</th>
+<th>一句话解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>状态机</td>
+<td>用一组字段记住「现在到哪一步」，每个动作只根据当前状态决定下一步</td>
+</tr>
+<tr>
+<td>事件委托</td>
+<td>监听器挂在容器上，靠事件冒泡处理里面所有子元素</td>
+</tr>
+<tr>
+<td>冒泡</td>
+<td>点击先从最里层元素开始，一层层向外传到祖先</td>
+</tr>
+<tr>
+<td><code>closest</code></td>
+<td>从自己开始向上找第一个匹配选择器的元素</td>
+</tr>
+<tr>
+<td><code>dataset</code></td>
+<td>元素上 <code>data-</code> 开头的属性在 JS 里的读法，取出来是字符串</td>
+</tr>
+<tr>
+<td>闭包</td>
+<td>内层函数记住外层变量，外层已经执行完也还记得</td>
+</tr>
+<tr>
+<td>本地存储</td>
+<td><code>localStorage</code>，键值都是字符串，存在这台浏览器里，跨页面刷新仍在</td>
+</tr>
+<tr>
+<td>JSON</td>
+<td>把对象写成文本再存起来、读回来再变回对象的那套格式</td>
+</tr>
+<tr>
+<td>兜形状</td>
+<td>读存档后补齐缺字段，保证返回的对象一定有约定的结构</td>
+</tr>
+<tr>
+<td>定时器编号</td>
+<td><code>setInterval</code> 的返回值，凭它才能 <code>clearInterval</code> 关掉</td>
+</tr>
+<tr>
+<td>事件循环</td>
+<td>JS 单线程下，延时与定时任务排在当前代码之后执行</td>
+</tr>
+<tr>
+<td>Promise</td>
+<td>异步操作的凭据，成功失败各接一段回调</td>
+</tr>
+<tr>
+<td>自动播放限制</td>
+<td>浏览器要求先有一次交互动作才允许出声，<code>play()</code> 因此可能失败</td>
+</tr>
+<tr>
+<td>四舍五入与向下取整</td>
+<td><code>Math.round</code> 与 <code>Math.floor</code> 用在显示和计分两处，会出现 1 秒差</td>
+</tr>
+</tbody></table>
+<h2 id="自测"><a href="#自测" class="headerlink" title="自测"></a>自测</h2><ol>
+<li>消除成功后为什么要把 <code>S.locked</code> 置真，220 毫秒后再放开？<br>答：这段时间里折线在淡出、图块在缩小，界面还在演，但棋盘数据已经改了。放开点击会出现两种坏情况：点在一颗正在消失的图块上（<code>tileAt</code> 已经找不到它，选中状态会记到一个不存在的格子上），或者同一对牌被消第二次。锁住 220 毫秒正好让动画走完再接受下一次输入。</li>
+<li>界面删除图块要等 220 毫秒，棋盘数据置 0 为什么是立刻做的？<br>答：所有判断都读 <code>S.g</code>：连线判定、找可连的一步、死局重排。数据慢一步，刚消掉的牌还会被算进去，可能出现「提示指向两张已经不存在的图块」。界面只是演给眼睛看的，可以让它慢。</li>
+<li>计时器为什么每 100 毫秒减 0.1，而不是每秒减 1？<br>答：进度条要看起来连续滑动。一秒一跳的话样式里那条 <code>transition:width .2s</code> 就没有意义了，条会一顿一顿地走。代价是 <code>S.time</code> 变成小数，显示时靠 <code>Math.floor</code> 抹平，判断归零用 <code>&lt;=0</code>。</li>
+<li>页面切到后台再回来，时间没少，是哪一行做到的？<br>答：第 279 行 <code>if(document.hidden||!$(&#39;mask&#39;).hidden) return;</code>。<code>document.hidden</code> 为真时这一次直接跳过不减，弹窗开着时同理。定时器本身可能被浏览器的省电策略拉长间隔，但拉长的那些轮次什么都不做，所以不会漏减也不会多减。</li>
+<li><code>save</code> 的三个字段分别什么时候写回浏览器？<br>答：<code>max</code> 和 <code>best</code> 在 <code>win()</code> 第 344 到 346 行改完立刻 <code>storeSave()</code>；<code>muted</code> 在音乐按钮的点击处理第 417 行改完立刻写。三样共用同一个对象、同一个键，所以一次写入把三样全存了。当前这局的分数、棋盘、剩余时间都不写，刷新就没了。</li>
+<li>首页那张卡片上的「未解锁」和点不动是同一件事吗？<br>答：不是，两处独立。<code>disabled</code> 属性让浏览器挡掉点击（第 194 行），说明文字里的「未解锁」只是拼给眼睛看的（第 197 行）。样式第 56 行的 <code>.lv:disabled</code> 负责让它看起来灰掉。三者都由 <code>unlocked</code> 这一个条件驱动，所以永远一致。</li>
+<li><code>dialog</code> 里的 <code>close</code> 为什么不直接把 <code>renderHome</code> 赋给 <code>onclick</code>？<br>答：<code>onclick</code> 需要的是「点击时执行」的函数，而传进来的参数是「点完之后要做的动作」。中间还有一步是把遮罩关掉。<code>close(fn)</code> 返回一个新函数，内容是「先关窗，再做 <code>fn</code>」，把这两步捆在一起。直接赋 <code>renderHome</code> 的话窗会一直盖在首页上面。</li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io">61飞兔</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/">https://cyg0825.github.io/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://cyg0825.github.io" target="_blank">学海拾茜</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E8%BF%9E%E8%BF%9E%E7%9C%8B/">连连看</a><a class="post-meta__tags" href="/tags/JavaScript/">JavaScript</a></div><div class="post-share"><div class="social-share" data-image="/img/cat.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="/assets/css/share.min.css" media="print" onload="this.media='all'"><script src="/assets/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/" title="06-界面骨架与样式"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">06-界面骨架与样式</div></div><div class="info-2"><div class="info-item-1">这一篇的位置前五篇讲的都是数据与算法：棋盘的形状、发牌、连线判定、死局与重排、格子尺寸。这一篇讲承载它们的那层：Link/index.html 的骨架和 Link/style.css 的样式。这两份文件都很短，却决定了前面所有计算能不能被看见、被点着。 这一篇的顺序是先骨架后样式：先把 HTML 里每个块是什么、为什么在这儿讲清，再按样式文件的书写顺序讲它做了哪几件事。代码与数据怎么把这些空壳填满，归第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   03 连线判定 拐弯不超过两次怎么判、折线怎么回溯出来   04 死局与自动重排 有没有可连的一步、重排怎么保证不越排越死   05 布局自适应 格子尺寸怎么算、窗口变化怎么跟   06 界面骨架与样式 HTML 与 CSS 逐行   07 点击、计分与存档 点击状态机、计时与分数、本地存档、音乐   骨架：一个文件装两个界面12345678910// Link/index.html:1-9&lt;!DOCTYPE html&gt;&...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/" title="05-布局自适应"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-05</div><div class="info-item-2">05-布局自适应</div></div><div class="info-2"><div class="info-item-1">这一篇的位置前三篇把棋盘当成一张已经存在的表来讲：行列是多少、数字怎么填、折线怎么走。这一篇回答这张表是怎么在屏幕上放下的。同一份关卡表要在 27 寸显示器和手机竖屏上都玩得动，靠的不是两套代码，而是一段在开局时挑行列、在窗口变化时换边长的计算。 对应 Link/script.js 第 36 到 61 行（fitGrid，挑行列与边长）、第 205 到 217 行（keepBottom、fitStage、stageBox，算可用宽高）、第 230 到 234 行（start 里定盒子）、第 247 到 258 行（tileEl，把格子换成像素）、第 421 到 436 行（resize 监听）。样式侧只有三行相关：#stage 的 overflow:auto、#board 的 margin:0 auto、@media (max-width:640px) 那一段，逐行归第六篇。 后面几篇要用到的东西在这一篇只出现名字：HTML 骨架与样式在第六篇，点击状态机、计分与存档在第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌...</div></div></div></a><a class="pagination-related" href="/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/" title="01-结构与数据形状"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-01</div><div class="info-item-2">01-结构与数据形状</div></div><div class="info-2"><div class="info-item-1">这一篇的位置这是一页连连看：点两张相同的图，若能用一条不超过两个拐弯的折线连起来，这两张就消掉，消完过关。 整页由三个文件组成，浏览器直接执行。    文件 管什么    Link/index.html 页面骨架：有哪些块、块之间的层级   Link/style.css 外观：颜色、圆角、动画、深浅色   Link/script.js 逻辑与算法：发牌、连线判定、计分、存档   这一篇定最底层的东西：文件怎么分工、棋盘在代码里到底是什么形状、关卡表里的六个数字各控制什么。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   03 连线判定 拐弯不超过两次怎么判、折线怎么回溯出来   04 死局与自动重排 有没有可连的一步、重排怎么保证不越排越死   05 布局自适应 格子尺寸怎么算、窗口变化怎么跟   06 界面骨架与样式 HTML 与 CSS 逐行   07 点击、计分与存档 点击状态机、计时与分数、本地存档、音乐   首页与一盘棋首页是一排关卡按钮，每个按钮上写着这一关的牌数、图案种类、...</div></div></div></a><a class="pagination-related" href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/" title="04-死局与自动重排"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-04</div><div class="info-item-2">04-死局与自动重排</div></div><div class="info-2"><div class="info-item-1">这一篇的位置第三篇的 linkPath 回答的是「这两张图现在连不连得上」。这一篇回答另一个问题：整张盘面上还有没有至少一对连得上的图。这个问题看起来只是把前面那个多用一次，实际上它是三个界面动作的共同前提：开局发完牌要检查一次，每消掉一对要检查一次，玩家按「提示」也要检查一次。检查出来没有解，就轮到重排出场。 对应 Link/script.js 第 127 到 134 行（tilesOf）、第 135 到 145 行（findMove）、第 151 到 161 行（reshuffle）、第 324 到 330 行（repaint），以及读它们的三处界面代码：第 314 到 321 行（每次消除之后）、第 397 到 408 行（提示按钮）、第 409 到 413 行（重排按钮）。 后面几篇要用到的东西在这一篇只出现名字：fitGrid 与格子边长怎么随窗口变化在第五篇，HTML 与 CSS 逐行在第六篇，点击状态机、计分与存档在第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   ...</div></div></div></a><a class="pagination-related" href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/" title="03-连线判定"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-03</div><div class="info-item-2">03-连线判定</div></div><div class="info-2"><div class="info-item-1">这一篇的位置前两篇把棋盘这张表的形状（横竖各多两行两列的外圈，0 是空格、正整数是图案编号）和表里的数字怎么填进去讲完了。这一篇回答玩家真正在意的那个问题：两张相同的图按下去，凭什么算连上、凭什么算连不上，以及连上之后屏幕上那条折线是怎么来的。 对应 Link/script.js 第 78 到 116 行（linkPath，判定与找路）、第 117 到 126 行（simplify，把逐格路径压成拐点）、第 331 到 338 行（drawPath，把拐点画成一条线）。方向表 DIRS 在第 25 行。 后面几篇要用到的东西在这一篇只出现名字：findMove 怎么判断「这一局还有没有可连的一步」、死局之后 reshuffle 怎么重排，在第四篇；fitGrid 怎么挑行列、格子边长 cell 从哪来在第五篇；HTML 与 CSS 逐行在第六篇；点击状态机、计分与存档在第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   03 连线判定 拐弯不超过两次怎么判、折线怎么回溯出来   0...</div></div></div></a><a class="pagination-related" href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/" title="06-界面骨架与样式"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-05</div><div class="info-item-2">06-界面骨架与样式</div></div><div class="info-2"><div class="info-item-1">这一篇的位置前五篇讲的都是数据与算法：棋盘的形状、发牌、连线判定、死局与重排、格子尺寸。这一篇讲承载它们的那层：Link/index.html 的骨架和 Link/style.css 的样式。这两份文件都很短，却决定了前面所有计算能不能被看见、被点着。 这一篇的顺序是先骨架后样式：先把 HTML 里每个块是什么、为什么在这儿讲清，再按样式文件的书写顺序讲它做了哪几件事。代码与数据怎么把这些空壳填满，归第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   03 连线判定 拐弯不超过两次怎么判、折线怎么回溯出来   04 死局与自动重排 有没有可连的一步、重排怎么保证不越排越死   05 布局自适应 格子尺寸怎么算、窗口变化怎么跟   06 界面骨架与样式 HTML 与 CSS 逐行   07 点击、计分与存档 点击状态机、计时与分数、本地存档、音乐   骨架：一个文件装两个界面12345678910// Link/index.html:1-9&lt;!DOCTYPE html&gt;&...</div></div></div></a><a class="pagination-related" href="/2026/11/02/02-%E9%9A%8F%E6%9C%BA%E6%95%B0%E4%B8%8E%E5%8F%91%E7%89%8C/" title="02-随机数与发牌"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-02</div><div class="info-item-2">02-随机数与发牌</div></div><div class="info-2"><div class="info-item-1">这一篇的位置第一篇把最底层的形状定下来了：棋盘在代码里是一张横竖各多两行两列的表，表里的 0 是空格、1 到 30 是图案编号，关卡表 LEVELS 一行一关。这一篇讲这张表内部的数字是怎么被填进去的，也就是「发一副牌」这件事，对应 Link/script.js 第 27 到 35 行（rngOf、shuffled）和第 62 到 77 行（deal）。 后面几篇要用到的东西在这一篇只出现名字：连线判定在第三篇，findMove 与 reshuffle 的内部机制在第四篇，fitGrid 怎么挑行列、格子尺寸怎么算在第五篇，界面与样式在第六篇，点击、计分与存档在第七篇。    篇 讲什么    01 结构与数据形状 文件分工、棋盘的真实形状、关卡表   02 随机数与发牌 自带随机数发生器、洗牌、成对发牌   03 连线判定 拐弯不超过两次怎么判、折线怎么回溯出来   04 死局与自动重排 有没有可连的一步、重排怎么保证不越排越死   05 布局自适应 格子尺寸怎么算、窗口变化怎么跟   06 界面骨架与样式 HTML 与 CSS 逐行   07 点击、计分与存档 点击状态机、计...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">61飞兔</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">65</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">26</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">24</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/cyg0825"><i class="fab fa-github"></i><span>关注我</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%99%E4%B8%80%E7%AF%87%E7%9A%84%E4%BD%8D%E7%BD%AE"><span class="toc-number">1.</span> <span class="toc-text">这一篇的位置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E5%B1%80%E6%B8%B8%E6%88%8F%E7%9A%84%E5%85%A8%E9%83%A8%E4%BA%8B%E5%AE%9E"><span class="toc-number">2.</span> <span class="toc-text">一局游戏的全部事实</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AD%98%E6%A1%A3%EF%BC%9A%E5%85%B3%E6%8E%89%E6%B5%8F%E8%A7%88%E5%99%A8%E8%BF%98%E5%9C%A8"><span class="toc-number">3.</span> <span class="toc-text">存档：关掉浏览器还在</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A6%96%E9%A1%B5%EF%BC%9A%E6%8A%8A%E5%AD%98%E6%A1%A3%E6%91%8A%E6%88%90%E4%BA%8C%E5%8D%81%E5%BC%A0%E5%8D%A1%E7%89%87"><span class="toc-number">4.</span> <span class="toc-text">首页：把存档摊成二十张卡片</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%B6%E9%97%B4%EF%BC%9A%E4%B8%80%E4%B8%AA%E6%AF%8F-100-%E6%AF%AB%E7%A7%92%E7%9A%84%E9%97%B9%E9%92%9F"><span class="toc-number">5.</span> <span class="toc-text">时间：一个每 100 毫秒的闹钟</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8F%90%E7%A4%BA%E4%B8%8E%E5%8F%8D%E9%A6%88%EF%BC%9A%E6%A0%BC%E5%BC%8F%E5%8C%96%E6%95%B0%E5%AD%97%E5%92%8C%E4%B8%80%E5%8F%A5%E8%AF%9D"><span class="toc-number">6.</span> <span class="toc-text">提示与反馈：格式化数字和一句话</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%82%B9%E5%87%BB%EF%BC%9A%E4%B8%80%E6%AC%A1%E7%82%B9%E4%B8%8B%E5%8E%BB%E7%9A%84%E4%B8%83%E7%A7%8D%E7%BB%93%E6%9E%9C"><span class="toc-number">7.</span> <span class="toc-text">点击：一次点下去的七种结果</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%93%E7%AE%97%EF%BC%9A%E6%8A%8A%E8%BF%99%E4%B8%80%E5%B1%80%E6%8D%A2%E6%88%90%E6%95%B0%E5%AD%97"><span class="toc-number">8.</span> <span class="toc-text">结算：把这一局换成数字</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9F%B3%E4%B9%90%EF%BC%9A%E5%9B%9B%E9%A6%96%E5%BE%AA%E7%8E%AF%EF%BC%8C%E4%B8%94%E4%B8%8D%E8%83%BD%E8%BF%9E%E7%BB%AD%E4%B8%A4%E9%A6%96%E7%9B%B8%E5%90%8C"><span class="toc-number">9.</span> <span class="toc-text">音乐：四首循环，且不能连续两首相同</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8B%E4%BB%B6%EF%BC%9A%E6%8A%8A%E7%82%B9%E3%80%81%E6%8C%89%E3%80%81%E8%BD%AC%E9%83%BD%E6%8E%A5%E4%B8%8A"><span class="toc-number">10.</span> <span class="toc-text">事件：把点、按、转都接上</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A1%B5%E9%9D%A2%E5%8A%A0%E8%BD%BD%E5%AE%8C%E5%81%9A%E7%9A%84%E4%B8%89%E4%BB%B6%E4%BA%8B"><span class="toc-number">11.</span> <span class="toc-text">页面加载完做的三件事</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%AC%E7%AF%87%E6%96%B0%E5%90%8D%E8%AF%8D"><span class="toc-number">12.</span> <span class="toc-text">本篇新名词</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%87%AA%E6%B5%8B"><span class="toc-number">13.</span> <span class="toc-text">自测</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/" title="07-点击计分与存档">07-点击计分与存档</a><time datetime="2026-11-06T00:20:00.000Z" title="发表于 2026-11-06 08:20:00">2026-11-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/" title="06-界面骨架与样式">06-界面骨架与样式</a><time datetime="2026-11-05T08:40:00.000Z" title="发表于 2026-11-05 16:40:00">2026-11-05</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/" title="05-布局自适应">05-布局自适应</a><time datetime="2026-11-05T01:30:00.000Z" title="发表于 2026-11-05 09:30:00">2026-11-05</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/" title="04-死局与自动重排">04-死局与自动重排</a><time datetime="2026-11-04T01:10:00.000Z" title="发表于 2026-11-04 09:10:00">2026-11-04</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/" title="03-连线判定">03-连线判定</a><time datetime="2026-11-03T01:20:00.000Z" title="发表于 2026-11-03 09:20:00">2026-11-03</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2024 - 2026 By 61飞兔</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.3</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
+(function () {
+  var menus = document.getElementById('sidebar-menus')
+  var card = document.querySelector('#aside-content .card-info')
+  if (!menus || !card || menus.dataset.profileIn) return
+  var name = card.querySelector('.author-info-name')
+  var btn = card.querySelector('#card-info-btn')
+  if (name) {
+    var n = name.cloneNode(true)
+    n.className = 'sidebar-author-name'
+    menus.querySelector('.avatar-img').after(n)
+  }
+  if (btn) {
+    var b = btn.cloneNode(true)
+    b.removeAttribute('id')
+    b.className = 'sidebar-follow'
+    menus.querySelector('.site-data').after(b)
+  }
+  menus.dataset.profileIn = '1'
+})()
+</script><div class="aplayer no-destroy" data-id="9086662585" data-server="netease" data-type="playlist" data-fixed="true" data-autoplay="false" data-order="random" data-mini="true" data-api="https://api.injahow.cn/meting/?server=:server&amp;type=:type&amp;id=:id&amp;r=:r">
+</div><link rel="stylesheet" href="/assets/css/APlayer.min.css" media="print" onload="this.media='all'"><script src="/assets/js/APlayer.min.js"></script><script src="/assets/js/Meting.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索文章" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>
