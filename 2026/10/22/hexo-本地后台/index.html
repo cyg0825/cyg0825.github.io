@@ -1,0 +1,959 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Hexo 本地后台 | 学海拾茜</title><meta name="author" content="61飞兔"><meta name="copyright" content="61飞兔"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="这是什么给 Hexo 源目录配一个只在本机跑的编辑后台，管到 source&#x2F; 的全部内容加上根目录的配置文件：文章、草稿、独立页面、主题自定义集合、source&#x2F;_data&#x2F; 里的数据文件、scaffolds&#x2F; 里的模板、静态资源都能增删改；_config.yml 与主题配置铺成中文标签的表单。构建和部署仍在命令行做，后台不落 public&#x2F;，也不执行任何 hexo 命令。 覆盖面靠目录约定自动发">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo 本地后台">
+<meta property="og:url" content="https://cyg0825.github.io/2026/10/22/hexo-%E6%9C%AC%E5%9C%B0%E5%90%8E%E5%8F%B0/index.html">
+<meta property="og:site_name" content="学海拾茜">
+<meta property="og:description" content="这是什么给 Hexo 源目录配一个只在本机跑的编辑后台，管到 source&#x2F; 的全部内容加上根目录的配置文件：文章、草稿、独立页面、主题自定义集合、source&#x2F;_data&#x2F; 里的数据文件、scaffolds&#x2F; 里的模板、静态资源都能增删改；_config.yml 与主题配置铺成中文标签的表单。构建和部署仍在命令行做，后台不落 public&#x2F;，也不执行任何 hexo 命令。 覆盖面靠目录约定自动发">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cyg0825.github.io/img/cat.png">
+<meta property="article:published_time" content="2026-10-22T15:45:00.000Z">
+<meta property="article:modified_time" content="2026-10-25T15:19:03.000Z">
+<meta property="article:author" content="61飞兔">
+<meta property="article:tag" content="建站">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cyg0825.github.io/img/cat.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Hexo 本地后台",
+  "url": "https://cyg0825.github.io/2026/10/22/hexo-%E6%9C%AC%E5%9C%B0%E5%90%8E%E5%8F%B0/",
+  "image": "https://cyg0825.github.io/img/cat.png",
+  "datePublished": "2026-10-22T15:45:00.000Z",
+  "dateModified": "2026-10-25T15:19:03.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "61飞兔",
+      "url": "https://cyg0825.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/333.png"><link rel="canonical" href="https://cyg0825.github.io/2026/10/22/hexo-%E6%9C%AC%E5%9C%B0%E5%90%8E%E5%8F%B0/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/css/fontawesome/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Hexo 本地后台',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><style>
+/* 手机端复用右侧收起按钮，整块侧栏（个人信息等卡片）可收起 */
+@media (max-width: 900px) {
+  #rightside #hide-aside-btn { display: block !important; }
+  html.hide-aside .layout > #aside-content { display: none; }
+  /* 个人信息卡折叠进抽屉，页面里不再单独占一块 */
+  #aside-content > .card-info { display: none; }
+}
+#sidebar-menus .sidebar-author-name { margin: 6px 0 0; font-size: 1.3em; font-weight: 700; text-align: center; }
+#sidebar-menus .sidebar-follow { display: block; margin: 14px 20px 0; padding: 9px 0; border-radius: 8px; background: var(--btn-bg); color: var(--btn-color); text-align: center; }
+#sidebar-menus .sidebar-follow i { margin-right: 6px; }
+/* 沿用线上站点：页脚透明，让背景色直接透出 */
+#footer { background: transparent !important; }
+#footer::before { background: transparent !important; }
+[data-theme="dark"] #footer::before { background: transparent !important; }
+/* 头图蒙版改成毛玻璃：轻微模糊 + 极淡压色，做出朦胧感但不挡画面 */
+#page-header:not(.not-top-img)::before {
+  background: linear-gradient(180deg, rgba(238,242,252,.16), rgba(214,222,242,.07) 55%, rgba(196,206,232,.20)) !important;
+  -webkit-backdrop-filter: blur(6px) brightness(.94) saturate(1.02);
+  backdrop-filter: blur(6px) brightness(.94) saturate(1.02);
+}
+[data-theme="dark"] #page-header:not(.not-top-img)::before {
+  background: linear-gradient(180deg, rgba(16,18,26,.20), rgba(16,18,26,.09) 55%, rgba(8,10,16,.26)) !important;
+  -webkit-backdrop-filter: blur(6px) brightness(.88);
+  backdrop-filter: blur(6px) brightness(.88);
+}
+/* 播放器遇到不可播曲目的自动跳过提示不显示 */
+.aplayer .aplayer-notice { display: none !important; }
+/* 主题只写了旧版高亮类名，补上 highlight.js 11 的这批 token，配色沿用主题的 light 色板 */
+#article-container figure.highlight pre .selector-tag,
+#article-container figure.highlight pre .selector-class,
+#article-container figure.highlight pre .selector-id,
+#article-container figure.highlight pre .selector-pseudo,
+#article-container figure.highlight pre .selector-attr,
+#article-container figure.highlight pre .property { color: #e53935; }
+#article-container figure.highlight pre .function_ { color: #6182b8; }
+#article-container figure.highlight pre .class_ { color: #ffb62c; }
+#article-container figure.highlight pre .constant_ { color: #f76d47; }
+#article-container figure.highlight pre .type { color: #6182b8; }
+#article-container figure.highlight pre .invoke__,
+#article-container figure.highlight pre .subst { color: #f76d47; }
+#article-container figure.highlight pre .language_,
+#article-container figure.highlight pre .bullet { color: #7c4dff; }
+</style><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-color: #bbdefb;"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">58</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">23</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-code"></i><span> 项目</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/"><i class="fa-fw fas fa-book"></i><span> 学生选课系统</span></a></li><li><a class="site-page child" href="/birthday/"><i class="fa-fw fas fa-cake-candles"></i><span> 生日</span></a></li><li><a class="site-page child" href="/link/link.html"><i class="fa-fw fas fa-puzzle-piece"></i><span> 连连看</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-file-alt"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/tags/%E8%AF%B4%E8%AF%B4/"><i class="fa-fw fas fa-comment-dots"></i><span> 说说</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/333.png" alt="Logo"><span class="site-name">学海拾茜</span></a><a class="nav-page-title" href="/"><span class="site-name">Hexo 本地后台</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-code"></i><span> 项目</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/"><i class="fa-fw fas fa-book"></i><span> 学生选课系统</span></a></li><li><a class="site-page child" href="/birthday/"><i class="fa-fw fas fa-cake-candles"></i><span> 生日</span></a></li><li><a class="site-page child" href="/link/link.html"><i class="fa-fw fas fa-puzzle-piece"></i><span> 连连看</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-file-alt"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/tags/%E8%AF%B4%E8%AF%B4/"><i class="fa-fw fas fa-comment-dots"></i><span> 说说</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Hexo 本地后台</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-22T15:45:00.000Z" title="发表于 2026-10-22 23:45:00">2026-10-22</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-25T15:19:03.000Z" title="更新于 2026-10-25 23:19:03">2026-10-25</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AD%A6%E4%B9%A0/">学习</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AD%A6%E4%B9%A0/%E5%BB%BA%E7%AB%99/">建站</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><h2 id="这是什么"><a href="#这是什么" class="headerlink" title="这是什么"></a>这是什么</h2><p>给 Hexo 源目录配一个只在本机跑的编辑后台，管到 <code>source/</code> 的全部内容加上根目录的配置文件：文章、草稿、独立页面、主题自定义集合、<code>source/_data/</code> 里的数据文件、<code>scaffolds/</code> 里的模板、静态资源都能增删改；<code>_config.yml</code> 与主题配置铺成中文标签的表单。构建和部署仍在命令行做，后台不落 <code>public/</code>，也不执行任何 hexo 命令。</p>
+<p>覆盖面靠目录约定自动发现：<code>source/_posts/</code> 是文章，<code>source/_drafts/</code> 是草稿，<code>source/_&lt;名&gt;/</code> 是主题自定义的集合，其余 markdown 与 html 文件是页面，剩下的都归资源。后台不认识的 front-matter 键、读不懂的配置结构，一律降级成原文编辑而不是拒绝。将来站点加集合、加配置键，后台不用改代码，这是「通用」在这里的全部含义。</p>
+<p>出发点是把「改一篇内容」的代价压到最低。命令行侧手工改一篇要同时盯住 front-matter 的键名与引号风格、分类要写成数组、嵌套缩进要对、配图要先算出站内相对路径，任何一处漏了都要等构建才发现。源目录不是 git 仓库时，改坏了没有版本兜底。后台把这些约束变成界面里的选择与保存时的固定动作，手工编辑仍然全部有效，两边写的是同一份文件。</p>
+<p>零依赖是这条链的前提。只用 Node 内置的 <code>http</code>、<code>fs</code>、<code>path</code>、<code>crypto</code>，不引 express，不引富文本编辑器，<code>package.json</code> 里不加 scripts 项也不加依赖。YAML 解析复用 hexo 安装里自带的那份库，取不到就退化成「只给原文编辑、不铺控件」，写回与校验规则不变。总共两个文件：<code>tools/admin/server.cjs</code> 是接口与写盘，<code>tools/admin/ui.html</code> 是整张页面，样式、图标、脚本、中文字典都在这一个文件里。拷进任何 Hexo 源目录都能直接起，不需要装东西，也不会与主题的依赖表打架。</p>
+<h2 id="起法"><a href="#起法" class="headerlink" title="起法"></a>起法</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">node tools/admin/server.cjs</span><br><span class="line">ADMIN_PORT=43999 node tools/admin/server.cjs</span><br><span class="line"><span class="built_in">nohup</span> node tools/admin/server.cjs &gt;/tmp/admin.log 2&gt;&amp;1 &amp;</span><br><span class="line">lsof -ti tcp:43210</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>取值</th>
+<th>为什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>入口</td>
+<td><code>node tools/admin/server.cjs</code></td>
+<td>不写进 <code>package.json</code> 的 scripts，避免被当成正式构建命令</td>
+</tr>
+<tr>
+<td>地址</td>
+<td><code>http://127.0.0.1:43210</code></td>
+<td>只绑回环，不监听 <code>0.0.0.0</code>；写源文件的接口一旦暴露到局域网就等于把仓库目录开放出去</td>
+</tr>
+<tr>
+<td>端口</td>
+<td>环境变量 <code>ADMIN_PORT</code></td>
+<td>换端口只改启动参数，不为此加第二条入口或第二份配置</td>
+</tr>
+<tr>
+<td>界面</td>
+<td><code>ui.html</code> 每次请求重新读盘</td>
+<td>改前端不用重启，刷新页面即生效；改 <code>server.cjs</code> 要重启</td>
+</tr>
+<tr>
+<td>鉴权</td>
+<td>无</td>
+<td>边界由监听地址给出，不再叠一层口令；没有凭据文件也就没有凭据泄漏面</td>
+</tr>
+<tr>
+<td>开机自启</td>
+<td>不做</td>
+<td>需要常驻时用 <code>nohup</code> 手动挂后台，或另加一层进程管理</td>
+</tr>
+</tbody></table>
+<p><em>启动参数</em></p>
+<p>启动后终端只打一行 <code>admin on http://127.0.0.1:43210</code>。与 <code>hexo server</code> 是两个进程，可以同时跑；后台不依赖 <code>hexo server</code>，起不起都能用。</p>
+<h2 id="界面入口"><a href="#界面入口" class="headerlink" title="界面入口"></a>界面入口</h2><p>六个视图共用一套组件，没有第二套列表、没有第二套表单：</p>
+<table>
+<thead>
+<tr>
+<th>路径</th>
+<th>页面</th>
+<th>出口</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/</code></td>
+<td>概览：各集合的数量卡片与最近更新（前八条）</td>
+<td>点数量卡片去对应列表；点最近更新进编辑</td>
+</tr>
+<tr>
+<td><code>/?c=&lt;集合&gt;</code></td>
+<td>集合条目列表：表格，页头给搜索、条目计数与「新建」，表上方一排标签快筛；资源集合另给上传，图片行带缩略图</td>
+<td>点行进编辑；点标签芯片只留该文；侧栏切集合或配置</td>
+</tr>
+<tr>
+<td><code>/new?c=&lt;集合&gt;</code></td>
+<td>空白表单，控件按该集合裁剪</td>
+<td>保存进该条编辑页</td>
+</tr>
+<tr>
+<td><code>/edit/&lt;id&gt;</code></td>
+<td>同一套表单，回填；左侧大纲可看可收；<code>id</code> 是相对 <code>source/</code> 的路径去扩展名，可以带目录</td>
+<td>保存留在本页；「删除」进确认弹层，确认后回该集合列表</td>
+</tr>
+<tr>
+<td><code>/config</code></td>
+<td>配置文件表格，每行写文件名、角色与可写性</td>
+<td>点行进 <code>/config/&lt;文件名&gt;</code>；侧栏切到任一集合</td>
+</tr>
+<tr>
+<td><code>/config/&lt;文件名&gt;</code></td>
+<td>分组表单，顶层键一个折叠区，控件递归到最深一层；右侧目录可跳段</td>
+<td>保存留在本页；有未保存改动时切走会问一次</td>
+</tr>
+</tbody></table>
+<p><em>页面与出口</em></p>
+<p>跳转有四条主线：概览进集合列表、列表进表单、表单回集合列表；列表进资源详情、资源详情回资源列表；侧栏在任一页切集合或配置，切集合与切配置都走真实跳转，地址栏跟着换，刷新仍落在同一页；配置页第二层右侧目录在段间直接跳，搜索命中任意一层键时直接跳到该行。后台是工具页，不需要站点级的信息架构，铺导航就会开始铺样式，那是主题该管的事。编辑页里也不铺分类和标签的跳转链接，那些目标在站点前台已经存在，后台里只作筛选条件；同一个跳转目标铺两遍只会让页面更吵。</p>
+<p>侧栏固定 216px：品牌在顶，下面两组（内容：概览与各集合，资源排在末尾；站点：配置），每项一个图标、名称与条目数，当前页用强调色浅底加左侧 2px 竖条；侧栏贴住视口、自己滚动。窗口窄到 1100px 时侧栏改成一行横向滚动的导航条，品牌留在左侧，分组标题与条目数收起，页头与工具条不再粘顶，避免两层固定条叠在一起。列表在 900px 以下收起标签列，700px 以下收起路径、分类、更新三列并把分类或路径放到标题下面一行，条目计数同时收起。375px 下导航条照样一行、可滚到「配置」，「新建」与「保存」不收缩，480px 以下页头文件名收起。</p>
+<h2 id="覆盖范围"><a href="#覆盖范围" class="headerlink" title="覆盖范围"></a>覆盖范围</h2><table>
+<thead>
+<tr>
+<th>磁盘位置</th>
+<th>归类</th>
+<th>表单形态</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>source/_posts/</code></td>
+<td>文章</td>
+<td>完整侧栏：标题、文件名、发表于、分类、标签、封面、删除</td>
+</tr>
+<tr>
+<td><code>source/_drafts/</code></td>
+<td>草稿</td>
+<td>同上，<code>date</code> 允许改，列表里标「草稿」，多一个「发布」动作</td>
+</tr>
+<tr>
+<td><code>source/_&lt;名&gt;/</code></td>
+<td>主题自定义集合</td>
+<td>只有 <code>title</code> 是受管键，其余键全部走原文区</td>
+</tr>
+<tr>
+<td><code>source/**/*.{md,markdown}</code> 的非下划线目录</td>
+<td>页面</td>
+<td><code>title</code>、<code>date</code>、<code>updated</code>、<code>layout</code> 四项，没有分类与标签控件</td>
+</tr>
+<tr>
+<td><code>source/_data/*.{yml,yaml,json}</code></td>
+<td>数据</td>
+<td>只有原文区，保存前做一次 YAML 解析校验</td>
+</tr>
+<tr>
+<td><code>scaffolds/*.md</code></td>
+<td>模板</td>
+<td>只有原文区</td>
+</tr>
+<tr>
+<td>其余文件</td>
+<td>资源</td>
+<td>详情给路径、类型、引用清单、删除与上传到当前目录</td>
+</tr>
+<tr>
+<td>根目录 <code>_config*.yml</code>、<code>themes/&lt;名&gt;/_config.yml</code></td>
+<td>配置</td>
+<td>见「配置层」</td>
+</tr>
+</tbody></table>
+<p><em>集合与形态</em></p>
+<p>归类按表中顺序取第一条命中的规则：<code>_posts</code>、<code>_drafts</code>、<code>_data</code> 先于通用的下划线目录，下划线目录先于页面，页面先于资源。页面目录页的 <code>index</code> 后缀在界面上折叠成目录名，<code>about/index</code> 显示成 <code>about/</code>，读写仍按真实路径。</p>
+<p><code>layout</code> 的判定顺序是 front-matter 的 <code>layout</code> 优先，其次目录约定（<code>_posts</code> 为 <code>post</code>、<code>_drafts</code> 为 <code>draft</code>、其余为 <code>page</code>），最后取 <code>_config.yml</code> 的 <code>default_layout</code>。独立 <code>.html</code> 页面必须自带 <code>layout: false</code>，这一项在页面表单里作为受管键给出来，后台不隐式补写。带 front-matter 的 <code>.html</code> 一律走原文态：这类页面常带 <code>&lt;script&gt;</code>、<code>&lt;style&gt;</code> 与整页结构，塞进 <code>contenteditable</code> 会把脚本当可编辑内容、保存时按段落规则重排，风险大于收益。</p>
+<p>新建命名跟着站点配置走：文章与草稿按 <code>_config.yml</code> 的 <code>new_post_name</code> 展开，<code>:title</code> 换成 slug，日期类占位取当前时间；页面固定落在 <code>&lt;slug&gt;/index.&lt;扩展名&gt;</code>，扩展名跟该集合里已有的同类条目一致，没有就先建 <code>.md</code>。</p>
+<p>草稿发布属于数据层：文件从 <code>_drafts/</code> 移到 <code>_posts/</code> 并按 <code>new_post_name</code> 补日期，不跑任何 hexo 命令。移动不是删除，所以不进 <code>.trash</code>，界面提示写清新旧两个路径。</p>
+<h2 id="front-matter-原文区"><a href="#front-matter-原文区" class="headerlink" title="front-matter 原文区"></a>front-matter 原文区</h2><p>表单只管受管键，其余键给一个原文编辑区，显示磁盘上那段 YAML 原文，不重排、不改引号风格、不补默认值。保存时的合并规则按顺序执行：以磁盘原文为底；受管键逐行替换成表单值，原文里与受管键同名的行位置不动，界面上标一句「该键由表单管理」；表单没有、原文有的键原样留在原位；原文没有、表单新增的键追加到末尾。</p>
+<p>原文区那段被改坏时拒绝保存并给行号，不做「尽力修复」，两类都拦：围栏不成对、缩进异常、键名解析不出，回 <code>front-matter 第 N 行解析不了</code>；整段能解析但不是映射形态时回 <code>front-matter 第 N 行要写成 键: 值</code>。后一条是必要的：<code>title 缺冒号</code> 在 YAML 里是一个合法标量，只按「能不能解析」判定会静默把整段 front-matter 写成一个字符串。表单值合并进来的那一版再过一次同一道判定。</p>
+<h2 id="配置层"><a href="#配置层" class="headerlink" title="配置层"></a>配置层</h2><p>用后台的人未必读得懂 YAML，也未必打得对缩进。配置项铺成中文标签加一句中文说明的表单，改一个开关不用去文件里找那一行、再担心删掉了别人的注释。配置文件是全站生效的，写坏一次站点就起不来，所以写回必须只动那一段，不做整份重写。</p>
+<h3 id="文件发现"><a href="#文件发现" class="headerlink" title="文件发现"></a>文件发现</h3><table>
+<thead>
+<tr>
+<th>文件</th>
+<th>角色</th>
+<th>后台形态</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>根目录 <code>_config.yml</code></td>
+<td>站点配置</td>
+<td>表单，可写</td>
+</tr>
+<tr>
+<td>根目录 <code>_config.&lt;主题名&gt;.yml</code></td>
+<td>主题覆盖配置</td>
+<td>表单，可写，优先级高于主题目录里的同名文件</td>
+</tr>
+<tr>
+<td>根目录 <code>_config.&lt;其它名&gt;.yml</code></td>
+<td>名字与站点配置里 <code>theme:</code> 指的主题不符</td>
+<td>表单只读，标一句 <code>这一份不参与构建</code>：hexo 按主题名找覆盖文件，这类文件改多少遍都不进站点；起站点或构建时显式带 <code>--config</code> 指定这类文件的除外，后台看不出有没有带</td>
+</tr>
+<tr>
+<td><code>themes/&lt;名&gt;/_config.yml</code></td>
+<td>主题自带配置（仓库里那一份）</td>
+<td>表单，可写；被根目录覆盖文件占用的那一条键标一句「根目录已覆盖」</td>
+</tr>
+<tr>
+<td><code>themes/&lt;其它名&gt;/_config.yml</code></td>
+<td>没被启用的主题自带配置</td>
+<td>表单只读，同样标 <code>这一份不参与构建</code></td>
+</tr>
+<tr>
+<td><code>node_modules/hexo-theme-&lt;名&gt;/_config.yml</code></td>
+<td>主题自带配置（装出来的那一份）</td>
+<td>只读展示，配一句「主题更新会覆盖这一份，改根目录的那份」</td>
+</tr>
+</tbody></table>
+<p><em>配置文件与角色</em></p>
+<p>清单不写死文件名，扫根目录、<code>themes/</code> 与 <code>node_modules/</code> 三处得到。同一条键在多份文件里都有时，行内标出实际生效的那份，判定按加载顺序取后者。主题名从站点配置的 <code>theme:</code> 读，读不出（没有站点配置或那份解析失败）时不标 <code>不参与构建</code>，退回按可写处理。</p>
+<p>只读那几份的值照全部显示，改动入口一个不渲染：每一行的「删」「改原文」「加一项」、列表项的上下移与删除都不出现，末尾追加那一段也不出现，输入控件与保存按钮全禁用；服务端再挡一道，提交给 <code>这一份不参与构建</code> 或 <code>这一份改在根目录的覆盖文件里</code>，文件字节不动。</p>
+<p>「根目录已覆盖」按完整点路径逐条判，不按顶层段：主题自带配置里某个叶子的路径在覆盖文件的解析树里同样存在才算被覆盖，父段出现在覆盖文件里不算该分组下每个叶子都被遮，覆盖是按键深合并的，段里有几条就遮几条。这一条标注只显示在带值控件的行上，分组行、凭据行、主题默认值补出来的行都不带——分组行带上这条标注会被读成整段都被覆盖，那正是按段判定的说法。差别在覆盖文件只写了几条的站点上才看得出：按段判会把没写的那几条也标成已覆盖；覆盖文件是整份副本的站点上，两种判法给的是同一个集合。</p>
+<h3 id="控件按值的形态给"><a href="#控件按值的形态给" class="headerlink" title="控件按值的形态给"></a>控件按值的形态给</h3><p>顶层键按文件里的出现顺序分组，每组一个折叠区。组内每个键一行：中文标签、键名原样小字、值控件、一句话说明。控件按值的形态递归给，嵌套多深就展开多深，每一段都同时留着「改原文」入口。</p>
+<table>
+<thead>
+<tr>
+<th>值的形态</th>
+<th>控件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>布尔</td>
+<td>分段开关</td>
+</tr>
+<tr>
+<td>关掉是 <code>false</code>、开启是一个数</td>
+<td>两段开关加一个整数框；选关闭那一段时框禁用、交出去的是 <code>false</code>，选开启那一段时框里要填正整数</td>
+</tr>
+<tr>
+<td>整数、小数</td>
+<td>数字输入框，字典给了范围就带上范围</td>
+</tr>
+<tr>
+<td>字符串</td>
+<td>单行输入框；字典给了候选值的（站点语言、链接样式、图片格式这类）换成下拉</td>
+</tr>
+<tr>
+<td>空值</td>
+<td>单行输入框，留空即写空值；路径字典声明成数值的换成数字输入框，没给范围就不带范围</td>
+</tr>
+<tr>
+<td>标量数组</td>
+<td>一行一个输入框，可加、可删、可上下移</td>
+</tr>
+<tr>
+<td>对象，值全是标量</td>
+<td>折叠分组，子键各一行</td>
+</tr>
+<tr>
+<td>对象，值里还有对象或数组</td>
+<td>折叠分组，子键按同一条规则递归展开</td>
+</tr>
+<tr>
+<td>对象数组</td>
+<td>每项一张小卡，卡内按同一条规则递归展开</td>
+</tr>
+<tr>
+<td>多行字符串（&#96;</td>
+<td><code>、</code>&gt;&#96; 写法的整段代码）</td>
+</tr>
+</tbody></table>
+<p><em>形态与控件</em></p>
+<p>形态判定来自解析出的值，不靠行首正则猜。定位某一行时先由解析值知道这一层有哪些键、列表有几项，再在段内找缩进符合且键名命中这一层键清单的行；块标量里的 CSS 行、注释行不在键清单里，不会被当成配置行。父键行右边只剩一个行尾注释时不算内联值，块式列表与对象数组照样逐项出控件，那一行由写回原样保留。任一层对不上（缩进异常、注释夹在列表项中间、解析值与行扫描条数不符）该段整段退回原文框，标签下标一句 <code>这一段形状对不上，只能改原文</code>，不做半结构化写入，也不拒绝整页。</p>
+<p>映射的键名本身就是界面文字——菜单项的键名是显示文字，分类映射的键名是中文分类——所以子键行左边是可编辑的键名框，右边是值控件，末尾一个「删」，组底一个「加一项」，列表项同理。改键名只改这一行的键，值与行尾注释留在原行。原文入口与结构化入口一段一次只走一种：同一段已有叶子改动时再点「改原文」直接挡下并提示 <code>这一段这次只改一种</code>。</p>
+<h3 id="写回只动那一段"><a href="#写回只动那一段" class="headerlink" title="写回只动那一段"></a>写回只动那一段</h3><p>主题配置文件里注释行的数量与配置行相当，注释就是这份文档，一次保存把注释冲掉等于毁掉这份文件。写回是行级替换：定位该键从起始行到下一个同级键之前的整段，换成新内容，其余行逐字节不动，包括空行、注释、引号风格与数组的流式或块状写法。结构化写入落得更细，只替换叶子那一条键值行；新增项落在该块最后一个同级项之后，块里还没有同级项就紧跟父键行；删除项移除该键那一段，块内注释跟着这一项一起走。</p>
+<p>块状列表按槽位写：列表的顺序就是行的顺序，新值与旧值逐项同下标比对，没变的原行一个字不动，变了的只写那一行并保留该行的行尾注释，多的项接在最后一项之后，少的项整行删掉；值从别的行搬过来时（增删与改序都会），原行的行尾注释跟着值走，不留在原位。流式列表整体重写那一行，逐项没变时连这一行都不碰。值形态跟着原文走，原来写成 <code>&#39;值&#39;</code> 就继续写 <code>&#39;值&#39;</code>，原来是裸值就裸写。文件里没有的新键追加到末尾。</p>
+<p>保存一次提交该文件里所有改过的键，逐段替换完再落盘，写文件仍是同目录临时文件加 <code>rename</code> 原子替换。写前把整份文件解析一次，解析不了直接拒绝并给行号；写后再解析一次，断言目标键的值等于表单提交值，任一步不过就不写盘。</p>
+<h3 id="主题默认值里没写进文件的键"><a href="#主题默认值里没写进文件的键" class="headerlink" title="主题默认值里没写进文件的键"></a>主题默认值里没写进文件的键</h3><p>主题脚本目录里那份默认配置（<code>scripts/common/default_config.js</code> 这类）会被并进主题配置，站点读到的值是「默认值 → 主题 YAML → 根目录覆盖」三层合出来的。默认值里有、两份 YAML 里都没有的键，表单只按文件生成就看不见这一行，这类键改不到。这一类补进根目录覆盖文件的表单：取启用主题的那份默认配置，按完整点路径补在同一个父段下（父段在文件里也没有就先铺这一层的分组行），值先显示默认值，标签下标一句 <code>这一项文件里没写，值是主题默认</code>，「删」与「改原文」都不给、键名框不可编辑。动过才落盘，走「文件里没有的新键追加到所属段末尾」那一条，父段是新建的就把父键行一起写进去；一个字没动就不写，文件照旧不含这些键。落盘之后重新读取，这一行就是带行号的普通行。补项同样过凭据判定，默认值里名字算凭据的键不铺出来。默认值里某个键是个分组、文件里同名的却是一条列表或一句话时，这一行不铺子项，只标一句 <code>这一段在文件里是别的样子，主题默认在这一项下面还有几项，要加就改这一段原文</code>，这一段里的默认项走原文那条路。同一个位置已经有的键再提交一次，服务端拒掉并给 <code>这一项已经在文件里了</code>。默认配置读不到（主题不按这个约定放文件）就整段不补，表单退回只列文件里已有的键。</p>
+<h3 id="中文标签四级退回"><a href="#中文标签四级退回" class="headerlink" title="中文标签四级退回"></a>中文标签四级退回</h3><p>标签与说明来自源码里的一份字典，取中文按四级退回：点分路径字典（<code>aside.display.archive</code> 这一级）→ 键名词典（按键名本身查，任何 YAML 配置通用）→ 该键在文件里正上方的注释 → 键名原样并标一句「这一项没有中文说明」。主题与 hexo 的配置文件自带的是英文注释，第三级只在注释含汉字时采用，那种注释不进界面。补齐字典靠改那一段数据，一行一个键，不改逻辑。</p>
+<p>词典只提供标签与说明，候选值与取值范围来自另一份按路径记的字典，且只按完整点路径命中、不逐级退回：退回会让同名的嵌套键继承别人的候选值，主题里 <code>code_blocks.language</code> 是个开关，不该拿到站点 <code>language</code> 那组语言候选。布尔之外还有一个裸词的键（<code>code_blocks.shrink</code> 的 <code>none</code>、<code>aside.card_categories.expand</code> 的 <code>none</code>）标成三态，界面给三段开关，段名写这个值在主题里的作用：默认收起 &#x2F; 展开 &#x2F; 展开与隐藏按钮。有候选值的那类键给下拉，每个候选写成 <code>值（中文含义）</code>，与值本身重复的括注不写；当前值不在候选里时那一项也出现在下拉里并被选中，改回候选内的值之后这一项消失。字典没铺到的键不做取值判定。按数用的键（每页条数、相关文章条数、深色模式切换时刻、侧栏卡片的排序位）另记一份数值声明，同样只按完整点路径命中：这类键当前留空也给数字框，留空给文本框的话一句话填进去就是一个认不出的值。关掉是 <code>false</code>、开启是一个像素数的那类（代码块限高）单独声明，出两段开关加一个整数框，两种形态切换写回的是同一行。主题把值当成带单位的 CSS 声明用的键（字号、头图高度、图标偏移、按钮间距）不进数值声明，仍是文本框，说明位把可写形态和例子写出来：这类键收下一个不带单位的数字，样式表里那条声明直接失效，构建一行错都不报。</p>
+<h3 id="凭据项与部署段"><a href="#凭据项与部署段" class="headerlink" title="凭据项与部署段"></a>凭据项与部署段</h3><p><code>deploy</code> 整段、<code>secret</code>，以及名字里带 token、key、password 的键，不给控件、不回显值，只显示键名所在行的定位。判定不分层级，任何深度里出现这类键名都按同一规则处理；键名按词切分后再比对，<code>api_key</code>、<code>apiKey</code>、<code>apikey</code>、<code>appId</code> 都算，<code>keywords</code>、<code>keyboard</code> 这类不含独立 key 词的键名不算。这类键所在的那一段连带失去整段入口：原文区不出文本框、「改原文」与「删」两个控件都不出现，这一段里其他键照常逐项用控件改、也照常加新项，落盘时那些行逐字节不动。提示一句 <code>这一段里有凭据项，不能整段改原文</code>。后台不做部署，这一段的正确性由人工负责。</p>
+<h3 id="校验与生效"><a href="#校验与生效" class="headerlink" title="校验与生效"></a>校验与生效</h3><p>配置文件没有必填项，允许任意键留空。类型不符时给一句话并拒绝写入，提示落在同一行的提示位上、不带键名：<code>这一项要填整数</code>、<code>这一项要填数字</code>、<code>这一项要填日期</code>，加上 <code>root 要以斜杠开头和结尾</code>、<code>url 要带协议</code> 两条按字典判定。开关与三段开关都是分段控件、不给自由文本，所以没有「格式不对」那一类文案；三段里那个裸词按值的形态判定，含空格、冒号、引号、注释符的一律拒并回 <code>这一项要改原文</code>，判定不看键名，没有键清单。写回时提交的是布尔就裸写 <code>true</code>、<code>false</code>，提交的是那个裸词就裸写那个词，两种形态互相切换仍是同一行的行级替换。数值项交空串或缺值同样拒掉、回 <code>这一项要填整数</code>，空提交不等于 0；把框清空回原来的空样子不算改动，提交前那一项整个撤掉。「关掉是 <code>false</code>、开启是一个数」那一类的正整数判定在界面发请求前做，服务端没有路径字典，看不出某个整数位置该不该收布尔。</p>
+<p>配置文件不被监听，改完不会即时反映到 <code>hexo server</code>，也不动产物。保存后的提示只有一句：<code>已写入，重启 hexo server 才生效</code>。后台不代跑、不拼命令。</p>
+<p>配置第二层右侧一栏目录，列出全部顶层段，栏宽 240px、字号 14px，点一段跳到那一段；搜索框按关键字命中任意一层的键，结果里带上级段路径，点一条直接跳到那一行；滚动时当前段在目录里高亮，「到顶部」「到底部」两个按钮直达两端；目录自己滚动，不把页头挤出视口。1100px 以下目录变成表单上方的折叠块，默认收起。</p>
+<p>另有一类是改了也进不了产物：主题样式里那条规则是个与关系，另一份文件里的开关不配合，这一项无论写成什么都被短路掉。这类跨文件门控由界面侧记一条声明（这一项的点路径 → 若干条依赖，每条写依赖哪份文件里的哪一条、什么值算通得过、不配合时怎么说），声明的依据是主题源码里那一行判定；渲染时界面按声明读那一份文件的当前值逐条比对，把当前不配合的那几条并成一句显示在这一项的说明位上，保存成功的提示也带上这一句。依赖那一条在那份文件里读不出值时不算不配合。门控只写声明过的那几条，不推测别的键，服务端不参与这类判定。</p>
+<h2 id="分类与标签"><a href="#分类与标签" class="headerlink" title="分类与标签"></a>分类与标签</h2><p>候选集合只从磁盘扫描来：把带分类的集合里出现过的分类聚合成候选，每次请求列表时重算，不落库。层级深度取候选里出现过的最大深度，选择器按该深度级联；一个分类都没有时，第一级只剩一个输入框。一篇文章可以选多条完整路径，已选的行显示成「父级 › 子级」形态，右侧一个「删」字。</p>
+<p>分类是级联芯片，选项直接铺成可点的一排，点一下就选中，再点取消，不设「打开选择器」的按钮。弹层里翻树要点两次才能落定一个值，芯片一次到位。新子分类在底部一行输入框里创建：填名字、选父级、点添加，芯片立刻出现在候选里并被选中。没保存进任何文章的候选，重新打开表单就消失——分类的真相只有源文件这一份，多存一份就会不一致。</p>
+<p>标签是一排芯片加一个输入框，已有标签点选，新标签输入后点添加。标签没有层级，不做父子约束。分类与标签都为空时允许保存，写成 <code>categories: []</code>。</p>
+<p>页面集合没有分类与标签控件：<code>categories</code> 与 <code>tags</code> 由文章处理器赋予，页面里没这两层语义。要按分类组织内容就只能写成文章。</p>
+<h2 id="正文编辑器"><a href="#正文编辑器" class="headerlink" title="正文编辑器"></a>正文编辑器</h2><p>正文框是 <code>contenteditable</code> 的所见即所得区，不引第三方编辑器。理由是产出格式：后台直接吃块级 HTML 这个形状、吐这个形状，中间没有转换层。第三方富文本编辑器自带一套 HTML 方言与样式类，接进来第一件事是写双向转换，转换写不对就污染源文件。</p>
+<p>打开时把源文件正文解析成块结构，保存时把 DOM 序列化回一行一块。顶栏的「所见 &#x2F; 源文」切到一个等宽纯文本框时直接改源文本，切回所见时重新解析，两种形态共用同一份待保存内容。Markdown 正文这一种例外：编辑区换成只读预览，工具条收起，切换标签显示「预览」，改字走「源文」栏，细节见「写盘形态」。</p>
+<p>产出形状跟着站内已有正文走，侧栏一个芯片切换「块形状」与「裸标签」：默认按扫描结果判定，站内正文里出现过 <code>wp-block-code</code> 或 <code>wp-block-table</code> 就用带块名的形状，纯 Markdown 站用裸标签。切换记在浏览器本地，不需要改代码，也不为此加一份配置文件。</p>
+<p>工具条用图标不用文字胶囊，一组一个动作，横向一排放得下十来个动作；文字胶囊会把工具条撑成两行。按下态由当前选区与光标所在块决定，光标在单元格里时才出现表格那四个动作。</p>
+<table>
+<thead>
+<tr>
+<th>动作</th>
+<th>产出</th>
+<th>前置</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>标题</td>
+<td>弹层里选正文或一级到六级，整段换成 <code>&lt;p&gt;</code> 或对应的 <code>&lt;h1&gt;</code> 到 <code>&lt;h6&gt;</code></td>
+<td>光标在段里即可</td>
+</tr>
+<tr>
+<td>加粗、斜体</td>
+<td><code>&lt;b&gt;</code>、<code>&lt;i&gt;</code>，再点一次取消</td>
+<td>要有选区</td>
+</tr>
+<tr>
+<td>链接</td>
+<td><code>&lt;a href&gt;</code> 包住选区；光标落在已有链接上则拆开</td>
+<td>要有选区，弹层填地址</td>
+</tr>
+<tr>
+<td>引用、列表</td>
+<td>整段包成 <code>&lt;blockquote&gt;</code> 或 <code>&lt;ul&gt;&lt;li&gt;</code>，再点一次取消；取消引用时引用里有块级子元素就整块搬回正文，只有散字与 <code>&lt;br&gt;</code> 才按 <code>&lt;br&gt;</code> 拆段，空行留一个空段</td>
+<td>光标在段里即可</td>
+</tr>
+<tr>
+<td>代码块</td>
+<td>整段转成 <code>&lt;pre&gt;&lt;code&gt;</code>（块形状打开时带 <code>wp-block-code</code> 类名），光标已经在代码块里再点一次转回正文：按空行分成几段，段内换行走 <code>&lt;br&gt;</code></td>
+<td>光标在顶层段落里，表格与列表里不转</td>
+</tr>
+<tr>
+<td>表格</td>
+<td>弹出行列选择器</td>
+<td>光标在正文里</td>
+</tr>
+<tr>
+<td>图片</td>
+<td>上传后在光标处插 <code>&lt;p&gt;&lt;img src=&quot;/uploads/...&quot; /&gt;&lt;/p&gt;</code></td>
+<td>走系统文件选择器</td>
+</tr>
+<tr>
+<td>清格式</td>
+<td>去掉选区里的 <code>&lt;b&gt;</code>、<code>&lt;i&gt;</code> 等内联标记，链接保留</td>
+<td>要有选区</td>
+</tr>
+</tbody></table>
+<p><em>工具条动作</em></p>
+<p>块级动作一律做成开关：标题、引用、列表、代码块都能再点一次退回正文。「只能进不能出」等于把改坏的段落留给源文态手修，那还不如不用后台。</p>
+<p>标题是一个下拉，七项：正文与一级到六级，弹层与表格尺寸选择器共用同一套机制，当前光标所在的层级在菜单里高亮，按钮上的字标跟着变成 <code>H2</code>、<code>H5</code> 这样的当前层级号，落回正文只剩一个 <code>H</code>。层级不做限制，没有「只能从 <code>h2</code> 起」的拦截——拦在界面上的规则一旦和站内既有文章打架，就只能靠源文态绕。</p>
+<p><code>h1</code> 与页面标题同级：主题通常把文章标题本身渲染成 <code>&lt;h1&gt;</code>，正文再出现 <code>h1</code> 就是一页两个 <code>h1</code>。用哪一级由写的人决定，后台只负责把这一级的样式显示成站点实际会渲染出来的样子，编辑区与前台不一致时「所见即所得」就只是名字好听。对齐做法见最后一节。</p>
+<p>点按钮的瞬间选区会被浏览器清掉，命令落到空选区上就会「按下去没有反应」。图标按钮在 <code>mousedown</code> 上阻止默认行为，并在失焦前记下 <code>Range</code>，命令执行前先恢复记下的选区。所有提前返回的分支都给一句话提示，不做静默无操作。</p>
+<p>快捷键只有三个：<code>⌘S</code> 保存、代码块内 <code>Tab</code> 插两个空格、代码块内 <code>Enter</code> 补一个换行。空代码块与空引用里按 <code>Enter</code> 直接退回正文段，和空列表项两次回车退出是同一手感。键盘事件的目标元素永远是可编辑宿主，不是光标所在的块，判断光标落在哪个块里只能按选区位置取，靠事件目标判定会整条分支静默落空。工具条右侧的字数是去掉空白后的字符数。</p>
+<p>编辑页左侧一栏大纲，按标签层级收集正文的 <code>h1</code>–<code>h6</code>，所见态直接读编辑区 DOM，源文态与原文编辑按行解析 Markdown 的 <code>#</code> 标题与 HTML 标题标签。每条按层级缩进，点击把标题滚到视口靠上位置并把光标放到标题开头；源文态移动文本框选区，不切形态。大纲随输入重算，滚动正文时高亮当前标题。标题栏给标题数与「收起」：收起后只留一条 34px 宽的竖条写着「大纲」，点竖条展开；折叠状态存本地，下次打开保持。正文没有标题时整栏不出现，编辑区分栏回到正文加元数据两栏。1360px 以下大纲落到正文上方的整宽折叠块，标题栏常驻、列表最高约三分之一屏；1100px 以下元数据栏也落到正文下方，编辑区变成单栏。</p>
+<p>正文框、front-matter 原文框与配置原文框都是固定尺寸，只有内部滚动，没有拖拽改大小的把手；侧栏、元数据栏与大纲各自在视口内滚动。</p>
+<h2 id="表格"><a href="#表格" class="headerlink" title="表格"></a>表格</h2><p>插入表格先选尺寸：6 列 × 8 行的方格选择器，悬停高亮并实时显示「N 列 × M 行」，旁边一个「表头」开关决定要不要 <code>&lt;thead&gt;</code>。没有默认尺寸这回事，不选就不插——一键插一张 3×3 再手改行列，比选一次格子多两到三倍动作。</p>
+<p>产出的结构与构建脚本认得的形状对齐，块形状打开时外面套一层 <code>&lt;figure&gt;</code>：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">figure</span> <span class="attr">class</span>=<span class="string">&quot;wp-block-table&quot;</span>&gt;</span><span class="tag">&lt;<span class="name">table</span> <span class="attr">class</span>=<span class="string">&quot;has-fixed-layout&quot;</span>&gt;</span><span class="tag">&lt;<span class="name">thead</span>&gt;</span><span class="tag">&lt;<span class="name">tr</span>&gt;</span><span class="tag">&lt;<span class="name">th</span>&gt;</span><span class="tag">&lt;<span class="name">br</span>&gt;</span><span class="tag">&lt;/<span class="name">th</span>&gt;</span><span class="tag">&lt;/<span class="name">tr</span>&gt;</span><span class="tag">&lt;/<span class="name">thead</span>&gt;</span><span class="tag">&lt;<span class="name">tbody</span>&gt;</span><span class="tag">&lt;<span class="name">tr</span>&gt;</span><span class="tag">&lt;<span class="name">td</span>&gt;</span><span class="tag">&lt;<span class="name">br</span>&gt;</span><span class="tag">&lt;/<span class="name">td</span>&gt;</span><span class="tag">&lt;/<span class="name">tr</span>&gt;</span><span class="tag">&lt;/<span class="name">tbody</span>&gt;</span><span class="tag">&lt;/<span class="name">table</span>&gt;</span><span class="tag">&lt;/<span class="name">figure</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>光标在单元格内时多出四个动作：下插一行、右插一列、删除本行、删除本列。删除本行落在表头行时删掉整个 <code>&lt;thead&gt;</code> 并提示「已删表头」；删到没有行时整张表换成一个空段落，位置就在原处。每次删除后把光标放回剩下的第一个单元格，否则下一个动作会因为选区丢失而没有反应。</p>
+<h2 id="配图"><a href="#配图" class="headerlink" title="配图"></a>配图</h2><p>三个入口共用一条上传通道：工具条上的图片动作、正文里直接粘贴图片文件、侧栏封面上传。前两个把文件读成 base64 POST 到 <code>/api/upload</code>，服务端解码落盘到 <code>source/uploads/&lt;年&gt;/&lt;月&gt;/&lt;文件名&gt;</code>，返回站内路径再插进正文；封面只取返回值写进 <code>cover</code>，不进正文。文件名冲突时追加时间戳。粘贴路径会阻止浏览器把图片转成 base64 内联，落盘后正文里只有站内路径。体积判定是服务端一个常量，超判定的直接拒绝并回一句话，要改就改那一行，不为此加配置文件。</p>
+<p>从资源页上传时落进当前所在目录，参数只接受 <code>source/</code> 下的相对路径，路径规范化后断言仍在 <code>source/</code> 内，越界返回 403。</p>
+<p>不引 multipart 解析库，走 base64 JSON 是为了守住零依赖，代价是大图内存驻留，判定阈值先拦在前面，请求体上限又设在一个明显高于配图判定的值，超限直接断连接。一条通道三个入口，也省掉「同一张图从两个入口进去落成两种结果」。</p>
+<p>编辑区能看到图，是因为后台自带一条静态资源路由：除页面路由与 <code>/api/</code> 以外的请求路径直接当作 <code>source/&lt;路径&gt;</code> 读盘返回，扩展名白名单限定图片、样式、脚本、字体与音频，响应头 <code>Cache-Control: no-store</code>。正文里写站内相对路径就能加载，不需要为了看图再起一个 <code>hexo server</code>。目录名不写死，站点将来新增 <code>/css/</code>、<code>/js/</code>、<code>/media/</code> 这类资源目录，编辑区照样能加载。</p>
+<p>资源页每行给路径、类型与引用次数，图片行另给一张 56×42 的缩略图，比例不拉伸，非图片行预览位留空；缩略图按需解码，滚进视口才加载。引用次数等于所有条目正文里出现该站内相对路径的次数，按出现次数计，不只按文件计。删除走 <code>.trash</code>，被引用大于 0 时提示里带上引用数，但仍允许删。改名不做——引用散在各篇正文里，改名不会跟着改写，这是写下来的边界。</p>
+<h2 id="写盘形态"><a href="#写盘形态" class="headerlink" title="写盘形态"></a>写盘形态</h2><p>保存时先重新读一次磁盘再合并写入，而不是把打开页面时的内容整份覆盖回去。原因是有些插件会在构建时回写 front-matter，用内存里的旧快照覆盖会打回旧值。后台管理的键按表单结果写，其余键一律原样保留，不排序、不改写、不补默认值——源文件里可能有后台根本不认识的键。</p>
+<table>
+<thead>
+<tr>
+<th>控件</th>
+<th>键</th>
+<th>规则</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>标题</td>
+<td><code>title</code></td>
+<td>必填，原样</td>
+</tr>
+<tr>
+<td>文件名</td>
+<td>无</td>
+<td>新建时按标题生成 slug，允许中文；编辑时只读，改名等于新建加删除</td>
+</tr>
+<tr>
+<td>发表于</td>
+<td><code>date</code></td>
+<td>新建时预填当前时间，允许改；编辑时输入框只读，服务端也只取磁盘上的旧值</td>
+</tr>
+<tr>
+<td>更新于</td>
+<td><code>updated</code></td>
+<td>每次保存写当前时间</td>
+</tr>
+<tr>
+<td>分类</td>
+<td><code>categories</code></td>
+<td>一行一条完整路径，写成 <code>- [父级, 子级]</code></td>
+</tr>
+<tr>
+<td>标签</td>
+<td><code>tags</code></td>
+<td>字符串数组，写成 <code>- 标签名</code>；空数组写 <code>[]</code></td>
+</tr>
+<tr>
+<td>封面</td>
+<td><code>cover</code></td>
+<td>有值才写</td>
+</tr>
+<tr>
+<td>不在表单里</td>
+<td>其余全部</td>
+<td>原样留在原行，包括主题专属键与插件维护的键</td>
+</tr>
+</tbody></table>
+<p><em>字段模型</em></p>
+<p>文件名编辑时只读，是因为 permalink、插件生成的短链与已分发的链接都挂在文件名上面；改名在后台里等价于「新建加删除」，做成一个按钮反而掩盖了这一步的代价。</p>
+<p>正文一行一个块，块之间空一行，围栏与正文之间一个空行。写文件用同目录临时文件加 <code>rename</code> 原子替换，避免 <code>hexo server</code> 监听时读到写了一半的文件。</p>
+<p>块之间那个空行是承重的，不是排版偏好：少这一个空行，<code>marked</code> 会把围栏代码块内部的行当成新段落开始解析，产物里就多出看得见的 <code>&lt;p&gt;</code> 字面量。序列化按块 join 时补这一个空行。</p>
+<p>序列化只处理结构，不改文字：块级元素嵌在 <code>&lt;p&gt;</code>、<code>&lt;span&gt;</code>、<code>&lt;a&gt;</code> 里时向外提升；引用块里套 <code>&lt;p&gt;</code>、<code>&lt;ul&gt;</code> 是块级 HTML 正文本来的写法，原样保留不往外搬，否则一次保存就把引用拆成空壳加正文。粘贴带进来的 <code>Apple-*</code> 临时类与无样式 <code>&lt;span&gt;</code> 剥掉，<code>&lt;img&gt;</code> 统一补成自闭合。代码块内部浏览器给的是 <code>&lt;br&gt;</code>，落盘前换回真换行。</p>
+<p>纯 Markdown 写法照样渲染，后台不是渲染的前提：<code>##</code> 出带锚点的二级标题，围栏代码块直接进 <code>hexo-util</code> 高亮，管道表格出 <code>&lt;table&gt;</code>，判定口径与这套 HTML 块写法一致。</p>
+<p>后台这一侧按正文形状分两种形态。一行一个块级标签的走所见即所得。带 Markdown 记号的走只读预览：这类正文里的反引号、围栏、竖线不是标签，塞进 <code>contenteditable</code> 会把反引号内的 HTML 片段当成真标签解析，序列化回来就不是磁盘上那份。预览用一套自带的小解析：围栏出 <code>&lt;pre&gt;&lt;code&gt;</code>，<code>#</code> 出一到六级标题，管道行出带 <code>&lt;thead&gt;</code> 的 <code>&lt;table&gt;</code>，<code>&gt;</code> 出引用，<code>-</code>、<code>*</code>、<code>1.</code> 出列表，行内反引号按字面转义。判定取两个条件的交集：既不像一行一块的形状、又确实带 Markdown 记号，才切预览；纯文本老正文两个条件都不满足，照旧可编辑。多行 <code>&lt;pre&gt;</code> 与缩进式 HTML 的收尾行（<code>&lt;/blockquote&gt;</code>、<code>&lt;/tbody&gt;&lt;/table&gt;&lt;figcaption&gt;</code>）按标签嵌套深度算延续，不算 Markdown 痕迹。</p>
+<p>只读预览承担的是「在后台核对前台效果」这一件事：结构逐项与产物一致，改字仍然走源文栏，写回磁盘的就是源文本框里的内容，不经过 DOM 往返。要做的是不损坏，不是替 Markdown 编辑器代劳。</p>
+<h2 id="与插件、hexo-server-同跑"><a href="#与插件、hexo-server-同跑" class="headerlink" title="与插件、hexo server 同跑"></a>与插件、hexo server 同跑</h2><p>会回写 front-matter 的插件不止一个，<code>hexo-abbrlink</code> 是一例：该插件在处理文章时补生成用的键、把引号改成单引号、把流式数组重排成块状两行。<code>hexo server</code> 运行中只要新建或改动一篇就会触发，不需要手动跑 <code>hexo g</code>。重排只改形状不改值。</p>
+<p>因此外部改动保护不能按原始字节比。后台把磁盘文件重新解析成同一个模型（受管键加非易变额外键）再取哈希：插件重排形状时指纹不变，保存照常通过；真被别的编辑器加了一段正文时指纹改变，保存被拒并提示 <code>文件已被外部改动，请重新打开</code>，磁盘内容不动。打开编辑页时接口就把指纹一起返回，保存时带回去比对。宁可拒绝保存，也不静默覆盖别人的改动。</p>
+<p>另一个可见的连带效果：<code>hexo server</code> 会在源文件变动后重新生成并写 <code>public/</code>。后台进程不写产物，源码里没有指向产物目录的写入路径，也不派生子进程；看到产物时间戳跟着保存变化，那是 <code>hexo server</code> 干的。</p>
+<h2 id="备份与删除"><a href="#备份与删除" class="headerlink" title="备份与删除"></a>备份与删除</h2><p>源目录不是 git 仓库时，改动没有版本兜底，所以几条路径都留副本。</p>
+<table>
+<thead>
+<tr>
+<th>动作</th>
+<th>落点</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>覆盖保存条目</td>
+<td><code>.trash/admin-&lt;日期&gt;/&lt;id&gt;-&lt;时间戳&gt;.md</code></td>
+<td>写入前的整份旧文件，多轮保存留多份</td>
+</tr>
+<tr>
+<td>删除条目</td>
+<td><code>.trash/&lt;id&gt;-&lt;日期&gt;/&lt;原文件名&gt;</code></td>
+<td>源文件整体移过去，不做物理删除</td>
+</tr>
+<tr>
+<td>保存配置</td>
+<td><code>.trash/admin-config-&lt;日期&gt;/&lt;文件名&gt;-&lt;时间戳&gt;.yml</code></td>
+<td>写入前的整份旧配置，写坏时手工换回</td>
+</tr>
+<tr>
+<td>发布草稿</td>
+<td>不留副本</td>
+<td>移动不是删除，新旧两个路径写进提示</td>
+</tr>
+</tbody></table>
+<p><em>副本位置</em></p>
+<p><code>.trash</code> 在 Hexo 根目录，不在 <code>source/</code> 下，不进产物，站点上不留痕迹。删除是列表进编辑、点删除、确认弹层点确定三步，确认后界面回列表并提示源文件在 <code>.trash</code>。物理删除在这种场景里没有收益：省下的磁盘空间换不回一篇写坏的文章。</p>
+<h2 id="边界"><a href="#边界" class="headerlink" title="边界"></a>边界</h2><p>不做的部分写清楚，免得照着找：</p>
+<blockquote>
+<p>不执行任何 hexo 命令，不执行构建，不执行部署，保存后也不提示命令；不做第二条构建入口，不落 <code>dist/</code>，不让浏览器成为上线路径；不写 <code>public/</code>、不写 <code>package.json</code>、不写 <code>node_modules/</code> 里主题自带的配置；不做资源改名与移动；不做拖拽图片进正文；不做多人协作与并发编辑；不做 Markdown 与 HTML 块两种写法之间的互转；不显示、不写入凭据形态的键；配置改动不代跑重启。</p>
+</blockquote>
+<p>产物只由命令行的 <code>clean</code>、<code>generate</code>、<code>deploy</code> 决定。后台这一侧到源文件为止：站点配置一类是精确到行的改动，表单给的是「不用去找那一行」，而不是替理解配置这件事代劳。</p>
+<h2 id="构建"><a href="#构建" class="headerlink" title="构建"></a>构建</h2><p>后台只管到源文件为止，落盘之后照常走命令行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">npm i</span><br><span class="line">npx hexo clean</span><br><span class="line">npx hexo generate</span><br><span class="line">npx hexo server -p 4000</span><br></pre></td></tr></table></figure>
+
+<p>后台插入的代码块与站内既有写法同形，走同一套构建脚本转成高亮块，产物侧的比对只看判定标准：正文里真代码块的旧标记应为 0，高亮块数与源文件里的代码块总数一致，两类写法产出的高亮块计进同一条比对，不用分开算。讲这两种写法的文章会把旧标记当字面量写进代码围栏，那几处是示例文本，不计入这条判定。配置改完要重启 <code>hexo server</code> 才读得到新值。</p>
+<p>比对不要用文件哈希。同一份源文件连续两次 <code>clean</code> 加 <code>generate</code>，产物原本并不逐字节相同：搜索索引的条目顺序跟着数据库遍历次序走，日期相同的文章之间每次排得不一样；侧栏「网站信息」控件的 <code>data-lastPushDate</code> 取的是构建时刻，每次构建都在动。这两处不是主题要表达的随机性，挂两个 hexo 钩子就能钉住：<code>generateAfter</code> 里把索引的 <code>&lt;entry&gt;</code> 段按 <code>&lt;url&gt;</code> 重排，改的是路由里那份字符串——挂在 <code>hexo.route</code> 上，<code>hexo</code> 实例没有 <code>router</code> 这个属性，写错就拿不到 <code>routes</code>；<code>after_render:html</code> 里把 <code>data-lastPushDate</code> 换成全站最新的文章更新时间。</p>
+<p>钉过之后连续两次构建仍在变的只剩三类。一是相关推荐的候选取样，打分时给每篇候选挂一次 <code>Math.random()</code>，同分的候选取哪几篇、按什么顺序排，每次不同；二是标签页的标签云，顺序默认按 <code>random</code> 走（标签页的 front-matter 不写 <code>orderby</code> 就是随机），配色每个标签各取一次 <code>Math.random()</code>；这两类是主题自带的多样性，连着这个功能一起保留。第三类不算随机：一篇文章挂了多个同级分类或多个标签时，同级项之间没有稳定排序，front-matter 里的书写顺序在产物里不作保证，落在文章页元信息行、首页卡片和搜索索引条目里的先后因此每次构建可能不同。界面看不出来，也不为这一处多挂一层改写产物的钩子。</p>
+<p>钉过之后的判定口径可以是三条：搜索索引按 url 升序、条目数与文章数对得上、文件可解析；带 <code>data-lastPushDate</code> 的页面取值只剩一个且等于按 front-matter 算出的最新更新时间；标题层级、高亮块、图片、引用块、表格这些按 <code>&lt;article&gt;</code> 与 <code>.article-container</code> 范围内逐项数，两次构建的计数一致。「整站哈希一致」这种断言看着严格，实际会把上面那三类差异当成回归。真要卡差异范围，可行的口径是差异文件只允许落在带相关推荐的文章页、首页分页、标签页与搜索索引这几处，别的页面一出差异就是回归。</p>
+<h2 id="排错"><a href="#排错" class="headerlink" title="排错"></a>排错</h2><table>
+<thead>
+<tr>
+<th>现象</th>
+<th>判定</th>
+<th>处置</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>点按钮没反应</td>
+<td>提示 <code>要有选区</code> 一类，或按钮没亮</td>
+<td>先在正文里选中字或把光标放进目标段；表格动作要求光标在单元格内</td>
+</tr>
+<tr>
+<td>删行删列没动静</td>
+<td>上一次删除把光标移出了单元格</td>
+<td>再点一次表格动作前，先点进任意单元格</td>
+</tr>
+<tr>
+<td>正文里的图不显示</td>
+<td>图片路径不是站内相对路径，或文件不在 <code>source/</code> 下的资源目录里</td>
+<td>改成 <code>/uploads/&lt;年&gt;/&lt;月&gt;/&lt;文件&gt;</code>；外链图片在编辑区不加载</td>
+</tr>
+<tr>
+<td>保存报 <code>文件已被外部改动，请重新打开</code></td>
+<td>编辑页打开后文件被别的编辑器或插件改过</td>
+<td>刷新编辑页重新取一次，确认磁盘内容后重做改动</td>
+</tr>
+<tr>
+<td>保存报 <code>已存在同名文章</code></td>
+<td>新建时 slug 与站内某篇重名</td>
+<td>换文件名，或去编辑已有那篇</td>
+</tr>
+<tr>
+<td>保存报 <code>front-matter 第 N 行要写成 键: 值</code></td>
+<td>原文区那段解析出来不是映射（键名少了冒号最常见）</td>
+<td>按提示的行号补成 <code>键: 值</code> 再保存</td>
+</tr>
+<tr>
+<td>某段配置只给原文框</td>
+<td>提示 <code>这一段形状对不上，只能改原文</code> 或 <code>这一段读不出值，只能改原文</code></td>
+<td>该段整段手工改；缩进异常或注释夹在列表项中间时不会半结构化写入</td>
+</tr>
+<tr>
+<td>配置保存报 <code>这一段这次只改一种</code></td>
+<td>同一段里既有叶子改动又提交了整段原文</td>
+<td>二选一：只留控件改动，或只留原文改动</td>
+</tr>
+<tr>
+<td>配置保存报 <code>这一项不在后台里改</code> 或 <code>这一段里有凭据项，不能整段改原文</code></td>
+<td>命中凭据判定</td>
+<td>手工编辑那份文件，后台不写这类键</td>
+</tr>
+<tr>
+<td>配置保存报 <code>这一份改在根目录的覆盖文件里</code></td>
+<td>点进的是 <code>node_modules/</code> 里主题自带的只读那份</td>
+<td>改根目录的 <code>_config.&lt;主题名&gt;.yml</code></td>
+</tr>
+<tr>
+<td>配置保存报 <code>这一份不参与构建</code>，或表单整页改动入口都不出现、还标着 <code>这一份不参与构建</code></td>
+<td>这一份的名字与站点配置里 <code>theme:</code> 指的主题不符，hexo 根本不读这一份</td>
+<td>改根目录的 <code>_config.&lt;主题名&gt;.yml</code>；确实要用这一份，就把 <code>theme:</code> 改成对应的主题名再起构建</td>
+</tr>
+<tr>
+<td>某一行写着「这一项文件里没写，值是主题默认」</td>
+<td>这一项在两份 YAML 里都没有，值来自主题脚本里那份默认配置</td>
+<td>改值保存才会落进覆盖文件；一个字没动就不写盘，文件里始终不含这一行</td>
+</tr>
+<tr>
+<td>配置保存报 <code>这一项已经在文件里了</code></td>
+<td>同一位置已经有这一行，包括刚写完盘的补项</td>
+<td>那一行已经是普通行，直接改值，不要再新增</td>
+</tr>
+<tr>
+<td>说明位带一句「…这一项写了也不生效」</td>
+<td>跨文件门控：另一份文件里的开关不配合，主题样式里那条规则是个与关系</td>
+<td>按说明位点出的那几条去改另一份文件；只改这一项写什么都没用</td>
+</tr>
+<tr>
+<td>配置保存只回 <code>已写入，重启 hexo server 才生效</code></td>
+<td>配置文件不被监听，正常现象</td>
+<td>重启 <code>hexo server</code>，需要新产物再跑构建</td>
+</tr>
+<tr>
+<td>名字与主题不符的那几份也显示可写、不标 <code>不参与构建</code></td>
+<td>站点配置没有、或那份解析失败，主题名读不出来，后台退回按可写处理</td>
+<td>先修站点配置那一行 <code>theme:</code>，重开列表这一档标记就回来</td>
+</tr>
+<tr>
+<td>值写进去了、前台还是老样子</td>
+<td>值的形态与主题里的用法对不上：该收一个数的位置被写成开关的两种值，或带单位的值写成不带单位的数字</td>
+<td>按说明位给的形态重填：「关掉是关闭、开启是一个数」那类选开启那段填正整数，带单位那类照例子写；不带单位的那类不报错，只是那条样式作废</td>
+</tr>
+<tr>
+<td>构建后样式表是空的，命令行只回一行错</td>
+<td>值形态不合被样式引擎判成类型错；样式文件渲染失败时构建记一条错误照样正常退出</td>
+<td>找构建输出里的 <code>Asset render failed</code>，把那个键改回能用的形态再构建</td>
+</tr>
+<tr>
+<td>改主题自带那份的某个键没动静</td>
+<td>根目录的覆盖文件里同一条键也有一份，加载时整段覆盖过去</td>
+<td>改根目录的 <code>_config.&lt;主题名&gt;.yml</code>；被覆盖那段里的键，行内标了「根目录已覆盖」</td>
+</tr>
+<tr>
+<td>端口起不来</td>
+<td><code>lsof -ti tcp:43210</code> 有输出</td>
+<td>用 <code>ADMIN_PORT</code> 换端口，或先停掉旧进程</td>
+</tr>
+<tr>
+<td>局域网另一台机器打不开</td>
+<td>设计如此，只绑回环</td>
+<td>不在本机改，或用 SSH 端口转发把端口转出去</td>
+</tr>
+<tr>
+<td>改前端不生效</td>
+<td>浏览器缓存了旧页面</td>
+<td>硬刷新；<code>ui.html</code> 本身每次请求重读盘，不需要重启进程</td>
+</tr>
+<tr>
+<td>Markdown 正文在后台不能直接改</td>
+<td>这类正文进 <code>contenteditable</code> 会丢形状，编辑区只给只读预览</td>
+<td>改字切「源文」栏；预览用来核对前台效果，不写回内容</td>
+</tr>
+</tbody></table>
+<p><em>排错对照</em></p>
+<h2 id="实测记录"><a href="#实测记录" class="headerlink" title="实测记录"></a>实测记录</h2><p>接口与命令行侧逐条跑过，写盘类断言都以文件与构建产物为准，不以界面显示为准：</p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>集合发现</td>
+<td>列表六档（文章、草稿、页面、数据、模板、资源）与磁盘目录逐项对照一致；空目录不报错；自定义目录没有时照样起</td>
+</tr>
+<tr>
+<td>自定义集合</td>
+<td>临时造一个 <code>source/_&lt;新名&gt;/</code>，重开列表该集合自动出现、能进表单、保存落回原路径；删掉目录后该集合消失；没为此改过任何常量</td>
+</tr>
+<tr>
+<td>front-matter 原文区</td>
+<td>原文区改一个后台不认识的键、同时用表单改标题，落盘后逐行比对只有那两行变化，未知键留在原行位；重开原文区回显磁盘新内容；正文因写盘归一行首空行而整体上移一行，内容一字未改</td>
+</tr>
+<tr>
+<td>原文区损坏拒绝</td>
+<td>围栏不成对回 400 带行号；<code>title 缺冒号</code> 这一类在加映射形态判定之前会静默重写文件，加判定后回 400 且文件字节不变</td>
+</tr>
+<tr>
+<td>页面新建</td>
+<td>落在 <code>source/&lt;slug&gt;/index.md</code>，front-matter 四项，没有分类与标签控件</td>
+</tr>
+<tr>
+<td>草稿与发布</td>
+<td>草稿先落 <code>_drafts/</code>，发布后同一内容按 <code>new_post_name</code> 出现在 <code>_posts/</code> 并补 <code>date</code>、<code>updated</code>，<code>_drafts</code> 不再保留；发布前后 <code>.trash</code> 里同名副本数量不变，即发布不留副本</td>
+</tr>
+<tr>
+<td>资源计数与删除</td>
+<td>一张图在正文里出现两次，计数按出现次数为 2；删除后源文件出现在 <code>.trash/&lt;id&gt;-&lt;日期&gt;/</code>，原目录不再包含，引用数不拦删除</td>
+</tr>
+<tr>
+<td><code>_data</code> 原文编辑</td>
+<td>该类条目只给原文区；合规改动逐行落盘、其余行原样；多缩进一行的那段回 400 带行号且文件字节不变</td>
+</tr>
+<tr>
+<td>模板</td>
+<td>后台新建模板得到 <code>scaffolds/&lt;名&gt;.md</code>，读回只给原文区，提交内容与磁盘逐字相同；命令行 <code>hexo new &lt;模板名&gt; &quot;&lt;标题&gt;&quot;</code> 新建的文章带上模板里新加的那一行。只给一个参数时那个参数当标题、用的仍是默认模板，模板名要放在第一个位置</td>
+</tr>
+<tr>
+<td>命令层边界</td>
+<td>未知接口路径与几种编码、相对路径的越界变体分别回 404、403、400；整轮跑完站点 <code>_config.yml</code> 字节不变；两份源码里 <code>child_process</code> 出现 0 次，<code>public</code> 只出现在中文字典标签与 <code>public_key</code> 键名里</td>
+</tr>
+<tr>
+<td>配置写回</td>
+<td>真实主题配置的逐字节副本上，整份文件的叶子按原值全量回写一次，落盘后与回写前差异 0 处；单改一个布尔、一个整数时全文件只有那一行变化，注释行、空行、键序、引号风格逐字节相同</td>
+</tr>
+<tr>
+<td>配置降级范围</td>
+<td>主题配置的一份逐字节副本里，只有 2 段形状对不上退回原文框，其余各段逐项铺出控件；夹具里故意做坏的段整段降级、不拒绝整页</td>
+</tr>
+<tr>
+<td>中文标签覆盖</td>
+<td>站点配置、主题覆盖配置、主题自带配置与一份逐字节副本四份一起统计，取的是源码里那份字典与标签、控件函数：出控件的叶子里说明位不含汉字的 0 条、标签不含汉字的 0 条；配置文件自带的英文注释一处不进界面，全部显示字典里的中文；字典没铺到的键（只在夹具里专铺）显示键名加「这一项没有中文说明」，改值照样正常落盘</td>
+</tr>
+<tr>
+<td>三态与候选值写回</td>
+<td>布尔之外带裸词的两个键出三段开关，依次选三段各保存一次，每次全文件只动那一行，分别写成裸词 <code>none</code>、布尔 <code>true</code>、布尔 <code>false</code>，重解析类型跟着变；那行上方的主题注释一字未动。有候选值的键下拉文案是 <code>值（中文含义）</code>，选一项保存写成裸值；手工写进一个字典外的值再读回，下拉里多出那一项且被选中，改回候选内的值后这一项消失。对布尔键提交含空格、带冒号、带引号、<code>#</code> 开头、空值、首尾带空格六种值全部 400 回 <code>这一项要改原文</code>、文件字节不变，合规裸词与布尔各写入成功</td>
+</tr>
+<tr>
+<td>三态写进配置后主题读对</td>
+<td>真实配置上写成 <code>none</code> 构建一次，产物里注入的是 <code>isHighlightShrink: undefined</code>；改回 <code>false</code> 后该文件与写入前留存逐字节相同，再构建一次注入的是 <code>isHighlightShrink: false</code>，与主题模板里 <code>shrink == &#39;none&#39;</code> 那条判定一致</td>
+</tr>
+<tr>
+<td>构建可复现</td>
+<td>同一份源文件连续两次 <code>clean</code> 加 <code>generate</code>，再把那两个钩子摘掉连跑两次做对照：摘掉时每次构建都在变的是带构建时刻戳的那一片页面，加上主题随机的那几处；挂上后差异只剩带相关推荐的文章页、首页分页、标签页与搜索索引这几处，其余产物两次逐字节相同。逐文件把差异段落的位置对过一遍，全部落在相关推荐区块、元信息行的分类标签链接、标签云链接这三类里面，没有第四类；搜索索引按 url 升序、条目可解析，带 <code>data-lastPushDate</code> 的页面取值只剩一个且等于按 front-matter 算出的全站最新更新时间；文章容器内的结构计数两次一致</td>
+</tr>
+<tr>
+<td>数值或关闭写回</td>
+<td>真实主题配置的逐字节副本上，代码块限高那一项选关闭写成裸 <code>false</code>、选限制填一个像素数写成裸整数，两次各只动值那一行，上方的主题注释行一字未动；值为 <code>false</code> 时数字框禁用且空，值为整数时框里带原值、最小 1；填 0、小数、半截数、汉字各被界面在发请求前拦下并回 <code>这一项要填整数</code>，请求不发出。其余布尔键不受影响，照旧两段开关；同名键出现在别段里时不套这一形态</td>
+</tr>
+<tr>
+<td>空值项与空提交</td>
+<td>两个深色模式切换时刻与六个侧栏卡片排序位当前留空，按数值声明改出数字框，给过范围的带范围、没给的不带；数值项交空串、缺值、汉字、半截数、小数各拒一次、文件字节不变；空串先前会被静默写成 <code>0</code>，现在空值判定排在数值分支最前；把框清空回原来的空样子不产生提交项，走的是提交前的同值撤销。带单位那类（字号、头图高度、图标偏移、按钮间距）仍给文本框、说明位写形态与例子，实测不带单位的数字进样式编译得到一条无效声明、构建不报错</td>
+</tr>
+<tr>
+<td>不参与构建与只读形态</td>
+<td>仓库根临时放一份主题覆盖文件的逐字节副本、名字换成不符的：这一份的表单值全部显示，494 个面板里 1238 个输入控件全禁用，「删」「改原文」「加一项」三类芯片 0 个，保存按钮禁用，顶部一句写明按 <code>theme:</code> 找覆盖文件；接口 POST 一次回 400 <code>这一份不参与构建</code>，写前后同一串校验值。配置清单里这类文件显示「这一份不参与构建」，加载得到的显示「可写」，主题自带那份显示「可写，同键以根目录那份为准」</td>
+</tr>
+<tr>
+<td>覆盖标注按叶子</td>
+<td>主题自带那份 368 行带值控件的键逐条与覆盖文件的解析树比对、全标，界面上的标注也是 368 个、114 个分组面板里 0 个标注、11 个凭据行不带；覆盖文件是整份副本时这 368 条本来就该全标，按叶子的差别在一份同构夹具上看：从覆盖文件删掉两条叶子后界面上的标注只剩 366 个、不带标注的两行点路径正是那两条，同段另外 4 条照旧标，再删掉整段时那一段 50 条全不标；两次删减里主题那份的行集与总数不变，还原后回到 368 条全标、覆盖文件逐字节相同</td>
+</tr>
+<tr>
+<td>主题默认值补成可写行</td>
+<td>根目录覆盖文件的表单补出 9 条叶子、2 个分组行和 1 条形态行，9 条的值与类型逐条等于主题默认配置里的，一律没有行号、不给「删」与「改原文」，写盘前这些路径在该文件的解析树里不存在；界面侧 12 个面板标签全部中文、说明位写着「这一项文件里没写，值是主题默认」；在夹具的默认配置里并排铺一个凭据形态的键与一个普通键，只多铺出后者（补出的叶行 12→13、默认项计数 10→11），前者在整个节点的任何路径里都不出现</td>
+</tr>
+<tr>
+<td>补项落盘</td>
+<td>五种父段形态各写一次：父段已在文件里的各加一行；缺中间一层分组的加两行（分组行与键行）；整条父段缺的连着父键追加到末尾；顶层缺项追加到末尾。五次删除行都是 0 处、重解析值逐条对得上；写完再读这几条已不带补项标记且带行号，没动过的照旧不落盘；同一位置重复提交回 400 <code>这一项已经在文件里了</code>、文件不多第二份；形态行下面的子路径提交被拒；夹具还原逐字节相同、补出的叶行数回到 9；真实仓库那几份配置全程逐字节未动</td>
+</tr>
+<tr>
+<td>跨文件门控的提示</td>
+<td>真实站点上一条依赖不配合，代码块自动换行那一项的说明位是字典说明加一句「站点配置里高亮行号开着，这一项写了也不生效」，另一条依赖当前通得过就不出现；夹具上做两条同时不配合，说明位并成一句、改值保存后的提示整句带上这一句，全文件只有那一行变化、还原逐字节相同；把其中一条依赖从站点配置里删掉后说明位只剩不配合的那一条，缺值不算不配合</td>
+</tr>
+<tr>
+<td>侧栏导航与概览</td>
+<td>概览数量卡片与侧栏数量逐项相同，六档齐全；点卡片进对应表格，最近更新按日期取前八条、点首条进编辑；侧栏两项分组齐全，概览、集合列表、编辑页、配置清单与配置第二层分别高亮对应项；从概览点集合、从列表点「配置」、从清单点配置行都走真实跳转，地址栏跟着换，重载后仍停在同一页</td>
+</tr>
+<tr>
+<td>列表表格</td>
+<td>文章与草稿四列（标题、分类、标签、更新），页面、数据与模板三列（标题、路径、更新），资源四列（预览、文件名、路径、引用）；搜索与标签快筛同时生效时计数与行内容都对得上；点行进编辑</td>
+</tr>
+<tr>
+<td>外壳窄宽度</td>
+<td>1100px 及以下侧栏变一行横向导航，品牌留在左侧、分组标题与数量收起、页头与工具条不粘顶；1101px 恢复 216px 竖栏；900px 收起标签列；700px 收起路径、分类、更新三列并在标题下补一行分类或路径，条目计数收起；375px 导航条仍一行、可滚到「配置」并点进去，编辑页返回与保存完整可见、文件名收起，全程无横向溢出。控制台只有测试时手输带扩展名地址触发的一次 404，正常路径无报错</td>
+</tr>
+<tr>
+<td>资源缩略图</td>
+<td>图片行给 56×42 的缩略图、比例不拉伸，非图片行预览位留空；滚到尚未进入视口的行才完成解码；详情页大图按等比完整显示</td>
+</tr>
+<tr>
+<td>配置目录</td>
+<td>目录顶层段数与表单顶层段数一致；搜索只出现在深层里的键能命中并跳到该行；清空搜索后滚动恢复当前段高亮；「到顶部」「到底部」直达两端；目录独立滚动，字号 14px、栏宽 240px；窄屏变整宽折叠块，默认收起、可展开</td>
+</tr>
+<tr>
+<td>编辑页大纲</td>
+<td>按 <code>h1</code>–<code>h6</code> 缩进列出，条数等于正文标题数；点一条把标题滚到视口靠上位置并放下光标；改标题文字后大纲跟着变；源文态按 Markdown 标题解析、点一条移动文本框选区；收起后只留 34px 竖条，刷新保持收起；窄屏落在正文上方、标题栏常驻、列表约三分之一屏；正文没有标题时整栏不出现</td>
+</tr>
+<tr>
+<td>固定文本域与滚动</td>
+<td>正文框、front-matter 原文框、配置原文框都固定尺寸、只能内部滚动，拖右下角不改尺寸；侧栏、元数据栏、大纲与配置目录各自在视口内滚动，页头不被挤出</td>
+</tr>
+<tr>
+<td>配置改动到前台</td>
+<td>用界面改站点标题、主题覆盖配置里的页脚文案与一个新菜单项，各保存一次后跑一次构建：标题进首页标题，页脚文案出现在页面上，新菜单项连同链接出现在导航里。三处改回后再构建一次，首页与关于页与改前逐字节相同，产物里的探针标记归零，两份配置与改前逐字节相同</td>
+</tr>
+<tr>
+<td>配置改动的生效边界</td>
+<td>主题自带那份整份被根目录覆盖文件遮住，改其中一个开关并构建，首页与关于页不变、该键在产物里不出现；名字与启用主题对不上的那份保存回 400 <code>这一份不参与构建</code>、文件字节不变；已在跑的服务在保存与构建之后仍返回旧标题、新菜单的路由 404，重启才变</td>
+</tr>
+<tr>
+<td>键名可编辑与增删</td>
+<td>子键行改键名只动这一行的键，值与行尾注释留在原行；块状列表上下移动时行尾注释跟着值走；对象数组新增被拒并提示走原文，原文新增正常</td>
+</tr>
+<tr>
+<td>凭据识别</td>
+<td>夹具里明文值一个都不出现在响应中；深层键（<code>pics.key</code>、<code>search.docsearch.appId</code> 这类）不分层级一律只列键名，同段连带锁掉整段入口，同段其他键照常逐项改；<code>keywords</code>、<code>keyboard</code> 不误判</td>
+</tr>
+<tr>
+<td>站内回归</td>
+<td>用站内一篇长正文走「打开即保存 + 构建比对」：两级分类读成数组、原样写回成 <code>- [父, 子]</code>，主题专属键与插件维护的键留在原位，正文逐字相同；构建后两篇产物在文章容器内逐项比对，标题层级、高亮块、图片、引用块、表格计数差异 0，<code>top_img: false</code> 照样生效</td>
+</tr>
+<tr>
+<td>副本与回退</td>
+<td>同一份配置文件连续两次保存各落一份带时间戳的副本；用最早那份手工换回后与改前逐字节相同</td>
+</tr>
+<tr>
+<td>编辑器</td>
+<td>工具条逐项、块级动作可逆、标题层级、表格增删行列、配图上传与粘贴、Markdown 预览形态、两种正文写法的保存等价——这些逐条跑过（细节见设计文档的验收表），改成通用实现后没有逐条重跑</td>
+</tr>
+</tbody></table>
+<p><em>已跑通</em></p>
+<p>没跑过或没复测的部分，别当成已验证：概览在文章集合为空时的「还没有文章」空状态、分类选择器的两级联动、删除确认弹窗带引用数、封面上传与系统文件选择器的界面路径（同一通道只从接口与粘贴跑过）。配置页里补项行的点击与保存、只读那份的改动入口、门控那句说明与保存后的提示，这几处在浏览器里点过并取的是页面渲染出来的文本；其余界面点击类（按段折叠、选项焦点样式、列表项上下移的按钮态）没复测。「构建后主题读到 <code>_data</code> 的新值」「发布后产物有该文路由」「页面作为独立页渲染」这三条要跑构建比对，只做到源文件正确；中文标签、说明位、三段开关与下拉文案这几条的实测办法是把源码里那份字典和标签、控件函数原样取出来跑真实配置的解析结果，断言的是渲染出来的 HTML 字符串。「关闭 &#x2F; 限制」两段与数字框的禁用联动、清空后不提交这两条也只验到渲染出的字符串与提交前的同值判定，浏览器里的点击没复测；<code>node_modules/</code> 里主题自带配置的只读分支在本机没有对应目录，没跑过；主题默认配置那份文件读不到时整段不补的退回分支没跑过。深色模式下的版面观感（令牌值按站点深色产物配的，没做截图核对）；常驻场景（只用 <code>nohup</code> 起停过，没配任何进程守护）；把端口转发到另一台机器使用（只验证了本机连不上）；Markdown 与 HTML 块两种写法之间的互转（后台不做转换）；预览区与产物页面的逐像素对照（只做了结构逐项计数与保存后的产物比对）。</p>
+<h2 id="本站落地差异"><a href="#本站落地差异" class="headerlink" title="本站落地差异"></a>本站落地差异</h2><p>通用口径落到这个站点上要拧的几处，都在这一节，前文按通用写法读即可：</p>
+<ul>
+<li>分类深度：站内最深两级，候选里出现 <code>学习</code>、<code>生活</code> 两个父分类与一条顶级分类 <code>学生选课系统</code>；早期版本把这两个父分类名内置在候选里，现在只从扫描来。</li>
+<li>说说：站内说说就是分类留空、带 <code>说说</code> 标签的文章，新建时点一下 <code>说说</code> 芯片、不选分类即可。为说说单开一套表和界面，等于把同一个数据存两处。</li>
+<li>正文形状：站内正文是 WordPress 导出再转换的块写法，判定扫到 <code>wp-block-code</code> 与 <code>wp-block-table</code> 就默认用块形状；侧栏那个芯片可以切到裸标签，切换记在浏览器本地。</li>
+<li>主题专属键：站内文章普遍带 <code>top_img: false</code>（图片横幅关掉），这一项不在表单里，靠原文区保留；<code>abbrlink</code> 由 <code>hexo-abbrlink</code> 维护，后台只保留不改写。</li>
+<li>编辑区与站点的样式对齐：站里正文基准 14px，主题对 <code>h1</code> 到 <code>h6</code> 只给 <code>margin: 20px 0 14px</code>、字重 700、颜色 <code>#1f2d3d</code>（深色态换成 <code>rgba(255,255,255,0.9)</code>），行高沿用容器的 2 倍，字号走浏览器默认比例；编辑区基准 16px，六级按 2em、1.5em、1.17em、1em、.83em、.67em 写死，不依赖浏览器默认值，两边比例一致。表头底色 <code>rgba(153,169,191,0.1)</code>、表头字重 700 居中、单元格内边距 6px 12px、表格圆角 5px、底部外边距 20px；行内代码底色 <code>rgba(27,31,35,.05)</code>、字色 <code>#f47466</code>、圆角 6px；代码块底色 <code>#f6f8fa</code>、字号 14px、圆角 6px。深色态随 <code>prefers-color-scheme</code> 换一组令牌。这些值是从构建产物里读出来的，改一处样式要同时核对站点产物，两边不一致时以站点为准。</li>
+<li>配图体积判定沿用 README 内容约定里配图入库那条，改的是服务端那一行常量。</li>
+<li>配置层真正用到的部分：站点配置与主题覆盖配置两份表单，主题覆盖那份的注释行数量与配置行相当，这也是写回必须只动一段的直接原因。</li>
+<li>本站的覆盖文件是整份副本：主题自带配置里 368 行带值控件的键，点路径在覆盖文件里都能对上，所以「根目录已覆盖」这一条标注在站内是全标，按叶子判与按段判给的是同一个集合；差别在同构夹具上量过。</li>
+<li>本站两份 YAML 都没写、由主题默认值补出来的键有 9 条，覆盖文件里多出来的就是这几行：<code>nav.display_post_title</code>、<code>footer.nav</code>、<code>lazyload.native</code>、<code>rightside_config_animation</code>、<code>umami_analytics.script_name</code>，加上 <code>google_tag_manager</code> 与 <code>search.local_search.pagination</code> 两组里的子键。主题那份 <code>structured_data</code> 在文件里是别的样子，只铺一行说明、不铺子项。</li>
+<li>根目录的 <code>_config.landscape.yml</code> 名字与 <code>theme: butterfly</code> 对不上，后台标 <code>这一份不参与构建</code>；这一份文件在本站点里没有任何读取路径，改这一份不进站点。</li>
+<li>代码块限高这一项要写成像素数或 <code>false</code>：主题在样式里把值当数用，写成布尔会让样式编译抛类型错，产物里两个样式文件变空、<code>hexo g</code> 却照样成功。界面按「关闭 &#x2F; 限制」两段加一个整数框给这一项。</li>
+<li>代码块自动换行这一项被站点配置里的高亮行号门控：主题那条换行样式要同时满足行号关掉，本站站点配置里行号是开的，所以这一项改了看不出效果；要的是换行样式，得先改站点配置那一侧。</li>
+<li>部署链不在后台里：<code>npx hexo clean &amp;&amp; npx hexo g &amp;&amp; npx hexo d</code> 三步手工做，<code>hexo d</code> 是整站替换并强推产物仓库，推之前要先比对远端。</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io">61飞兔</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io/2026/10/22/hexo-%E6%9C%AC%E5%9C%B0%E5%90%8E%E5%8F%B0/">https://cyg0825.github.io/2026/10/22/hexo-%E6%9C%AC%E5%9C%B0%E5%90%8E%E5%8F%B0/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://cyg0825.github.io" target="_blank">学海拾茜</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%BB%BA%E7%AB%99/">建站</a></div><div class="post-share"><div class="social-share" data-image="/img/cat.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="/assets/css/share.min.css" media="print" onload="this.media='all'"><script src="/assets/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/03/04/linux%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="Linux学习笔记"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Linux学习笔记</div></div><div class="info-2"><div class="info-item-1">一、目录与导航 ⭐⭐⭐  123456pwd                     # 显示当前所在目录的绝对路径cd 路径                 # 切换到指定目录（如 cd /var/log）cd ~                    # 回到当前用户的家目录（/home/用户名）cd ..                   # 返回上一级目录ls -la                  # 列出当前目录所有文件（含隐藏文件，含详细信息）ls 路径                 # 列出指定目录的文件（如 ls /var/log）  二、文件操作 ⭐⭐⭐  12345678910touch 文件名            # 创建一个空文件，或更新已有文件的时间戳cp 原文件 目标文件      # 复制文件（如 cp test.txt test_backup.txt）cp -r 原目录 目标目录   # 复制目录（-r = 递归复制）mv 原文件 目标文件      # 移动文件，或重命名文件（如 mv A B 把A改名为B）mv 文件 路径/     ...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2024/07/19/problem/" title="建站时遇到的一些问题汇总"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/uploads/2024/07/image-65-1024x156.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2024-07-19</div><div class="info-item-2">建站时遇到的一些问题汇总</div></div><div class="info-2"><div class="info-item-1">一边做一边发现问题一边解决  参考网址  博客搭建常见问题汇总   数据库  切记！！！数据库一定多备份，一不小心删了后悔莫及！！！  评论失败，未知错误，或者点赞失败  WordPress安装目录有问题修改安装目录就好了      WordPress站点健康页面提示    到宝塔面板找到软件商店——PHP设置——安装扩展——安装这三个扩展      这样就解决了      需要透明图标时  比如我网站图标那个兔子，我在手机抠图后用微信上传格式就变了，即便改格式背景依然不是透明，这个时候用发文件的发图片就不会改格式了        宝塔域名问题  宝塔面板域名更改后不记得怎么进，可以打开阿里云远程服务器输入命令&nbsp;bt default    域名正确后，如果进不去，清除浏览器浏览记录重新进  SSL证书查询  SSL证书在线检测工具-中国数字证书CHINASSL    注册登录页面 问题解答  解决页面缓存问题    下面几种方法  Jetpack插件Jetpack插件的使用教程和设置教程  站点页面缓存开启方法 – Stone个人博客↗  WP Super Cache ...</div></div></div></a><a class="pagination-related" href="/2024/08/15/argon/" title="Argon主题美化"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/uploads/2024/08/image-134.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2024-08-15</div><div class="info-item-2">Argon主题美化</div></div><div class="info-2"><div class="info-item-1">参考学习网址：  Echo's blog  主题资源：  argon-theme-master.zip链接：https://pan.baidu.com/s/1i34oTlfMaP46c3Na8f4tZg?pwd=tpjd 提取码：tpjd    博客美化 JSON  注意：可复制一键导入  别忘记在主题设置页面修改头像、背景以及底部信息等设置哦（博客背景 url 已失效，需自己填写）  建议主题设置全局里 CDN 选择不使用或更换为自己的，否则可能出现 CSS 样式失效    1{&quot;argon_theme_color&quot;:&quot;#5e72e4&quot;,&quot;argon_theme_color_hex_preview&quot;:&quot;#5e72e4&quot;,&quot;argon_show_customize_theme_color_picker&quot;:false,&quot;argon_enable_immersion_color&quot;:&quot;true&quot;,&quot;argon_darkmode_autos...</div></div></div></a><a class="pagination-related" href="/2024/08/08/butterfly/" title="Butterfly 主题美化"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/uploads/2024/08/image-121.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2024-08-08</div><div class="info-item-2">Butterfly 主题美化</div></div><div class="info-2"><div class="info-item-1">参考学习网站  配置 | Hexo  Butterfly主题的详细配置   Butterfly 主题美化（一）   Butterfly 安裝文檔 一系列  升级建议  为了减少升级主题后带来的不便，请使用以下方法：   在 hexo 的根目录创建一个文件&nbsp;_config.butterfly.yml，并把主题目录的&nbsp;_config.yml&nbsp;内容复制到&nbsp;_config.butterfly.yml&nbsp;去，以后只需要在&nbsp;_config.butterfly.yml&nbsp;进行配置就行。   注意：复制的是主题的 _config.yml ，而不是 hexo 的 _config.yml  注意： 不要把主题目录的 _config.yml 刪掉  注意： 以後只需要在 _config.butterfly.yml 进行配置就行。如果使用了 _config.butterfly.yml， 配置主题的 _config.yml 将不会有效果。       Hexo自动合并主题中的 _config.yml 和 _config.butterfly....</div></div></div></a><a class="pagination-related" href="/2024/07/20/wordpress/" title="个人博客搭建步骤"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/uploads/2024/07/image-3-711x1024.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2024-07-20</div><div class="info-item-2">个人博客搭建步骤</div></div><div class="info-2"><div class="info-item-1">1小时WordPress从0到1建站系列   【笔记】个人博客建立（域名选择、网站备案、公安联网备案、安全评估报告）_国际联网备案必须要做安全评估吗  个人博客搭建通过之前搭建经验以及参考视频搭建  准备一个服务器  我用的阿里云云服务器ECS          购买成功      点击管理控制台进入      概览      服务器准备好了  准备域名  搜索拦搜索域名      信息模板-创建新信息模板，根据填写，已经有了模版不用管      进入概览      选择想要注册的域名，按要求注册，购买      等到之后的网站备案通过了，再为域名添加解析，到时候就能用域名打开网站了      接着准备宝塔面板（等学的更多之后自己再部署）  进入服务器控制台打开 https://www.aliyun.com/      进入云服务器          立即登录      进入服务器      在浏览器打开新窗口宝塔面板官网，网址 宝塔面板注册，或者登陆      安装宝塔  如果选了Alibaba Cloud Linux系统的服务器,这里就使用Centos的安装脚本      复...</div></div></div></a><a class="pagination-related" href="/2024/08/04/close/" title="关闭评论"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/uploads/2024/07/image-188-1024x539.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2024-08-04</div><div class="info-item-2">关闭评论</div></div><div class="info-2"><div class="info-item-1">看了几种观点都不太一样，所以还是保险一点先不开吧，有人说可以开交互式，有人说个人博客不能开交互式，只能开非交互，哎~奇奇怪怪  非交互一定不能注册登录，但是评论和点赞存疑，有的说可以有的说不可以，很矛盾啊！！！  设置-讨论-不允许评论    写文章的时候再看一遍是不是关闭的   </div></div></div></a><a class="pagination-related" href="/2024/08/04/hexogitee/" title="hexo+github个人博客搭建"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/uploads/2024/08/image-54-1024x137.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2024-08-04</div><div class="info-item-2">hexo+github个人博客搭建</div></div><div class="info-2"><div class="info-item-1">学习参考网址  这是全网最贴心的免费搭建个人博客的教程吧_hexo+gitee 完全免费的个人博客_超级详细 – 陶小桃 Blog  使用Hexo博客搭建的个人博客，使用Next主题来进行优化改造  比 github 和服务器 Wordpress 方便，不需要翻 tz，而且可以免费，等这个过期或者搭建一个新网站都是一个不错的选择&nbsp;Gitee – 基于 Git 的代码托管和研发协作平台&nbsp;我直接 github 账号注册的  安装配置 node.js  node.js是配置好的，镜像也更换好了  搭建hexo  1npm install hexo-cli -g    使用 npm root -g 命令来查看确切的路径    不是报错不管  建一个文件夹，以后里面存放博客内容，文件夹尽量不要用中文可能乱码    管理员权限打开git bash  123hexo init myblog               //初始化Hexo项目cd e:/git/blog/myblog         //切换到项目目录npm install                  ...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">61飞兔</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">58</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">23</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/cyg0825"><i class="fab fa-github"></i><span>关注我</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%99%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-number">1.</span> <span class="toc-text">这是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%B5%B7%E6%B3%95"><span class="toc-number">2.</span> <span class="toc-text">起法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%95%8C%E9%9D%A2%E5%85%A5%E5%8F%A3"><span class="toc-number">3.</span> <span class="toc-text">界面入口</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A6%86%E7%9B%96%E8%8C%83%E5%9B%B4"><span class="toc-number">4.</span> <span class="toc-text">覆盖范围</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#front-matter-%E5%8E%9F%E6%96%87%E5%8C%BA"><span class="toc-number">5.</span> <span class="toc-text">front-matter 原文区</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%85%8D%E7%BD%AE%E5%B1%82"><span class="toc-number">6.</span> <span class="toc-text">配置层</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E5%8F%91%E7%8E%B0"><span class="toc-number">6.1.</span> <span class="toc-text">文件发现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8E%A7%E4%BB%B6%E6%8C%89%E5%80%BC%E7%9A%84%E5%BD%A2%E6%80%81%E7%BB%99"><span class="toc-number">6.2.</span> <span class="toc-text">控件按值的形态给</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%99%E5%9B%9E%E5%8F%AA%E5%8A%A8%E9%82%A3%E4%B8%80%E6%AE%B5"><span class="toc-number">6.3.</span> <span class="toc-text">写回只动那一段</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BB%E9%A2%98%E9%BB%98%E8%AE%A4%E5%80%BC%E9%87%8C%E6%B2%A1%E5%86%99%E8%BF%9B%E6%96%87%E4%BB%B6%E7%9A%84%E9%94%AE"><span class="toc-number">6.4.</span> <span class="toc-text">主题默认值里没写进文件的键</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%AD%E6%96%87%E6%A0%87%E7%AD%BE%E5%9B%9B%E7%BA%A7%E9%80%80%E5%9B%9E"><span class="toc-number">6.5.</span> <span class="toc-text">中文标签四级退回</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%87%AD%E6%8D%AE%E9%A1%B9%E4%B8%8E%E9%83%A8%E7%BD%B2%E6%AE%B5"><span class="toc-number">6.6.</span> <span class="toc-text">凭据项与部署段</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%A1%E9%AA%8C%E4%B8%8E%E7%94%9F%E6%95%88"><span class="toc-number">6.7.</span> <span class="toc-text">校验与生效</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%86%E7%B1%BB%E4%B8%8E%E6%A0%87%E7%AD%BE"><span class="toc-number">7.</span> <span class="toc-text">分类与标签</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%AD%A3%E6%96%87%E7%BC%96%E8%BE%91%E5%99%A8"><span class="toc-number">8.</span> <span class="toc-text">正文编辑器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A1%A8%E6%A0%BC"><span class="toc-number">9.</span> <span class="toc-text">表格</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%85%8D%E5%9B%BE"><span class="toc-number">10.</span> <span class="toc-text">配图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%99%E7%9B%98%E5%BD%A2%E6%80%81"><span class="toc-number">11.</span> <span class="toc-text">写盘形态</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8E%E6%8F%92%E4%BB%B6%E3%80%81hexo-server-%E5%90%8C%E8%B7%91"><span class="toc-number">12.</span> <span class="toc-text">与插件、hexo server 同跑</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%87%E4%BB%BD%E4%B8%8E%E5%88%A0%E9%99%A4"><span class="toc-number">13.</span> <span class="toc-text">备份与删除</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BE%B9%E7%95%8C"><span class="toc-number">14.</span> <span class="toc-text">边界</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%84%E5%BB%BA"><span class="toc-number">15.</span> <span class="toc-text">构建</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%92%E9%94%99"><span class="toc-number">16.</span> <span class="toc-text">排错</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%B5%8B%E8%AE%B0%E5%BD%95"><span class="toc-number">17.</span> <span class="toc-text">实测记录</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%AC%E7%AB%99%E8%90%BD%E5%9C%B0%E5%B7%AE%E5%BC%82"><span class="toc-number">18.</span> <span class="toc-text">本站落地差异</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/22/hexo-%E6%9C%AC%E5%9C%B0%E5%90%8E%E5%8F%B0/" title="Hexo 本地后台">Hexo 本地后台</a><time datetime="2026-10-22T15:45:00.000Z" title="发表于 2026-10-22 23:45:00">2026-10-22</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/04/linux%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="Linux学习笔记">Linux学习笔记</a><time datetime="2026-03-04T15:02:33.000Z" title="发表于 2026-03-04 23:02:33">2026-03-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/03/01/idea%E4%B8%ADjava%E6%89%93%E5%8C%85%E6%95%99%E7%A8%8B/" title="idea中java打包教程"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/uploads/2026/03/1.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="idea中java打包教程"/></a><div class="content"><a class="title" href="/2026/03/01/idea%E4%B8%ADjava%E6%89%93%E5%8C%85%E6%95%99%E7%A8%8B/" title="idea中java打包教程">idea中java打包教程</a><time datetime="2026-03-01T02:34:19.000Z" title="发表于 2026-03-01 10:34:19">2026-03-01</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/08/10/vscode-2/" title="vscode搭建Spring Boot + Vue 全栈环境笔记"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/uploads/2026/10/image.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="vscode搭建Spring Boot + Vue 全栈环境笔记"/></a><div class="content"><a class="title" href="/2025/08/10/vscode-2/" title="vscode搭建Spring Boot + Vue 全栈环境笔记">vscode搭建Spring Boot + Vue 全栈环境笔记</a><time datetime="2025-08-09T17:26:00.000Z" title="发表于 2025-08-10 01:26:00">2025-08-10</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/05/09/18%E5%85%B6%E4%BB%96%E5%85%B3%E8%81%94/" title="18其他关联"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/uploads/2025/05/image-30-1024x678.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="18其他关联"/></a><div class="content"><a class="title" href="/2025/05/09/18%E5%85%B6%E4%BB%96%E5%85%B3%E8%81%94/" title="18其他关联">18其他关联</a><time datetime="2025-05-09T10:02:23.000Z" title="发表于 2025-05-09 18:02:23">2025-05-09</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2024 - 2026 By 61飞兔</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.3</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
+(function () {
+  var menus = document.getElementById('sidebar-menus')
+  var card = document.querySelector('#aside-content .card-info')
+  if (!menus || !card || menus.dataset.profileIn) return
+  var name = card.querySelector('.author-info-name')
+  var btn = card.querySelector('#card-info-btn')
+  if (name) {
+    var n = name.cloneNode(true)
+    n.className = 'sidebar-author-name'
+    menus.querySelector('.avatar-img').after(n)
+  }
+  if (btn) {
+    var b = btn.cloneNode(true)
+    b.removeAttribute('id')
+    b.className = 'sidebar-follow'
+    menus.querySelector('.site-data').after(b)
+  }
+  menus.dataset.profileIn = '1'
+})()
+</script><div class="aplayer no-destroy" data-id="9086662585" data-server="netease" data-type="playlist" data-fixed="true" data-autoplay="false" data-order="random" data-mini="true" data-api="https://api.injahow.cn/meting/?server=:server&amp;type=:type&amp;id=:id&amp;r=:r">
+</div><link rel="stylesheet" href="/assets/css/APlayer.min.css" media="print" onload="this.media='all'"><script src="/assets/js/APlayer.min.js"></script><script src="/assets/js/Meting.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索文章" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>

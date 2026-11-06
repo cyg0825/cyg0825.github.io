@@ -125,6 +125,90 @@
         "愿你永远支持自己，生日快乐"
     ];
 
+    var DAILY_WISHES = [
+        "你比自己想象的更强大",
+        "今天也要好好爱自己",
+        "一切都会慢慢变好",
+        "你的存在本身就是美好",
+        "每一步都算数，别急",
+        "累了就休息，没关系",
+        "你值得所有温柔与善意",
+        "乌云后面总有太阳",
+        "深呼吸，放松一下",
+        "你已经做得很好了",
+        "相信时间，相信成长",
+        "小进步也是进步",
+        "给自己一个大大的拥抱",
+        "今天你微笑了吗",
+        "一切安排都是最好的",
+        "别怕，我在呢",
+        "你的努力会被看见",
+        "慢慢来，比较快",
+        "照顾好自己最重要",
+        "你让世界更美好",
+        "风雨过后总有彩虹",
+        "每一天都是新的开始",
+        "你的善良温暖人间",
+        "做自己的光",
+        "不必完美，尽力就好",
+        "你正在成为更好的自己",
+        "世界因你而不同",
+        "保持热爱，奔赴山海",
+        "简单生活，深深欢喜",
+        "今天也要加油呀",
+        "你是独一无二的存在",
+        "所有美好正在路上",
+        "心向阳光，温暖自生",
+        "好好吃饭，好好睡觉",
+        "记得对自己温柔些",
+        "你是重要的",
+        "今天的你也很棒",
+        "保持好奇，保持期待",
+        "一切都会如你所愿",
+        "微笑是最好的礼物",
+        "你配得上所有美好",
+        "慢慢沉淀，静静生长",
+        "给自己一点甜头吧",
+        "你正在闪闪发光",
+        "今天也是特别的一天",
+        "愿你被世界温柔以待",
+        "小小的坚持大大的力量",
+        "你是自己的英雄",
+        "生活因你而精彩",
+        "相信美好的事情会发生",
+        "今天也要开心呀",
+        "你的温暖感染着他人",
+        "每一步都走向更好的自己",
+        "好好呼吸，好好存在",
+        "你的笑容是治愈良药",
+        "慢慢走，欣赏啊",
+        "一切都在慢慢变好",
+        "你是被爱着的",
+        "今天也要元气满满",
+        "未来可期，人间值得",
+        "保持善良，保持可爱",
+        "你让今天变得更美好",
+        "温柔待人，也被温柔以待"
+    ];
+
+    var BIRTHDAY_MONTH = 7;
+    var BIRTHDAY_DAY_START = 20;
+    var BIRTHDAY_DAY_END = 25;
+
+    function isBirthdaySeason() {
+        var now = new Date();
+        return now.getMonth() === BIRTHDAY_MONTH
+            && now.getDate() >= BIRTHDAY_DAY_START
+            && now.getDate() <= BIRTHDAY_DAY_END;
+    }
+
+    function randomFrom(list) {
+        return list[Math.floor(Math.random() * list.length)];
+    }
+
+    var isBirthday = isBirthdaySeason();
+    var ACTIVE_WISHES = isBirthday ? BIRTHDAY_WISHES : DAILY_WISHES;
+
     var TIP_BG_COLORS = [
         'rgb(238, 230, 250)', 'rgb(221, 214, 243)', 'rgb(206, 197, 231)',
         'rgb(255, 228, 238)', 'rgb(243, 224, 247)', 'rgb(216, 191, 216)',
@@ -162,6 +246,8 @@
     var restartBtn = document.getElementById('restartBtn');
     var wishesContainer = document.getElementById('wishesContainer');
     var bgAudio = document.getElementById('bgAudio');
+    var titleText = document.getElementById('titleText');
+    var greetingText = document.getElementById('greetingText');
 
     var naturalW = 0;
     var naturalH = 0;
@@ -513,7 +599,7 @@
 
     function playRandomMusic() {
         var audioIdx = Math.floor(Math.random() * TOTAL_AUDIOS) + 1;
-        bgAudio.src = 'vo/' + audioIdx + '.mp3';
+        bgAudio.src = '/vo/' + audioIdx + '.mp3';
         bgAudio.volume = 0.7;
         bgAudio.play().catch(function(e) {
             console.log('Audio play failed:', e);
@@ -565,7 +651,7 @@
         if (isClosing) return;
         if (!naturalW || naturalW === 0) return;
 
-        var wishText = BIRTHDAY_WISHES[Math.floor(Math.random() * BIRTHDAY_WISHES.length)];
+        var wishText = randomFrom(ACTIVE_WISHES);
         var imgIdx = Math.floor(Math.random() * TOTAL_IMAGES);
         var imgSrc = 'img/image' + imgIdx + '.jpg';
         var bgColor = TIP_BG_COLORS[Math.floor(Math.random() * TIP_BG_COLORS.length)];
@@ -677,6 +763,21 @@
             });
         }
     });
+
+    function applySeasonCopy() {
+        if (isBirthday) return;
+        document.title = '今天也要好好的';
+        if (titleText) titleText.textContent = '今日祝福';
+        if (greetingText) {
+            greetingText.textContent = '';
+            greetingText.appendChild(document.createTextNode('今天的小幸运已送达 🌿'));
+            greetingText.appendChild(document.createElement('br'));
+            greetingText.appendChild(document.createTextNode(randomFrom(DAILY_WISHES) + ' ✨'));
+        }
+        startBtn.textContent = '收下祝福';
+    }
+
+    applySeasonCopy();
 
     if (bgImage.complete && bgImage.naturalWidth) {
         updateScale();
