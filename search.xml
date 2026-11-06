@@ -221,14 +221,14 @@
       <categories>
         <category>学习</category>
         <category>建站</category>
-        <category>gitee</category>
         <category>问题</category>
+        <category>gitee</category>
         <category>node.js</category>
       </categories>
       <tags>
         <tag>建站</tag>
-        <tag>gitee</tag>
         <tag>问题</tag>
+        <tag>gitee</tag>
         <tag>node.js</tag>
       </tags>
   </entry>
@@ -2963,9 +2963,9 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 
 <p>滚动时顶栏不再消失。主题的滚动隐藏逻辑是给 <code>#nav</code> 换上一个 <code>nav-fixed</code> 类，配 <code>.nav-fixed #nav { top: -60px }</code> 把它推出视口；<code>fixed: true</code> 时另有 <code>.fixed #nav { top: 0 }</code>，优先级更高，正好把这条压掉，导航就一直贴着顶部。</p>
 
-<p>菜单的写法是一行一项，<code>页面名: 路径 || 图标类名</code>；带 <code>||</code> 的键后面缩进一层就是分组，组名本身不可点。顶层项是首页、项目、文章、关于，生日页挂在「项目」组里。说说没有单独页面，那几条本来就是带 <code>说说</code> 标签的文章，所以「文章」组里的「说说」直接指向 <code>/tags/说说/</code>；主题自带的 <code>type: shuoshuo</code> 说说页只读 <code>source/_data/shuoshuo.yml</code> 或 <code>shuoshuo_url</code> 指的远端 JSON，不吃文章的分类标签，要用就得把文章搬成数据文件。</p>
+<p>菜单的写法是一行一项，<code>页面名: 路径 || 图标类名</code>；带 <code>||</code> 的键后面缩进一层就是分组，组名本身不可点。顶层项是首页、项目、文章、关于，祝福页（原生日页）和连连看挂在「项目」组里。说说没有单独页面，那几条本来就是带 <code>说说</code> 标签的文章，所以「文章」组里的「说说」直接指向 <code>/tags/说说/</code>；主题自带的 <code>type: shuoshuo</code> 说说页只读 <code>source/_data/shuoshuo.yml</code> 或 <code>shuoshuo_url</code> 指的远端 JSON，不吃文章的分类标签，要用就得把文章搬成数据文件。</p>
 
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">menu:</span></span><br><span class="line">  <span class="string">首页:</span> <span class="string">/</span> <span class="string">||</span> <span class="string">fas</span> <span class="string">fa-home</span></span><br><span class="line">  <span class="string">项目||fas</span> <span class="attr">fa-code:</span></span><br><span class="line">    <span class="string">学生选课系统:</span> <span class="string">/categories/学生选课系统/</span> <span class="string">||</span> <span class="string">fas</span> <span class="string">fa-book</span></span><br><span class="line">    <span class="string">生日:</span> <span class="string">/birthday/</span> <span class="string">||</span> <span class="string">fas</span> <span class="string">fa-cake-candles</span></span><br><span class="line">  <span class="string">文章||fas</span> <span class="attr">fa-file-alt:</span></span><br><span class="line">    <span class="string">时间轴:</span> <span class="string">/archives/</span> <span class="string">||</span> <span class="string">fas</span> <span class="string">fa-archive</span></span><br><span class="line">    <span class="string">分类:</span> <span class="string">/categories/</span> <span class="string">||</span> <span class="string">fas</span> <span class="string">fa-folder</span></span><br><span class="line">    <span class="string">标签:</span> <span class="string">/tags/</span> <span class="string">||</span> <span class="string">fas</span> <span class="string">fa-tags</span></span><br><span class="line">    <span class="string">说说:</span> <span class="string">/tags/说说/</span> <span class="string">||</span> <span class="string">fas</span> <span class="string">fa-comment-dots</span></span><br><span class="line">  <span class="string">关于:</span> <span class="string">/about/</span> <span class="string">||</span> <span class="string">fas</span> <span class="string">fa-user-circle</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">menu:</span></span><br><span class="line">  <span class="string">首页:</span> <span class="string">/</span> <span class="string">||</span> <span class="string">fas</span> <span class="string">fa-home</span></span><br><span class="line">  <span class="string">项目||fas</span> <span class="attr">fa-code:</span></span><br><span class="line">    <span class="string">学生选课系统:</span> <span class="string">/categories/学生选课系统/</span> <span class="string">||</span> <span class="string">fas</span> <span class="string">fa-book</span></span><br><span class="line">    <span class="string">祝福:</span> <span class="string">/birthday/</span> <span class="string">||</span> <span class="string">fas</span> <span class="string">fa-cake-candles</span></span><br><span class="line">    <span class="string">连连看:</span> <span class="string">/link/</span> <span class="string">||</span> <span class="string">fas</span> <span class="string">fa-puzzle-piece</span></span><br><span class="line">  <span class="string">文章||fas</span> <span class="attr">fa-file-alt:</span></span><br><span class="line">    <span class="string">时间轴:</span> <span class="string">/archives/</span> <span class="string">||</span> <span class="string">fas</span> <span class="string">fa-archive</span></span><br><span class="line">    <span class="string">分类:</span> <span class="string">/categories/</span> <span class="string">||</span> <span class="string">fas</span> <span class="string">fa-folder</span></span><br><span class="line">    <span class="string">标签:</span> <span class="string">/tags/</span> <span class="string">||</span> <span class="string">fas</span> <span class="string">fa-tags</span></span><br><span class="line">    <span class="string">说说:</span> <span class="string">/tags/说说/</span> <span class="string">||</span> <span class="string">fas</span> <span class="string">fa-comment-dots</span></span><br><span class="line">  <span class="string">关于:</span> <span class="string">/about/</span> <span class="string">||</span> <span class="string">fas</span> <span class="string">fa-user-circle</span></span><br></pre></td></tr></table></figure>
 
 <h2 class="wp-block-heading" id="头像与站点图标">头像、favicon、顶部图</h2>
 
@@ -2975,7 +2975,7 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 
 <p>cat.png 这个文件名有点误导：它的实际编码是 JPEG，只有扩展名是 png。浏览器按文件内容识别，显示没问题，但要替换或批量处理时得按 JPEG 对待。</p>
 
-<h2 class="wp-block-heading" id="独立整页">自建整页（生日页）</h2>
+<h2 class="wp-block-heading" id="独立整页">自建整页（生日页与连连看）</h2>
 
 <p>菜单里的 <code>/birthday/</code> 是一份独立 HTML，源文件在 <code>source/birthday/index.html</code>，front-matter 只有一行：</p>
 
@@ -2983,7 +2983,9 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 
 <p><code>layout: false</code> 必须写，不写就会被当成普通页面套上主题模板，多出导航和页脚两层。同目录里的 <code>style.css</code>、<code>script.js</code>、<code>img/</code> 用相对路径引用，构建时原样搬进 <code>public/birthday/</code>；背景音乐不放在这一页的目录里，取站点根目录的 <code>source/vo/</code>，按 <code>/vo/1.mp3</code> 这样的绝对路径引用，独立页共用这一套。</p>
 
-<p>菜单项写成 <code>生日: /birthday/ || fas fa-cake-candles</code>，路径带结尾斜杠。</p>
+<p>菜单项写成 <code>祝福: /birthday/ || fas fa-cake-candles</code>，路径带结尾斜杠。</p>
+
+<p>连连看是同一套形态：<code>source/link/index.html</code> 加同目录的 <code>style.css</code>、<code>script.js</code>、<code>img/</code>，菜单项写成 <code>连连看: /link/ || fas fa-puzzle-piece</code>。图块头像按 <code>img/image0.jpg</code> 这样的相对路径引用，音乐仍然取站点根的 <code>/vo/</code>。通关进度写在浏览器 <code>localStorage</code> 的 <code>link-save</code> 键里，记录到过的最高关、每关最高分和音乐开关，清掉站点数据才会重置。</p>
 
 <h2 class="wp-block-heading" id="资源本地化">静态资源本地化</h2>
 
@@ -6450,8 +6452,8 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
       <categories>
         <category>学习</category>
         <category>gitee</category>
-        <category>github</category>
         <category>mac</category>
+        <category>github</category>
       </categories>
       <tags>
         <tag>github</tag>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="shortcut icon" href="/img/333.png">
+<title>连连看</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="brand">连连看</div>
+  <div id="hud" hidden>
+    <span>关卡 <b id="hLv">1</b>/<b id="hLvMax">20</b></span>
+    <span>剩余 <b id="hLeft">0</b> 对</span>
+    <span>分数 <b id="hScore">0</b></span>
+    <span>限时 <b id="hTime">--</b></span>
+  </div>
+  <div id="tools" hidden>
+    <button id="bHint">提示 <span class="n" id="nHint">0</span></button>
+    <button id="bShuf">重排 <span class="n" id="nShuf">0</span></button>
+    <button id="bRetry">重玩</button>
+    <button id="bMusic">音乐</button>
+    <button id="bHome">首页</button>
+  </div>
+</header>
+<main>
+  <section id="home">
+    <p class="lead">点两张相同的图，连线拐弯不超过两次即可消除。每关消完全部图块就算过。</p>
+    <div id="levels"></div>
+    <div class="sum">已过 <b id="sMax">0</b>/<b id="sMaxAll">20</b> 关 · 总分 <b id="sTotal">0</b></div>
+  </section>
+  <section id="game" hidden>
+    <div id="barwrap"><div id="bar"></div></div>
+    <div id="stage"><div id="board"><svg id="line"></svg><div id="tiles"></div></div></div>
+  </section>
+</main>
+<div id="toast"></div>
+<div id="mask" hidden>
+  <div class="dlg">
+    <h2 id="dTitle"></h2>
+    <p id="dText"></p>
+    <div class="row">
+      <button id="dA" class="go"></button>
+      <button id="dB"></button>
+    </div>
+  </div>
+</div>
+<audio id="bgm" preload="none"></audio>
+<script src="script.js"></script>
+</body>
+</html>

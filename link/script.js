@@ -1,158 +1,3 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="shortcut icon" href="/img/333.png">
-<title>连连看</title>
-<style>
-:root{
-  --bg1:#eef4f7; --bg2:#f8fbfc; --ink:#1f2d3d; --ink2:#5b6b7c;
-  --card:#fff; --line:#dfe7ee; --accent:#2f9fb8; --accent2:#1d7f95; --danger:#d9534f;
-  --shadow:0 2px 10px rgba(31,45,61,.08);
-}
-@media (prefers-color-scheme:dark){
-  :root{
-    --bg1:#161b22; --bg2:#1b222b; --ink:rgba(255,255,255,.9); --ink2:rgba(255,255,255,.6);
-    --card:#222b36; --line:#33404f; --accent:#4bbcd6; --accent2:#6ed3e8;
-    --shadow:0 2px 10px rgba(0,0,0,.4);
-  }
-}
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0; color:var(--ink);
-  background:linear-gradient(160deg,var(--bg1),var(--bg2));
-  font:15px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
-  -webkit-text-size-adjust:100%;
-}
-header{
-  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-  padding:10px 16px; border-bottom:1px solid var(--line);
-  position:sticky; top:0; z-index:5;
-  background:color-mix(in srgb, var(--bg2) 88%, transparent);
-  backdrop-filter:blur(6px);
-}
-[hidden]{display:none !important}
-.brand{font-weight:700; letter-spacing:2px; margin-right:4px}
-#hud{color:var(--ink2); font-size:14px; display:flex; gap:12px; flex-wrap:wrap}
-#hud b{color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
-#tools{margin-left:auto; display:flex; gap:6px; flex-wrap:wrap}
-button{
-  font:inherit; font-size:14px; color:var(--ink); cursor:pointer;
-  background:var(--card); border:1px solid var(--line); border-radius:8px;
-  padding:6px 11px; min-height:34px; touch-action:manipulation;
-}
-button:hover:not(:disabled){border-color:var(--accent); color:var(--accent2)}
-button:disabled{opacity:.45; cursor:default}
-button .n{color:var(--ink2); font-variant-numeric:tabular-nums}
-main{max-width:1240px; margin:0 auto; padding:18px 16px 40px}
-.lead{color:var(--ink2); margin:0 0 16px}
-#levels{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px}
-.lv{
-  background:var(--card); border:1px solid var(--line); border-radius:12px;
-  padding:12px 14px; box-shadow:var(--shadow); cursor:pointer; text-align:left;
-}
-.lv:hover:not(:disabled){border-color:var(--accent)}
-.lv .t{font-weight:700}
-.lv .d{color:var(--ink2); font-size:13px; margin-top:2px}
-.lv:disabled{cursor:default; opacity:.5; box-shadow:none}
-.sum{margin-top:18px; color:var(--ink2); font-size:14px}
-.sum b{color:var(--ink); font-variant-numeric:tabular-nums}
-#barwrap{height:6px; border-radius:3px; background:var(--line); overflow:hidden; margin-bottom:14px}
-#bar{height:100%; width:100%; background:var(--accent); transition:width .2s linear}
-#bar.low{background:var(--danger)}
-#stage{display:flex; justify-content:center}
-#board{position:relative; border-radius:14px; background:color-mix(in srgb, var(--card) 55%, transparent); border:1px solid var(--line)}
-#tiles{position:absolute; inset:0}
-#line{position:absolute; inset:0; pointer-events:none; overflow:visible}
-.tile{
-  position:absolute; padding:0; border:0; background:none;
-  display:flex; align-items:center; justify-content:center;
-}
-.tile span{
-  display:block; width:calc(100% - 6px); height:calc(100% - 6px);
-  border-radius:9px; overflow:hidden; background:var(--card);
-  border:1px solid var(--line); box-shadow:var(--shadow);
-  transition:transform .16s, opacity .16s, box-shadow .16s, border-color .16s;
-}
-.tile img{width:100%; height:100%; object-fit:cover; display:block; pointer-events:none}
-.tile .ph{width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--accent2); background:color-mix(in srgb, var(--accent) 14%, var(--card))}
-.tile:hover span{transform:translateY(-2px)}
-.tile.sel span{border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent); transform:translateY(-2px)}
-.tile.hint span{animation:pulse .9s ease-in-out infinite}
-.tile.bad span{animation:shake .22s}
-.tile.gone span{opacity:0; transform:scale(.55)}
-@keyframes pulse{50%{box-shadow:0 0 0 6px color-mix(in srgb, var(--accent) 30%, transparent)}}
-@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-polyline{fill:none; stroke:var(--accent); stroke-width:4; stroke-linecap:round; stroke-linejoin:round; opacity:.95}
-polyline.out{transition:opacity .2s; opacity:0}
-#toast{
-  position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(12px);
-  background:var(--ink); color:var(--bg2); padding:8px 14px; border-radius:20px;
-  font-size:14px; opacity:0; pointer-events:none; transition:opacity .18s, transform .18s; max-width:88vw;
-}
-#toast.on{opacity:.94; transform:translateX(-50%)}
-#mask{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(15,22,30,.45); z-index:20; padding:16px}
-.dlg{background:var(--card); border-radius:14px; padding:22px 24px; width:min(360px,100%); box-shadow:0 12px 40px rgba(0,0,0,.25)}
-.dlg h2{margin:0 0 6px; font-size:19px}
-.dlg p{margin:0 0 16px; color:var(--ink2); font-size:14px}
-.dlg .row{display:flex; gap:8px; flex-wrap:wrap}
-.dlg .go{background:var(--accent); border-color:var(--accent); color:#fff}
-.dlg .go:hover{color:#fff; border-color:var(--accent2); background:var(--accent2)}
-@media (max-width:640px){
-  header{padding:8px 10px; gap:8px}
-  #hud{font-size:13px; gap:8px}
-  main{padding:12px 8px 30px}
-  #tools{margin-left:0; width:100%}
-}
-</style>
-</head>
-<body>
-<header>
-  <div class="brand">连连看</div>
-  <div id="hud" hidden>
-    <span>关卡 <b id="hLv">1</b>/10</span>
-    <span>剩余 <b id="hLeft">0</b> 对</span>
-    <span>分数 <b id="hScore">0</b></span>
-    <span>限时 <b id="hTime">--</b></span>
-  </div>
-  <div id="tools" hidden>
-    <button id="bHint">提示 <span class="n" id="nHint">0</span></button>
-    <button id="bShuf">重排 <span class="n" id="nShuf">0</span></button>
-    <button id="bRetry">重玩</button>
-    <button id="bMusic">音乐</button>
-    <button id="bHome">首页</button>
-  </div>
-</header>
-
-<main>
-  <section id="home">
-    <p class="lead">点两张相同的图，连线拐弯不超过两次即可消除。十关，每关消完全部图块就算过。</p>
-    <div id="levels"></div>
-    <div class="sum">已过 <b id="sMax">0</b>/10 关 · 总分 <b id="sTotal">0</b></div>
-  </section>
-
-  <section id="game" hidden>
-    <div id="barwrap"><div id="bar"></div></div>
-    <div id="stage"><div id="board"><svg id="line"></svg><div id="tiles"></div></div></div>
-  </section>
-</main>
-
-<div id="toast"></div>
-<div id="mask" hidden>
-  <div class="dlg">
-    <h2 id="dTitle"></h2>
-    <p id="dText"></p>
-    <div class="row">
-      <button id="dA" class="go"></button>
-      <button id="dB"></button>
-    </div>
-  </div>
-</div>
-<audio id="bgm" preload="none"></audio>
-
-<script>
 /* ==== 核心逻辑 ==== */
 var LEVELS=[
   {c:6,r:4,f:6,t:90,h:5,s:3},
@@ -164,9 +9,19 @@ var LEVELS=[
   {c:12,r:7,f:18,t:185,h:3,s:2},
   {c:12,r:8,f:20,t:210,h:3,s:2},
   {c:14,r:8,f:22,t:240,h:2,s:2},
-  {c:16,r:8,f:22,t:270,h:2,s:1}
+  {c:16,r:8,f:24,t:270,h:2,s:2},
+  {c:14,r:10,f:24,t:285,h:2,s:1},
+  {c:16,r:9,f:26,t:300,h:2,s:1},
+  {c:18,r:8,f:26,t:310,h:2,s:1},
+  {c:16,r:10,f:28,t:325,h:1,s:1},
+  {c:18,r:9,f:28,t:335,h:1,s:1},
+  {c:20,r:8,f:30,t:350,h:1,s:1},
+  {c:18,r:10,f:30,t:365,h:1,s:1},
+  {c:20,r:9,f:30,t:380,h:1,s:0},
+  {c:22,r:8,f:30,t:395,h:1,s:0},
+  {c:20,r:10,f:30,t:410,h:1,s:0}
 ];
-var NFACE=22;
+var NFACE=30;
 var DIRS=[[-1,0],[1,0],[0,-1],[0,1]];
 
 function rngOf(seed){
@@ -551,8 +406,6 @@ addEventListener('resize',function(){
   },200);
 });
 
+$('hLvMax').textContent=LEVELS.length; $('sMaxAll').textContent=LEVELS.length;
 $('bMusic').textContent=save.muted?'音乐关':'音乐开';
 renderHome();
-</script>
-</body>
-</html>
