@@ -45,7 +45,8 @@ function fitGrid(n,specC,W,H){
       if(cc<4||rr<4||cc>24||rr>24) continue;
       var cell=Math.min(W/(cc+2),H/(rr+2),84);
       if(cell>=MIN_CELL) fits.push({c:cc,r:rr,cell:cell,score:cell-Math.abs(cc-specC)*0.12});
-      else tight.push({c:cc,r:rr,cell:MIN_CELL,over:(cc+2)*MIN_CELL-W+(rr+2)*MIN_CELL-H});
+      // 夹不住 24 时，格子只按宽度收，横向绝不越界；多出来的高度由页面滚动解决
+      else { var t=Math.min(MIN_CELL,W/(cc+2)); tight.push({c:cc,r:rr,cell:t,over:(rr+2)*t-H,small:t<MIN_CELL?1:0}); }
     }
   }
   if(fits.length){
@@ -53,11 +54,11 @@ function fitGrid(n,specC,W,H){
     return fits[0];
   }
   if(tight.length){
-    tight.sort(function(a,b){return a.over-b.over;});
+    tight.sort(function(a,b){return a.small-b.small||a.over-b.over;});
     return tight[0];
   }
   var c2=Math.max(4,Math.min(24,specC)); var r2=Math.ceil(n/c2);
-  return {c:c2,r:r2,cell:Math.max(MIN_CELL,Math.min(W/(c2+2),H/(r2+2),84))};
+  return {c:c2,r:r2,cell:Math.min(W/(c2+2),Math.max(MIN_CELL,Math.min(H/(r2+2),84)))};
 }
 function deal(level,W,H,rnd){
   var n=level.c*level.r;
@@ -202,16 +203,14 @@ function renderHome(){
   $('sMax').textContent=save.max; $('sTotal').textContent=total;
 }
 
+var SIDE=matchMedia('(min-width:880px)');
 function keepBottom(){
   var a=$('act');
-  return a.hidden?12:a.offsetHeight+26;
-}
-function fitStage(){
-  var top=$('stage').getBoundingClientRect().top;
-  $('stage').style.maxHeight=Math.max(240, document.documentElement.clientHeight-top-keepBottom())+'px';
+  if(SIDE.matches||a.hidden) return 12;
+  return a.offsetHeight+26;
 }
 function stageBox(){
-  var w=Math.min(document.documentElement.clientWidth,1240)-32;
+  var w=$('stage').clientWidth;
   var h=document.documentElement.clientHeight-$('board').getBoundingClientRect().top-keepBottom()-28;
   return {w:Math.max(w,240), h:Math.max(h,240)};
 }
@@ -220,7 +219,6 @@ function start(level){
   var lv=LEVELS[level-1];
   $('home').hidden=true; $('game').hidden=false;
   $('hud').hidden=false; $('tools').hidden=false; toolset(true);
-  fitStage();
   var box=stageBox();
   var d=deal(lv,box.w,box.h,rngOf(Date.now()&0x7fffffff));
   S={lv:lv,no:level,g:d.g,rows:d.rows,cols:d.cols,cell:d.cell,total:d.total,
@@ -399,10 +397,9 @@ $('bHint').onclick=function(){
   var mv=findMove(S.g);
   if(!mv){ toast('没有可连的'); return; }
   S.hint--; syncTools();
-  var b=$('board');
   [tileAt(mv.a.r,mv.a.c),tileAt(mv.b.r,mv.b.c)].forEach(function(e){
     if(!e) return; e.classList.add('hint');
-    var st=$('stage'); if(b.offsetWidth>st.clientWidth||b.offsetHeight>st.clientHeight) e.scrollIntoView({block:'nearest',inline:'nearest'});
+    e.scrollIntoView({block:'nearest',inline:'nearest'});
     setTimeout(function(){e.classList.remove('hint');},1800);
   });
 };
@@ -424,7 +421,7 @@ addEventListener('resize',function(){
   clearTimeout(rsT);
   rsT=setTimeout(function(){
     var box=stageBox();
-    var cell=Math.min(box.w/(S.cols+2),box.h/(S.rows+2),84);
+    var cell=Math.min(box.w/(S.cols+2),84,Math.max(MIN_CELL,box.h/(S.rows+2)));
     if(Math.abs(cell-S.cell)<1) return;
     S.cell=cell;
     var size=(S.cols+2)*cell, height=(S.rows+2)*cell, board=$('board');

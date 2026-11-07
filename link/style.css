@@ -29,6 +29,8 @@ header{
 [hidden]{display:none !important}
 .brand{font-weight:700; letter-spacing:2px; margin-right:4px}
 #hud{color:var(--ink2); font-size:14px; display:flex; gap:12px; flex-wrap:wrap}
+#hud span{display:flex; align-items:baseline; gap:6px}
+#hud i{font-style:normal}
 #hud b{color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
 #tools{margin-left:auto; display:flex; gap:6px; flex-wrap:wrap}
 button{
@@ -59,9 +61,12 @@ main{max-width:1240px; margin:0 auto; padding:18px 16px calc(40px + env(safe-are
 #barwrap{height:6px; border-radius:3px; background:var(--line); overflow:hidden; margin-bottom:14px}
 #bar{height:100%; width:100%; background:var(--accent); transition:width .2s linear}
 #bar.low{background:var(--danger)}
-#stage{display:block; overflow:auto; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain}
-#act{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:14px}
-#board{position:relative; margin:0 auto; border-radius:14px; background:color-mix(in srgb, var(--card) 55%, transparent); border:1px solid var(--line)}
+#game{display:flex; flex-direction:column}
+#side{display:contents}
+#stat{order:1}
+#stage{order:2; display:block}
+#act{order:3; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:14px}
+#board{position:relative; margin:0 auto; border-radius:14px; background:color-mix(in srgb, var(--card) 55%, transparent); box-shadow:inset 0 0 0 1px var(--line)}
 #tiles{position:absolute; inset:0; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none}
 #line{position:absolute; inset:0; pointer-events:none; overflow:visible}
 .tile{
@@ -103,4 +108,16 @@ polyline.out{transition:opacity .2s; opacity:0}
   header{padding:8px 10px; gap:8px}
   #hud{font-size:13px; gap:8px}
   main{padding:12px 8px calc(30px + env(safe-area-inset-bottom))}
+}
+/* 宽屏把状态与按钮挪到棋盘右侧一栏；窄屏保持棋盘在上、按钮在下 */
+@media (min-width:880px){
+  #game{display:grid; grid-template-columns:minmax(0,1fr) 216px; column-gap:18px}
+  #stage{grid-column:1; grid-row:1}
+  #side{grid-column:2; grid-row:1; display:flex; flex-direction:column; align-self:start}
+  #stat{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; box-shadow:var(--shadow)}
+  #act{flex-direction:column; align-items:stretch; gap:8px; margin-top:14px}
+  #hud{flex-direction:column; gap:9px}
+  #hud i{margin-right:auto}
+  #barwrap{margin:12px 0 0}
+  #act button{display:flex; align-items:center; justify-content:space-between}
 }

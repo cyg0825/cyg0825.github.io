@@ -6,7 +6,7 @@
 
 body {
     font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
-    background: #1a1a2e;
+    background: radial-gradient(125% 100% at 50% 0%, #1B2A55 0%, #101A3A 48%, #070C1E 100%);
     overflow: hidden;
     width: 100vw;
     height: 100vh;
@@ -15,18 +15,21 @@ body {
     align-items: center;
 }
 
-.background-container {
-    position: relative;
-    line-height: 0;
-    user-select: none;
+:root {
+    --glass-bg: rgba(28, 40, 78, 0.68);
+    --glass-band: rgba(20, 31, 64, 0.42);
+    --glass-line: rgba(199, 168, 232, 0.45);
+    --glass-glow: 0 0 24px rgba(126, 96, 196, 0.35);
+    --glass-blur: blur(8px) saturate(1.15);
+    --ink: #F2ECFF;
+    --ink-soft: rgba(226, 214, 246, 0.85);
+    --ink-shadow: 0 1px 4px rgba(6, 10, 26, 0.75);
 }
 
-.background-image {
-    display: block;
-    max-width: 100vw;
-    max-height: 100vh;
-    width: auto;
-    height: auto;
+.background-container {
+    position: relative;
+    overflow: hidden;
+    user-select: none;
 }
 
 .overlay-layer {
@@ -47,9 +50,12 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     width: 520px;
-    background: rgba(238, 230, 250, 0.95);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-line);
     border-radius: 12px;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--glass-glow);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
     opacity: 0;
     transition: opacity 0.5s ease;
     z-index: 10;
@@ -70,19 +76,21 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 12px 18px;
-    background: rgba(238, 230, 250, 0.9);
+    background: var(--glass-band);
+    border-bottom: 1px solid var(--glass-line);
 }
 
 .title-text {
     font-size: 22px;
     font-weight: bold;
-    color: #333;
+    color: var(--ink);
+    text-shadow: var(--ink-shadow);
 }
 
 .close-btn {
-    background: rgba(238, 230, 250, 0.9);
-    border: none;
-    color: #555;
+    background: rgba(28, 40, 78, 0.4);
+    border: 1px solid var(--glass-line);
+    color: var(--ink);
     font-size: 24px;
     font-weight: bold;
     cursor: pointer;
@@ -92,7 +100,7 @@ body {
 }
 
 .close-btn:hover {
-    background: rgba(221, 214, 243, 0.9);
+    background: rgba(122, 92, 176, 0.55);
 }
 
 .content-area {
@@ -105,13 +113,14 @@ body {
 
 .greeting-text {
     text-align: center;
-    color: #8A2BE2;
+    color: #E4D6FF;
     font-size: 26px;
     font-weight: bold;
     line-height: 1.6;
     padding: 30px;
-    background: rgba(248, 240, 255, 0.8);
-    border: 3px solid #ddd;
+    background: rgba(28, 40, 78, 0.4);
+    text-shadow: var(--ink-shadow);
+    border: 1px solid var(--glass-line);
     border-radius: 10px;
     width: 100%;
 }
@@ -126,7 +135,7 @@ body {
     font-family: "Microsoft YaHei", sans-serif;
     font-size: 22px;
     padding: 12px 22px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--glass-line);
     border-radius: 6px;
     cursor: pointer;
     transition: background 0.2s, transform 0.1s;
@@ -141,21 +150,23 @@ body {
 }
 
 .btn-primary {
-    background: #DDD6F3;
-    color: #4B0082;
+    background: rgba(122, 92, 176, 0.5);
+    color: var(--ink);
+    text-shadow: var(--ink-shadow);
 }
 
 .btn-primary:hover {
-    background: #C8BFDC;
+    background: rgba(150, 120, 205, 0.65);
 }
 
 .btn-secondary {
-    background: #CE93D8;
-    color: #4B0082;
+    background: rgba(206, 147, 216, 0.4);
+    color: var(--ink);
+    text-shadow: var(--ink-shadow);
 }
 
 .btn-secondary:hover {
-    background: #B87DC4;
+    background: rgba(206, 147, 216, 0.6);
 }
 
 .wishes-container {
@@ -172,11 +183,13 @@ body {
     position: absolute;
     width: 270px;
     max-width: 270px;
-    background: rgba(255, 248, 250, 0.95);
-    border: 1px solid #ddd;
+    background: var(--card-tint, var(--glass-bg));
+    border: 1px solid var(--glass-line);
     border-radius: 10px;
     padding: 18px;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--glass-glow);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
     opacity: 0;
     transform: scale(0.8);
     transition: opacity 0.3s ease, transform 0.3s ease;
@@ -187,12 +200,13 @@ body {
 }
 
 .wish-popup.visible {
-    opacity: 0.92;
+    opacity: 1;
     transform: scale(1);
 }
 
 .wish-popup .wish-text {
-    color: #4B0082;
+    color: var(--ink);
+    text-shadow: var(--ink-shadow);
     font-size: 20px;
     font-weight: bold;
     text-align: center;
@@ -204,9 +218,10 @@ body {
 .wish-popup .wish-btn {
     display: block;
     margin: 0 auto;
-    background: #DDD6F3;
-    color: #4B0082;
-    border: 1px solid #ccc;
+    background: rgba(122, 92, 176, 0.5);
+    color: var(--ink);
+    text-shadow: var(--ink-shadow);
+    border: 1px solid var(--glass-line);
     padding: 6px 20px;
     border-radius: 6px;
     font-size: 18px;
@@ -216,7 +231,7 @@ body {
 }
 
 .wish-popup .wish-btn:hover {
-    background: #C8BFDC;
+    background: rgba(150, 120, 205, 0.65);
 }
 
 .wish-popup .wish-image {
@@ -224,7 +239,87 @@ body {
     height: 90px;
     object-fit: cover;
     border-radius: 6px;
+    border: 1px solid rgba(199, 168, 232, 0.35);
     margin-bottom: 12px;
+}
+
+.music-btn {
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    width: 96px;
+    height: 96px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s, transform 0.2s;
+}
+
+.music-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.music-btn:hover {
+    transform: scale(1.1);
+}
+
+.music-icon {
+    display: block;
+    width: 96px;
+    height: 96px;
+}
+
+.m-head,
+.m-stem,
+.m-flag {
+    fill: rgba(233, 220, 247, 0.95);
+    stroke: rgba(122, 92, 176, 0.9);
+    stroke-width: 1;
+}
+
+.m-wave {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.85);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    transition: opacity 0.2s;
+}
+
+.m-slash {
+    fill: none;
+    stroke: #FF7A9E;
+    stroke-width: 3;
+    stroke-linecap: round;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.music-btn.muted .m-wave {
+    opacity: 0.2;
+}
+
+.music-btn.muted .m-slash {
+    opacity: 1;
+}
+
+.music-no {
+    position: absolute;
+    right: 8px;
+    bottom: 0;
+    font-size: 34px;
+    line-height: 1;
+    font-weight: 700;
+    color: #FFFFFF;
+    text-shadow: 0 2px 6px rgba(75, 0, 130, 0.85);
+}
+
+.music-btn.muted .music-no {
+    opacity: 0.4;
 }
 
 .close-all-btn {
@@ -260,7 +355,8 @@ body {
 
 .close-all-text {
     position: absolute;
-    color: #4B0082;
+    color: var(--ink);
+    text-shadow: var(--ink-shadow);
     font-size: 22px;
     font-weight: bold;
     text-align: center;
@@ -300,7 +396,8 @@ body {
 
 .restart-text {
     position: absolute;
-    color: #4B0082;
+    color: var(--ink);
+    text-shadow: var(--ink-shadow);
     font-size: 22px;
     font-weight: bold;
     text-align: center;
@@ -319,12 +416,13 @@ body {
 .footer-notice span {
     display: inline-block;
     font-size: 18px;
-    color: #4B0082;
-    background: rgba(255, 248, 250, 0.85);
+    color: var(--ink);
+    text-shadow: var(--ink-shadow);
+    background: var(--glass-band);
     padding: 7px 20px;
     border-radius: 20px;
-    border: 1px solid rgba(206, 147, 216, 0.5);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+    border: 1px solid var(--glass-line);
+    box-shadow: 0 0 14px rgba(126, 96, 196, 0.28);
     white-space: nowrap;
     -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);

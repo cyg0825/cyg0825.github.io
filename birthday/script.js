@@ -210,16 +210,15 @@
     var ACTIVE_WISHES = isBirthday ? BIRTHDAY_WISHES : DAILY_WISHES;
 
     var TIP_BG_COLORS = [
-        'rgb(238, 230, 250)', 'rgb(221, 214, 243)', 'rgb(206, 197, 231)',
-        'rgb(255, 228, 238)', 'rgb(243, 224, 247)', 'rgb(216, 191, 216)',
-        'rgb(255, 218, 225)', 'rgb(218, 212, 243)', 'rgb(225, 212, 231)',
-        'rgb(255, 205, 220)', 'rgb(238, 223, 247)', 'rgb(245, 230, 235)',
-        'rgb(218, 212, 243)', 'rgb(250, 220, 235)', 'rgb(230, 220, 240)',
-        'rgb(255, 215, 225)', 'rgb(240, 225, 245)', 'rgb(220, 200, 230)',
-        'rgb(255, 225, 235)', 'rgb(232, 220, 248)'
+        'rgba(28, 40, 78, 0.72)', 'rgba(34, 32, 74, 0.72)', 'rgba(44, 34, 82, 0.72)',
+        'rgba(24, 44, 70, 0.72)', 'rgba(52, 36, 84, 0.74)', 'rgba(30, 38, 88, 0.72)',
+        'rgba(46, 30, 76, 0.72)', 'rgba(22, 46, 78, 0.72)', 'rgba(58, 40, 92, 0.74)',
+        'rgba(26, 42, 66, 0.72)'
     ];
 
-    var TIP_COUNT = 99;
+    var TIP_AREA = 26000;
+    var TIP_MIN = 14;
+    var TIP_MAX = 46;
     var TIP_INTERVAL = 450;
     var WISH_W = 270;
     var WISH_H_MIN = 120;
@@ -236,7 +235,6 @@
     var MODE_RAINFALL = 'rainfall';
 
     var bgContainer = document.getElementById('bgContainer');
-    var bgImage = document.getElementById('bgImage');
     var overlayLayer = document.getElementById('overlayLayer');
     var mainWindow = document.getElementById('mainWindow');
     var startBtn = document.getElementById('startBtn');
@@ -244,6 +242,8 @@
     var mainCloseBtn = document.getElementById('mainCloseBtn');
     var closeAllBtn = document.getElementById('closeAllBtn');
     var restartBtn = document.getElementById('restartBtn');
+    var musicBtn = document.getElementById('musicBtn');
+    var musicNo = document.getElementById('musicNo');
     var wishesContainer = document.getElementById('wishesContainer');
     var bgAudio = document.getElementById('bgAudio');
     var titleText = document.getElementById('titleText');
@@ -252,8 +252,6 @@
 
     var naturalW = 0;
     var naturalH = 0;
-    var curScale = 1;
-    var wishesCreated = 0;
     var isClosing = false;
     var timeouts = [];
     var wishElements = [];
@@ -261,24 +259,33 @@
     var heartDelays = null;
     var heartRainfall = false;
     var heartRainfallDistance = 0;
-    var cakeMounted = false;
+    var bgMounted = false;
+    var userMuted = false;
+    var curTrack = 0;
+
+    var DESIGN_W = 2560;
+    var DESIGN_H = 1440;
 
     function updateScale() {
-        if (!bgImage.naturalWidth) return;
+        var vw = window.innerWidth;
+        var vh = window.innerHeight;
+        if (!vw || !vh) return;
 
-        naturalW = bgImage.naturalWidth;
-        naturalH = bgImage.naturalHeight;
+        naturalW = DESIGN_W;
+        naturalH = DESIGN_H;
 
-        var displayedW = bgImage.clientWidth;
-        var displayedH = bgImage.clientHeight;
+        var scale = Math.min(vw / DESIGN_W, vh / DESIGN_H);
 
-        if (!displayedW || !displayedH) return;
-
-        curScale = displayedW / naturalW;
-
+        bgContainer.style.width = Math.round(DESIGN_W * scale) + 'px';
+        bgContainer.style.height = Math.round(DESIGN_H * scale) + 'px';
         overlayLayer.style.width = naturalW + 'px';
         overlayLayer.style.height = naturalH + 'px';
-        overlayLayer.style.transform = 'scale(' + curScale + ')';
+        overlayLayer.style.transform = 'scale(' + scale + ')';
+    }
+
+    function tipCount() {
+        var n = Math.round(window.innerWidth * window.innerHeight / TIP_AREA);
+        return Math.max(TIP_MIN, Math.min(TIP_MAX, n));
     }
 
     function generateHeartPositions(count) {
@@ -599,10 +606,36 @@
         }, 100);
     }
 
+    function syncMusicBtn() {
+        var playing = !bgAudio.paused;
+        var label = curTrack ? '第' + curTrack + '首' : '';
+        musicBtn.classList.toggle('muted', !playing);
+        musicNo.textContent = curTrack ? String(curTrack) : '';
+        musicBtn.title = (playing ? '暂停音乐' : '播放音乐') + (label ? '·' + label : '');
+        musicBtn.setAttribute('aria-label', musicBtn.title);
+    }
+
+    function toggleMusic() {
+        userMuted = !userMuted;
+        if (userMuted) {
+            bgAudio.pause();
+        } else {
+            bgAudio.play().catch(function(e) {
+                console.log('Audio play failed:', e);
+            });
+        }
+        syncMusicBtn();
+    }
+
     function playRandomMusic() {
         var audioIdx = Math.floor(Math.random() * TOTAL_AUDIOS) + 1;
+        curTrack = audioIdx;
         bgAudio.src = '/vo/' + audioIdx + '.mp3';
         bgAudio.volume = 0.7;
+        if (userMuted) {
+            syncMusicBtn();
+            return;
+        }
         bgAudio.play().catch(function(e) {
             console.log('Audio play failed:', e);
         });
@@ -639,27 +672,28 @@
 
         stopMusic();
         closeAllBtn.classList.remove('visible');
+        musicBtn.classList.remove('visible');
         restartBtn.classList.add('visible');
-        mountCake();
     }
 
     function restartWishes() {
         restartBtn.classList.remove('visible');
         isClosing = false;
+        userMuted = false;
         playRandomMusic();
         startTipWindows();
     }
 
-    function mountCake() {
-        if (cakeMounted || !isBirthday || !cakeStage) return;
-        cakeMounted = true;
+    function mountBackground() {
+        if (bgMounted || !cakeStage) return;
+        bgMounted = true;
         import('./cake3d.js').then(function(mod) {
             if (mod && mod.mount) {
-                var cake = mod.mount(cakeStage, {});
-                if (cake) cakeStage.classList.add('on');
+                var bg = mod.mount(cakeStage, { scene: isBirthday ? 'cake' : 'star' });
+                if (bg) cakeStage.classList.add('on');
             }
         }).catch(function(e) {
-            console.log('Cake load failed:', e);
+            console.log('Background load failed:', e);
         });
     }
 
@@ -674,7 +708,7 @@
 
         var wishPopup = document.createElement('div');
         wishPopup.className = 'wish-popup';
-        wishPopup.style.background = bgColor;
+        wishPopup.style.setProperty('--card-tint', bgColor);
 
         var wishImage = document.createElement('img');
         wishImage.className = 'wish-image';
@@ -734,24 +768,22 @@
     function startTipWindows() {
         updateScale();
         closeAllBtn.classList.add('visible');
-        wishesCreated = 0;
-        var result = generateHeartPositions(TIP_COUNT);
+        musicBtn.classList.add('visible');
+        syncMusicBtn();
+        mountBackground();
+        var count = tipCount();
+        var result = generateHeartPositions(count);
         heartPositions = result.positions;
         heartDelays = result.delays || null;
         heartRainfall = result.rainfall || false;
         heartRainfallDistance = result.rainfallFallDistance || 0;
 
-        for (var i = 0; i < TIP_COUNT; i++) {
+        for (var i = 0; i < count; i++) {
             (function(idx) {
                 var delay = heartDelays ? (heartDelays[idx] || idx * TIP_INTERVAL) : idx * TIP_INTERVAL;
                 var timeout = setTimeout(function() {
                     if (!isClosing) {
                         createRandomTipWindow(idx);
-                        wishesCreated++;
-                        if (wishesCreated >= TIP_COUNT) {
-                            var cakeTimeout = setTimeout(mountCake, 1500);
-                            timeouts.push(cakeTimeout);
-                        }
                     }
                 }, delay);
                 timeouts.push(timeout);
@@ -764,12 +796,15 @@
     mainCloseBtn.addEventListener('click', closeAllWindows);
     closeAllBtn.addEventListener('click', closeAllWindows);
     restartBtn.addEventListener('click', restartWishes);
+    musicBtn.addEventListener('click', toggleMusic);
+    bgAudio.addEventListener('play', syncMusicBtn);
+    bgAudio.addEventListener('pause', syncMusicBtn);
 
     window.addEventListener('resize', function() {
         updateScale();
 
         if (heartPositions.length > 0) {
-            var result = generateHeartPositions(TIP_COUNT);
+            var result = generateHeartPositions(heartPositions.length);
             heartPositions = result.positions;
             heartDelays = result.delays || null;
             heartRainfall = result.rainfall || false;
@@ -799,13 +834,6 @@
 
     applySeasonCopy();
 
-    if (bgImage.complete && bgImage.naturalWidth) {
-        updateScale();
-        fadeInMainWindow();
-    } else {
-        bgImage.addEventListener('load', function() {
-            updateScale();
-            fadeInMainWindow();
-        });
-    }
+    updateScale();
+    fadeInMainWindow();
 })();
