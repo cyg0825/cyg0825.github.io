@@ -5095,66 +5095,7 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
   <entry>
     <title>01-结构与数据形状</title>
     <url>/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/</url>
-    <content><![CDATA[<h2 id="这一篇的位置"><a href="#这一篇的位置" class="headerlink" title="这一篇的位置"></a>这一篇的位置</h2><p>这是一页连连看：点两张相同的图，若能用一条不超过两个拐弯的折线连起来，这两张就消掉，消完过关。</p>
-<p>整页由三个文件组成，浏览器直接执行。</p>
-<table>
-<thead>
-<tr>
-<th>文件</th>
-<th>管什么</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>Link/index.html</code></td>
-<td>页面骨架：有哪些块、块之间的层级</td>
-</tr>
-<tr>
-<td><code>Link/style.css</code></td>
-<td>外观：颜色、圆角、动画、深浅色</td>
-</tr>
-<tr>
-<td><code>Link/script.js</code></td>
-<td>逻辑与算法：发牌、连线判定、计分、存档</td>
-</tr>
-</tbody></table>
-<p>这一篇定最底层的东西：文件怎么分工、棋盘在代码里到底是什么形状、关卡表里的六个数字各控制什么。</p>
-<table>
-<thead>
-<tr>
-<th>篇</th>
-<th>讲什么</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><a href="/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/">01 结构与数据形状</a></td>
-<td>文件分工、棋盘的真实形状、关卡表</td>
-</tr>
-<tr>
-<td><a href="/2026/11/02/02-%E9%9A%8F%E6%9C%BA%E6%95%B0%E4%B8%8E%E5%8F%91%E7%89%8C/">02 随机数与发牌</a></td>
-<td>自带随机数发生器、洗牌、成对发牌</td>
-</tr>
-<tr>
-<td><a href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/">03 连线判定</a></td>
-<td>拐弯不超过两次怎么判、折线怎么回溯出来</td>
-</tr>
-<tr>
-<td><a href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/">04 死局与自动重排</a></td>
-<td>有没有可连的一步、重排怎么保证不越排越死</td>
-</tr>
-<tr>
-<td><a href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/">05 布局自适应</a></td>
-<td>格子尺寸怎么算、窗口变化怎么跟</td>
-</tr>
-<tr>
-<td><a href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/">06 界面骨架与样式</a></td>
-<td>HTML 与 CSS 逐行</td>
-</tr>
-<tr>
-<td><a href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/">07 点击、计分与存档</a></td>
-<td>点击状态机、计时与分数、本地存档、音乐</td>
-</tr>
-</tbody></table>
-<h2 id="首页与一盘棋"><a href="#首页与一盘棋" class="headerlink" title="首页与一盘棋"></a>首页与一盘棋</h2><p>首页是一排关卡按钮，每个按钮上写着这一关的牌数、图案种类、限时，有过成绩还会带上最高分。</p>
+    <content><![CDATA[<h2 id="首页与一盘棋"><a href="#首页与一盘棋" class="headerlink" title="首页与一盘棋"></a>首页与一盘棋</h2><p>首页是一排关卡按钮，每个按钮上写着这一关的牌数、图案种类、限时，有过成绩还会带上最高分。</p>
 <p><img src="/img/link/lk-01-home.png" alt="首页的二十个关卡按钮"></p>
 <p>点进去之后页面上是三样东西：状态（关卡、剩余张数、倒计时、分数）、棋盘、三个按钮。手机上是棋盘在上、状态贴着棋盘顶、按钮压在棋盘下面；电脑屏幕宽到一定程度，状态和按钮并成右边一栏，棋盘独占左边一大块。同一份 HTML，位置由样式分配，细节在第六篇。</p>
 <p><img src="/img/link/lk-02-board.png" alt="第 1 关开局后的棋盘"></p>
@@ -5418,55 +5359,19 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 ]]></content>
       <categories>
         <category>学习</category>
-        <category>连连看</category>
+        <category>小游戏</category>
       </categories>
       <tags>
         <tag>连连看</tag>
         <tag>JavaScript</tag>
+        <tag>美图消消乐</tag>
+        <tag>记忆翻牌</tag>
       </tags>
   </entry>
   <entry>
     <title>02-随机数与发牌</title>
     <url>/2026/11/02/02-%E9%9A%8F%E6%9C%BA%E6%95%B0%E4%B8%8E%E5%8F%91%E7%89%8C/</url>
-    <content><![CDATA[<h2 id="这一篇的位置"><a href="#这一篇的位置" class="headerlink" title="这一篇的位置"></a>这一篇的位置</h2><p>第一篇把最底层的形状定下来了：棋盘在代码里是一张横竖各多两行两列的表，表里的 <code>0</code> 是空格、<code>1</code> 到 <code>30</code> 是图案编号，关卡表 <code>LEVELS</code> 一行一关。这一篇讲这张表内部的数字是怎么被填进去的，也就是「发一副牌」这件事，对应 <code>Link/script.js</code> 第 27 到 35 行（<code>rngOf</code>、<code>shuffled</code>）和第 63 到 78 行（<code>deal</code>）。</p>
-<p>后面几篇要用到的东西在这一篇只出现名字：连线判定在第三篇，<code>findMove</code> 与 <code>reshuffle</code> 的内部机制在第四篇，<code>fitGrid</code> 怎么挑行列、格子尺寸怎么算在第五篇，界面与样式在第六篇，点击、计分与存档在第七篇。</p>
-<table>
-<thead>
-<tr>
-<th>篇</th>
-<th>讲什么</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><a href="/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/">01 结构与数据形状</a></td>
-<td>文件分工、棋盘的真实形状、关卡表</td>
-</tr>
-<tr>
-<td><a href="/2026/11/02/02-%E9%9A%8F%E6%9C%BA%E6%95%B0%E4%B8%8E%E5%8F%91%E7%89%8C/">02 随机数与发牌</a></td>
-<td>自带随机数发生器、洗牌、成对发牌</td>
-</tr>
-<tr>
-<td><a href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/">03 连线判定</a></td>
-<td>拐弯不超过两次怎么判、折线怎么回溯出来</td>
-</tr>
-<tr>
-<td><a href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/">04 死局与自动重排</a></td>
-<td>有没有可连的一步、重排怎么保证不越排越死</td>
-</tr>
-<tr>
-<td><a href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/">05 布局自适应</a></td>
-<td>格子尺寸怎么算、窗口变化怎么跟</td>
-</tr>
-<tr>
-<td><a href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/">06 界面骨架与样式</a></td>
-<td>HTML 与 CSS 逐行</td>
-</tr>
-<tr>
-<td><a href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/">07 点击、计分与存档</a></td>
-<td>点击状态机、计时与分数、本地存档、音乐</td>
-</tr>
-</tbody></table>
-<h2 id="为什么不用-Math-random"><a href="#为什么不用-Math-random" class="headerlink" title="为什么不用 Math.random"></a>为什么不用 Math.random</h2><p>浏览器自带 <code>Math.random()</code>，一行就能取一个随机数。这一页偏偏手写了一个发生器，换回来的是三件事。</p>
+    <content><![CDATA[<h2 id="为什么不用-Math-random"><a href="#为什么不用-Math-random" class="headerlink" title="为什么不用 Math.random"></a>为什么不用 Math.random</h2><p>浏览器自带 <code>Math.random()</code>，一行就能取一个随机数。这一页偏偏手写了一个发生器，换回来的是三件事。</p>
 <ul>
 <li>可复现。整副牌由一个种子（seed）决定：同一个数传进去，洗出来的序列一模一样。排查「某一关的发牌是不是有问题」时把种子记下来，就能原样重跑一遍，不用反复刷新页面碰运气。</li>
 <li>三条随机序列互不干扰。<code>deal</code> 需要的随机性从参数 <code>rnd</code> 进来，函数内部不碰全局发生器。开局发牌、死局自动重排、手动重排各造一个全新的发生器，各自的 <code>x</code> 各自往前走，不会因为别处多调用了一次随机数就错位。</li>
@@ -5714,56 +5619,19 @@ deck = 1,1,2,2,3,3,4,4,5,5,6,6,1,1,2,2,3,3,4,4,5,5,6,6
 ]]></content>
       <categories>
         <category>学习</category>
-        <category>连连看</category>
+        <category>小游戏</category>
       </categories>
       <tags>
         <tag>连连看</tag>
         <tag>算法</tag>
+        <tag>美图消消乐</tag>
+        <tag>记忆翻牌</tag>
       </tags>
   </entry>
   <entry>
     <title>03-连线判定</title>
     <url>/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/</url>
-    <content><![CDATA[<h2 id="这一篇的位置"><a href="#这一篇的位置" class="headerlink" title="这一篇的位置"></a>这一篇的位置</h2><p>前两篇把棋盘这张表的形状（横竖各多两行两列的外圈，<code>0</code> 是空格、正整数是图案编号）和表里的数字怎么填进去讲完了。这一篇回答玩家真正在意的那个问题：两张相同的图按下去，凭什么算连上、凭什么算连不上，以及连上之后屏幕上那条折线是怎么来的。</p>
-<p>对应 <code>Link/script.js</code> 第 78 到 116 行（<code>linkPath</code>，判定与找路）、第 117 到 126 行（<code>simplify</code>，把逐格路径压成拐点）、第 333 到 340 行（<code>drawPath</code>，把拐点画成一条线）。方向表 <code>DIRS</code> 在第 25 行。</p>
-<p>后面几篇要用到的东西在这一篇只出现名字：<code>findMove</code> 怎么判断「这一局还有没有可连的一步」、死局之后 <code>reshuffle</code> 怎么重排，在第四篇；<code>fitGrid</code> 怎么挑行列、格子边长 <code>cell</code> 从哪来在第五篇；HTML 与 CSS 逐行在第六篇；点击状态机、计分与存档在第七篇。</p>
-<table>
-<thead>
-<tr>
-<th>篇</th>
-<th>讲什么</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><a href="/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/">01 结构与数据形状</a></td>
-<td>文件分工、棋盘的真实形状、关卡表</td>
-</tr>
-<tr>
-<td><a href="/2026/11/02/02-%E9%9A%8F%E6%9C%BA%E6%95%B0%E4%B8%8E%E5%8F%91%E7%89%8C/">02 随机数与发牌</a></td>
-<td>自带随机数发生器、洗牌、成对发牌</td>
-</tr>
-<tr>
-<td><a href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/">03 连线判定</a></td>
-<td>拐弯不超过两次怎么判、折线怎么回溯出来</td>
-</tr>
-<tr>
-<td><a href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/">04 死局与自动重排</a></td>
-<td>有没有可连的一步、重排怎么保证不越排越死</td>
-</tr>
-<tr>
-<td><a href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/">05 布局自适应</a></td>
-<td>格子尺寸怎么算、窗口变化怎么跟</td>
-</tr>
-<tr>
-<td><a href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/">06 界面骨架与样式</a></td>
-<td>HTML 与 CSS 逐行</td>
-</tr>
-<tr>
-<td><a href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/">07 点击、计分与存档</a></td>
-<td>点击状态机、计时与分数、本地存档、音乐</td>
-</tr>
-</tbody></table>
-<h2 id="规则只有三条"><a href="#规则只有三条" class="headerlink" title="规则只有三条"></a>规则只有三条</h2><p>连连看的连线规则一句话：两张图编号相同，就能连；连线路径是一条横平竖直的折线，中间不能穿过别的图，拐弯不能超过两次。拆开是三条可以逐条检查的约定。</p>
+    <content><![CDATA[<h2 id="规则只有三条"><a href="#规则只有三条" class="headerlink" title="规则只有三条"></a>规则只有三条</h2><p>连连看的连线规则一句话：两张图编号相同，就能连；连线路径是一条横平竖直的折线，中间不能穿过别的图，拐弯不能超过两次。拆开是三条可以逐条检查的约定。</p>
 <p>第一，折线只能走空格。棋盘里 <code>0</code> 是空格，也就是已经消掉的位置和外圈那一整圈。正整数的位置是还站着的图，线不能压上去。终点例外：线停在 <code>b</code> 那个位置，<code>b</code> 本身有图，但它是终点而不是过路。</p>
 <p>第二，拐弯次数最多两次。拐弯就是「换方向」：一直向右走不算拐弯，向右走之后改成向下走算一次。两次拐弯最多能凑出三段直线，这也是「不超过两次」这句话在图形上的样子。</p>
 <p>第三，外圈可以绕。棋盘表比牌面横竖各多两行两列，多出来的那一圈全是 <code>0</code>，永远走得通。第一行左右两端各有一张相同的图时，直线和一拐弯全都堵死，把线抬到牌面上方那一行、横着走一段再下来，两次拐弯，照样连上。</p>
@@ -5952,56 +5820,19 @@ deck = 1,1,2,2,3,3,4,4,5,5,6,6,1,1,2,2,3,3,4,4,5,5,6,6
 ]]></content>
       <categories>
         <category>学习</category>
-        <category>连连看</category>
+        <category>小游戏</category>
       </categories>
       <tags>
         <tag>连连看</tag>
         <tag>算法</tag>
+        <tag>美图消消乐</tag>
+        <tag>记忆翻牌</tag>
       </tags>
   </entry>
   <entry>
     <title>04-死局与自动重排</title>
     <url>/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/</url>
-    <content><![CDATA[<h2 id="这一篇的位置"><a href="#这一篇的位置" class="headerlink" title="这一篇的位置"></a>这一篇的位置</h2><p>第三篇的 <code>linkPath</code> 回答的是「这两张图现在连不连得上」。这一篇回答另一个问题：整张盘面上还有没有至少一对连得上的图。这个问题看起来只是把前面那个多用一次，实际上它是三个界面动作的共同前提：开局发完牌要检查一次，每消掉一对要检查一次，玩家按「提示」也要检查一次。检查出来没有解，就轮到重排出场。</p>
-<p>对应 <code>Link/script.js</code> 第 127 到 134 行（<code>tilesOf</code>）、第 135 到 145 行（<code>findMove</code>）、第 151 到 161 行（<code>reshuffle</code>）、第 326 到 332 行（<code>repaint</code>），以及读它们的三处界面代码：第 316 到 323 行（每次消除之后）、第 399 到 410 行（提示按钮）、第 411 到 415 行（重排按钮）。</p>
-<p>后面几篇要用到的东西在这一篇只出现名字：<code>fitGrid</code> 与格子边长怎么随窗口变化在第五篇，HTML 与 CSS 逐行在第六篇，点击状态机、计分与存档在第七篇。</p>
-<table>
-<thead>
-<tr>
-<th>篇</th>
-<th>讲什么</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><a href="/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/">01 结构与数据形状</a></td>
-<td>文件分工、棋盘的真实形状、关卡表</td>
-</tr>
-<tr>
-<td><a href="/2026/11/02/02-%E9%9A%8F%E6%9C%BA%E6%95%B0%E4%B8%8E%E5%8F%91%E7%89%8C/">02 随机数与发牌</a></td>
-<td>自带随机数发生器、洗牌、成对发牌</td>
-</tr>
-<tr>
-<td><a href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/">03 连线判定</a></td>
-<td>拐弯不超过两次怎么判、折线怎么回溯出来</td>
-</tr>
-<tr>
-<td><a href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/">04 死局与自动重排</a></td>
-<td>有没有可连的一步、重排怎么保证不越排越死</td>
-</tr>
-<tr>
-<td><a href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/">05 布局自适应</a></td>
-<td>格子尺寸怎么算、窗口变化怎么跟</td>
-</tr>
-<tr>
-<td><a href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/">06 界面骨架与样式</a></td>
-<td>HTML 与 CSS 逐行</td>
-</tr>
-<tr>
-<td><a href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/">07 点击、计分与存档</a></td>
-<td>点击状态机、计时与分数、本地存档、音乐</td>
-</tr>
-</tbody></table>
-<h2 id="死局是怎么出现的"><a href="#死局是怎么出现的" class="headerlink" title="死局是怎么出现的"></a>死局是怎么出现的</h2><p>连连看的消除只减不加：一次消两张，<code>g</code> 里两个位置从正整数变回 <code>0</code>。看起来盘面应该越走越松，怎么会没有解？</p>
+    <content><![CDATA[<h2 id="死局是怎么出现的"><a href="#死局是怎么出现的" class="headerlink" title="死局是怎么出现的"></a>死局是怎么出现的</h2><p>连连看的消除只减不加：一次消两张，<code>g</code> 里两个位置从正整数变回 <code>0</code>。看起来盘面应该越走越松，怎么会没有解？</p>
 <p>堵路的是还没消掉的图。第三篇的空格检查只允许折线穿过 <code>0</code>，所以两张相同的图能不能连，取决于它们之间有没有一条由空格组成的通路，以及这条通路能不能在两次拐弯以内拐到位。开局阶段牌面是满的，通路只有外圈那一圈空格，能连的组合本来就不多；消到中途，洞多了但剩下的图分布散，同图案的两张可能各自被围住。两种情形都可能撞上「一张都连不上」。</p>
 <p>撞上之后界面必须给出路，否则这一局只能重玩。这一篇的四段代码就是这件事：<code>tilesOf</code> 把盘面按图案分组，<code>findMove</code> 在组内两两配对试连，<code>reshuffle</code> 把现存的数字重新洗牌放回原来的位置，<code>repaint</code> 让界面跟上。</p>
 <p>先分清两个层次。「这两张连不上」是第三篇 <code>linkPath</code> 返回 <code>null</code>，盘面整体仍然可能有解，玩家换一对照样能消；「一张都连不上」才是本篇要处理的死局，此时任何一对都不行，怎么点都消不掉。</p>
@@ -6167,56 +5998,19 @@ deck = 1,1,2,2,3,3,4,4,5,5,6,6,1,1,2,2,3,3,4,4,5,5,6,6
 ]]></content>
       <categories>
         <category>学习</category>
-        <category>连连看</category>
+        <category>小游戏</category>
       </categories>
       <tags>
         <tag>连连看</tag>
         <tag>算法</tag>
+        <tag>美图消消乐</tag>
+        <tag>记忆翻牌</tag>
       </tags>
   </entry>
   <entry>
     <title>05-布局自适应</title>
     <url>/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/</url>
-    <content><![CDATA[<h2 id="这一篇的位置"><a href="#这一篇的位置" class="headerlink" title="这一篇的位置"></a>这一篇的位置</h2><p>前三篇把棋盘当成一张已经存在的表来讲：行列是多少、数字怎么填、折线怎么走。这一篇回答这张表是怎么在屏幕上放下的。同一份关卡表要在 27 寸显示器和手机竖屏上都玩得动，靠的不是两套代码，而是一段在开局时挑行列、在窗口变化时换边长的计算。</p>
-<p>对应 <code>Link/script.js</code> 第 36 到 62 行（<code>fitGrid</code>，挑行列与边长）、第 206 到 216 行（<code>SIDE</code>、<code>keepBottom</code>、<code>stageBox</code>，算可用宽高）、第 228 到 232 行（<code>start</code> 里定盒子）、第 245 到 256 行（<code>tileEl</code>，把格子换成像素）、第 418 到 433 行（<code>resize</code> 监听）。样式侧相关的只有两处：<code>#stage</code> 那一行和那两条 <code>@media</code>（窄屏 640、宽屏 880 的分栏），逐行归第六篇。</p>
-<p>后面几篇要用到的东西在这一篇只出现名字：HTML 骨架与样式在第六篇，点击状态机、计分与存档在第七篇。</p>
-<table>
-<thead>
-<tr>
-<th>篇</th>
-<th>讲什么</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><a href="/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/">01 结构与数据形状</a></td>
-<td>文件分工、棋盘的真实形状、关卡表</td>
-</tr>
-<tr>
-<td><a href="/2026/11/02/02-%E9%9A%8F%E6%9C%BA%E6%95%B0%E4%B8%8E%E5%8F%91%E7%89%8C/">02 随机数与发牌</a></td>
-<td>自带随机数发生器、洗牌、成对发牌</td>
-</tr>
-<tr>
-<td><a href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/">03 连线判定</a></td>
-<td>拐弯不超过两次怎么判、折线怎么回溯出来</td>
-</tr>
-<tr>
-<td><a href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/">04 死局与自动重排</a></td>
-<td>有没有可连的一步、重排怎么保证不越排越死</td>
-</tr>
-<tr>
-<td><a href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/">05 布局自适应</a></td>
-<td>格子尺寸怎么算、窗口变化怎么跟</td>
-</tr>
-<tr>
-<td><a href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/">06 界面骨架与样式</a></td>
-<td>HTML 与 CSS 逐行</td>
-</tr>
-<tr>
-<td><a href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/">07 点击、计分与存档</a></td>
-<td>点击状态机、计时与分数、本地存档、音乐</td>
-</tr>
-</tbody></table>
-<h2 id="布局要定的三件事"><a href="#布局要定的三件事" class="headerlink" title="布局要定的三件事"></a>布局要定的三件事</h2><p>「布局」在这份代码里是三个数：用几列几行、一格多大、棋盘盒子多大。三者有先后关系。</p>
+    <content><![CDATA[<h2 id="布局要定的三件事"><a href="#布局要定的三件事" class="headerlink" title="布局要定的三件事"></a>布局要定的三件事</h2><p>「布局」在这份代码里是三个数：用几列几行、一格多大、棋盘盒子多大。三者有先后关系。</p>
 <p>牌数 <code>n</code> 由关卡表说死（第二篇第 63 行），不可调。列数与行数的乘积必须回到 <code>n</code>，所以能选的只是 <code>n</code> 的因数分解里哪一种摆得下、摆得好看。行列一定，格子边长就由「可用宽高除以格子数」算出来。边长一定，棋盘盒子的像素尺寸就是边长乘上含外圈的行列数。</p>
 <p>于是问题变成：给一个窗口，怎么挑一个因数分解。这一段逻辑全在 <code>fitGrid</code> 里，而它需要两个输入：牌数 <code>n</code> 和可用宽高 <code>W</code>、<code>H</code>。先从 <code>W</code>、<code>H</code> 讲起。</p>
 <h2 id="可用宽高从哪来"><a href="#可用宽高从哪来" class="headerlink" title="可用宽高从哪来"></a>可用宽高从哪来</h2><figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:206-211</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">SIDE</span>=<span class="title function_">matchMedia</span>(<span class="string">&#x27;(min-width:880px)&#x27;</span>);</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">keepBottom</span>(<span class="params"></span>)&#123;</span><br><span class="line">  <span class="keyword">var</span> a=$(<span class="string">&#x27;act&#x27;</span>);</span><br><span class="line">  <span class="keyword">if</span>(<span class="variable constant_">SIDE</span>.<span class="property">matches</span>||a.<span class="property">hidden</span>) <span class="keyword">return</span> <span class="number">12</span>;</span><br><span class="line">  <span class="keyword">return</span> a.<span class="property">offsetHeight</span>+<span class="number">26</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -6384,55 +6178,19 @@ deck = 1,1,2,2,3,3,4,4,5,5,6,6,1,1,2,2,3,3,4,4,5,5,6,6
 ]]></content>
       <categories>
         <category>学习</category>
-        <category>连连看</category>
+        <category>小游戏</category>
       </categories>
       <tags>
         <tag>连连看</tag>
         <tag>JavaScript</tag>
+        <tag>美图消消乐</tag>
+        <tag>记忆翻牌</tag>
       </tags>
   </entry>
   <entry>
     <title>06-界面骨架与样式</title>
     <url>/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/</url>
-    <content><![CDATA[<h2 id="这一篇的位置"><a href="#这一篇的位置" class="headerlink" title="这一篇的位置"></a>这一篇的位置</h2><p>前五篇讲的都是数据与算法：棋盘的形状、发牌、连线判定、死局与重排、格子尺寸。这一篇讲承载它们的那层：<code>Link/index.html</code> 的骨架和 <code>Link/style.css</code> 的样式。这两份文件都很短，却决定了前面所有计算能不能被看见、被点着。</p>
-<p>这一篇的顺序是先骨架后样式：先把 HTML 里每个块是什么、为什么在这儿讲清，再按样式文件的书写顺序讲它做了哪几件事。代码与数据怎么把这些空壳填满，归第七篇。</p>
-<table>
-<thead>
-<tr>
-<th>篇</th>
-<th>讲什么</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><a href="/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/">01 结构与数据形状</a></td>
-<td>文件分工、棋盘的真实形状、关卡表</td>
-</tr>
-<tr>
-<td><a href="/2026/11/02/02-%E9%9A%8F%E6%9C%BA%E6%95%B0%E4%B8%8E%E5%8F%91%E7%89%8C/">02 随机数与发牌</a></td>
-<td>自带随机数发生器、洗牌、成对发牌</td>
-</tr>
-<tr>
-<td><a href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/">03 连线判定</a></td>
-<td>拐弯不超过两次怎么判、折线怎么回溯出来</td>
-</tr>
-<tr>
-<td><a href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/">04 死局与自动重排</a></td>
-<td>有没有可连的一步、重排怎么保证不越排越死</td>
-</tr>
-<tr>
-<td><a href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/">05 布局自适应</a></td>
-<td>格子尺寸怎么算、窗口变化怎么跟</td>
-</tr>
-<tr>
-<td><a href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/">06 界面骨架与样式</a></td>
-<td>HTML 与 CSS 逐行</td>
-</tr>
-<tr>
-<td><a href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/">07 点击、计分与存档</a></td>
-<td>点击状态机、计时与分数、本地存档、音乐</td>
-</tr>
-</tbody></table>
-<h2 id="骨架：一个文件装两个界面"><a href="#骨架：一个文件装两个界面" class="headerlink" title="骨架：一个文件装两个界面"></a>骨架：一个文件装两个界面</h2><figure class="highlight html"><table><tr><td class="code"><pre><span class="line">// Link/index.html:1-9</span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span> <span class="attr">lang</span>=<span class="string">&quot;zh-CN&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">&quot;UTF-8&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">meta</span> <span class="attr">name</span>=<span class="string">&quot;viewport&quot;</span> <span class="attr">content</span>=<span class="string">&quot;width=device-width, initial-scale=1, viewport-fit=cover&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">&quot;shortcut icon&quot;</span> <span class="attr">href</span>=<span class="string">&quot;/img/333.png&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">title</span>&gt;</span>连连看<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">&quot;stylesheet&quot;</span> <span class="attr">href</span>=<span class="string">&quot;style.css&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br></pre></td></tr></table></figure>
+    <content><![CDATA[<h2 id="骨架：一个文件装两个界面"><a href="#骨架：一个文件装两个界面" class="headerlink" title="骨架：一个文件装两个界面"></a>骨架：一个文件装两个界面</h2><figure class="highlight html"><table><tr><td class="code"><pre><span class="line">// Link/index.html:1-9</span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span> <span class="attr">lang</span>=<span class="string">&quot;zh-CN&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">&quot;UTF-8&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">meta</span> <span class="attr">name</span>=<span class="string">&quot;viewport&quot;</span> <span class="attr">content</span>=<span class="string">&quot;width=device-width, initial-scale=1, viewport-fit=cover&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">&quot;shortcut icon&quot;</span> <span class="attr">href</span>=<span class="string">&quot;/img/333.png&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">title</span>&gt;</span>连连看<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">&quot;stylesheet&quot;</span> <span class="attr">href</span>=<span class="string">&quot;style.css&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br></pre></td></tr></table></figure>
 
 <ul>
 <li>第 1 行 <code>&lt;!DOCTYPE html&gt;</code>：声明这是标准模式页面。浏览器对同一份 CSS 在标准模式和怪异模式下算法不同，比如盒模型和图片基线对齐，少了这一行，第五篇那些像素计算会整体偏移。</li>
@@ -6704,54 +6462,19 @@ deck = 1,1,2,2,3,3,4,4,5,5,6,6,1,1,2,2,3,3,4,4,5,5,6,6
 ]]></content>
       <categories>
         <category>学习</category>
-        <category>连连看</category>
+        <category>小游戏</category>
       </categories>
       <tags>
         <tag>连连看</tag>
         <tag>CSS</tag>
+        <tag>美图消消乐</tag>
+        <tag>记忆翻牌</tag>
       </tags>
   </entry>
   <entry>
     <title>07-点击计分与存档</title>
     <url>/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/</url>
-    <content><![CDATA[<h2 id="这一篇的位置"><a href="#这一篇的位置" class="headerlink" title="这一篇的位置"></a>这一篇的位置</h2><p>前六篇把棋盘怎么生成、线怎么判、死局怎么解、格子怎么算、壳子怎么搭讲完了，还差把这几件事串起来的那根线：点下去的一张图块，怎么变成分数、变成进度条、变成下一次打开页面时还在的存档。这一篇讲的就是这根线，全部落在 <code>Link/script.js</code> 第 163 行往下的界面层。</p>
-<table>
-<thead>
-<tr>
-<th>篇</th>
-<th>讲什么</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><a href="/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/">01 结构与数据形状</a></td>
-<td>文件分工、棋盘的真实形状、关卡表</td>
-</tr>
-<tr>
-<td><a href="/2026/11/02/02-%E9%9A%8F%E6%9C%BA%E6%95%B0%E4%B8%8E%E5%8F%91%E7%89%8C/">02 随机数与发牌</a></td>
-<td>自带随机数发生器、洗牌、成对发牌</td>
-</tr>
-<tr>
-<td><a href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/">03 连线判定</a></td>
-<td>拐弯不超过两次怎么判、折线怎么回溯出来</td>
-</tr>
-<tr>
-<td><a href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/">04 死局与自动重排</a></td>
-<td>有没有可连的一步、重排怎么保证不越排越死</td>
-</tr>
-<tr>
-<td><a href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/">05 布局自适应</a></td>
-<td>格子尺寸怎么算、窗口变化怎么跟</td>
-</tr>
-<tr>
-<td><a href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/">06 界面骨架与样式</a></td>
-<td>HTML 与 CSS 逐行</td>
-</tr>
-<tr>
-<td><a href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/">07 点击、计分与存档</a></td>
-<td>点击状态机、计时与分数、本地存档、音乐</td>
-</tr>
-</tbody></table>
-<h2 id="一局游戏的全部事实"><a href="#一局游戏的全部事实" class="headerlink" title="一局游戏的全部事实"></a>一局游戏的全部事实</h2><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:163-167</span></span><br><span class="line"><span class="comment">/* ==== 界面 ==== */</span></span><br><span class="line"><span class="keyword">var</span> $=<span class="keyword">function</span>(<span class="params">id</span>)&#123;<span class="keyword">return</span> <span class="variable language_">document</span>.<span class="title function_">getElementById</span>(id);&#125;;</span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">SAVE_KEY</span>=<span class="string">&#x27;link-save&#x27;</span>;</span><br><span class="line"><span class="keyword">var</span> save=<span class="title function_">loadSave</span>();</span><br><span class="line"><span class="keyword">var</span> S=<span class="literal">null</span>, timer=<span class="number">0</span>, lastMatch=<span class="number">0</span>, combo=<span class="number">0</span>, runBase=<span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+    <content><![CDATA[<h2 id="一局游戏的全部事实"><a href="#一局游戏的全部事实" class="headerlink" title="一局游戏的全部事实"></a>一局游戏的全部事实</h2><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Link/script.js:163-167</span></span><br><span class="line"><span class="comment">/* ==== 界面 ==== */</span></span><br><span class="line"><span class="keyword">var</span> $=<span class="keyword">function</span>(<span class="params">id</span>)&#123;<span class="keyword">return</span> <span class="variable language_">document</span>.<span class="title function_">getElementById</span>(id);&#125;;</span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">SAVE_KEY</span>=<span class="string">&#x27;link-save&#x27;</span>;</span><br><span class="line"><span class="keyword">var</span> save=<span class="title function_">loadSave</span>();</span><br><span class="line"><span class="keyword">var</span> S=<span class="literal">null</span>, timer=<span class="number">0</span>, lastMatch=<span class="number">0</span>, combo=<span class="number">0</span>, runBase=<span class="number">0</span>;</span><br></pre></td></tr></table></figure>
 
 <ul>
 <li>第 164 行：<code>$(id)</code> 是 <code>document.getElementById</code> 的简写。整份文件里取元素全靠它，写短一点能让后面几十行都清爽。</li>
@@ -7073,11 +6796,13 @@ deck = 1,1,2,2,3,3,4,4,5,5,6,6,1,1,2,2,3,3,4,4,5,5,6,6
 ]]></content>
       <categories>
         <category>学习</category>
-        <category>连连看</category>
+        <category>小游戏</category>
       </categories>
       <tags>
         <tag>连连看</tag>
         <tag>JavaScript</tag>
+        <tag>美图消消乐</tag>
+        <tag>记忆翻牌</tag>
       </tags>
   </entry>
 </search>

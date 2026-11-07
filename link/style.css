@@ -47,6 +47,7 @@ button:disabled{opacity:.45; cursor:default}
 button .n{color:var(--ink2); font-variant-numeric:tabular-nums}
 main{max-width:1240px; margin:0 auto; padding:18px 16px calc(40px + env(safe-area-inset-bottom))}
 .lead{color:var(--ink2); margin:0 0 16px}
+.tip{color:var(--ink2); font-size:13px; margin:-10px 0 16px}
 #levels{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px}
 .lv{
   background:var(--card); border:1px solid var(--line); border-radius:12px;

@@ -198,7 +198,7 @@ function renderHome(){
   setBrand('小游戏');
   $('home').hidden=false; $('game').hidden=true;
   $('hud').hidden=true; $('tools').hidden=false; toolset(false);
-  stopTimer();
+  stopTimer(); stopMemReveal();
   $('tiles').classList.remove('m3'); $('tiles').classList.remove('mem');
   var mode=save.game;
   $('tabLink').classList.toggle('on',mode==='link');
@@ -207,7 +207,7 @@ function renderHome(){
   $('lead').textContent=mode==='m3'
     ?'点相邻两张图交换位置，凑齐 3 张以上相同的图即可消除得分；步数用完前达到目标分数就算过关。'
     :mode==='mem'
-    ?'所有牌背面朝上，每次翻开两张：同图即配对消掉得分，不同则翻回去；步数用完前配齐全部对子就算过关。'
+    ?'每关先亮牌 30 秒让你记住位置，然后全部翻面；每次翻开两张：同图即配对消掉得分，不同则翻回去；步数用完前配齐全部对子就算过关。'
     :'点两张相同的图，连线拐弯不超过两次即可消除。每关消完全部图块就算过。';
   var box=$('levels'); box.innerHTML='';
   if(mode==='m3'){
@@ -736,6 +736,7 @@ var MEM_LEVELS=[
   {c:12,r:5,f:30,m:48,h:1,s:0},
   {c:12,r:5,f:30,m:46,h:1,s:0}
 ];
+var MEM_REVEAL=30;
 function startMem(level){
   MODE='mem'; S=null; G=null;
   setBrand('记忆翻牌');
@@ -754,7 +755,7 @@ function startMem(level){
   var g=[], k=0;
   for(var r=0;r<lv.r;r++){ var row=[]; for(var c=0;c<lv.c;c++) row.push(deck[k++]); g.push(row); }
   M={lv:lv,no:level,g:g,rows:lv.r,cols:lv.c,cell:cell,pairs:pairs,left:pairs,
-     moves:lv.m,hint:lv.h,shuf:lv.s,score:0,streak:0,first:null,busy:false,over:false};
+     moves:lv.m,hint:lv.h,shuf:lv.s,score:0,streak:0,first:null,busy:false,over:false,reveal:MEM_REVEAL};
   combo=0; lastMatch=0;
   var board=$('board'), w=lv.c*cell, h=lv.r*cell;
   board.style.width=w+'px'; board.style.height=h+'px';
@@ -762,6 +763,7 @@ function startMem(level){
   memRepaint();
   $('hLv').textContent=level;
   syncMemTools(); syncMemHud(); stopTimer();
+  startMemReveal();
   ensureMusic();
 }
 function memRepaint(){
@@ -769,16 +771,40 @@ function memRepaint(){
   for(var r=0;r<M.rows;r++) for(var c=0;c<M.cols;c++){
     var f=M.g[r][c]; if(!f) continue;
     var el=tileEl(r,c,f,M.cell);
-    el.classList.add('down');
+    if(!M.reveal) el.classList.add('down');
     tiles.appendChild(el);
   }
 }
+var revT=0;
+function stopMemReveal(){ if(revT){ clearInterval(revT); revT=0; } }
+function startMemReveal(){
+  stopMemReveal();
+  M.busy=true;
+  $('hL4').textContent='明牌';
+  toast('所有牌亮 '+MEM_REVEAL+' 秒，快记住位置！');
+  syncMemHud();
+  revT=setInterval(function(){
+    if(!M){ stopMemReveal(); return; }
+    if(document.hidden||!$('mask').hidden) return;
+    M.reveal--;
+    if(M.reveal<=0){
+      M.reveal=0;
+      stopMemReveal();
+      var ts=$('tiles').children;
+      for(var i=0;i<ts.length;i++) if(!ts[i].classList.contains('gone')) ts[i].classList.add('down');
+      $('hL4').textContent='步数';
+      M.busy=false;
+      toast('翻面！开始配对吧');
+    }
+    syncMemHud();
+  },1000);
+}
 function syncMemHud(){
   $('hLeft').textContent=M.left; $('hScore').textContent=M.score;
-  $('hTime').textContent=M.moves;
-  var pct=M.pairs?Math.max(0,Math.min(100,(M.pairs-M.left)/M.pairs*100)):0;
+  $('hTime').textContent=M.reveal>0?M.reveal:M.moves;
+  var pct=M.reveal>0?M.reveal/MEM_REVEAL*100:(M.pairs?Math.max(0,Math.min(100,(M.pairs-M.left)/M.pairs*100)):0);
   var bar=$('bar'); bar.style.width=pct+'%';
-  bar.classList.toggle('low',M.moves<=3);
+  bar.classList.toggle('low',M.reveal>0?M.reveal<=10:M.moves<=3);
 }
 function syncMemTools(){
   $('nHint').textContent=M.hint; $('nShuf').textContent=M.shuf;
