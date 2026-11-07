@@ -1,25 +1,25 @@
 /* ==== 核心逻辑 ==== */
 var LEVELS=[
-  {c:6,r:4,f:6,t:90,h:5,s:3},
-  {c:8,r:4,f:8,t:100,h:5,s:3},
-  {c:8,r:5,f:10,t:115,h:4,s:3},
-  {c:10,r:5,f:12,t:130,h:4,s:3},
-  {c:10,r:6,f:14,t:145,h:4,s:2},
-  {c:12,r:6,f:16,t:165,h:3,s:2},
-  {c:12,r:7,f:18,t:185,h:3,s:2},
-  {c:12,r:8,f:20,t:210,h:3,s:2},
-  {c:14,r:8,f:22,t:240,h:2,s:2},
-  {c:16,r:8,f:24,t:270,h:2,s:2},
-  {c:14,r:10,f:24,t:285,h:2,s:1},
-  {c:16,r:9,f:26,t:300,h:2,s:1},
-  {c:18,r:8,f:26,t:310,h:2,s:1},
-  {c:16,r:10,f:28,t:325,h:1,s:1},
-  {c:18,r:9,f:28,t:335,h:1,s:1},
-  {c:20,r:8,f:30,t:350,h:1,s:1},
-  {c:18,r:10,f:30,t:365,h:1,s:1},
-  {c:20,r:9,f:30,t:380,h:1,s:0},
-  {c:22,r:8,f:30,t:395,h:1,s:0},
-  {c:20,r:10,f:30,t:410,h:1,s:0}
+  {c:6,r:4,f:6,t:150,h:5,s:3},
+  {c:8,r:4,f:8,t:170,h:5,s:3},
+  {c:8,r:5,f:10,t:195,h:4,s:3},
+  {c:10,r:5,f:12,t:225,h:4,s:3},
+  {c:10,r:6,f:14,t:255,h:4,s:2},
+  {c:12,r:6,f:16,t:290,h:3,s:2},
+  {c:12,r:7,f:18,t:325,h:3,s:2},
+  {c:12,r:8,f:20,t:360,h:3,s:2},
+  {c:14,r:7,f:22,t:395,h:2,s:2},
+  {c:14,r:8,f:24,t:435,h:2,s:2},
+  {c:16,r:7,f:24,t:470,h:2,s:1},
+  {c:16,r:8,f:26,t:510,h:2,s:1},
+  {c:14,r:8,f:26,t:545,h:2,s:1},
+  {c:16,r:8,f:28,t:585,h:1,s:1},
+  {c:14,r:8,f:28,t:620,h:1,s:1},
+  {c:16,r:8,f:30,t:660,h:1,s:1},
+  {c:16,r:8,f:30,t:695,h:1,s:1},
+  {c:16,r:8,f:30,t:730,h:1,s:0},
+  {c:16,r:8,f:30,t:765,h:1,s:0},
+  {c:16,r:8,f:30,t:800,h:1,s:0}
 ];
 var NFACE=30;
 var DIRS=[[-1,0],[1,0],[0,-1],[0,1]];
@@ -165,10 +165,14 @@ var $=function(id){return document.getElementById(id);};
 var SAVE_KEY='link-save';
 var save=loadSave();
 var S=null, timer=0, lastMatch=0, combo=0, runBase=0;
+var MODE=null, G=null, M=null;
 
 function loadSave(){
   try{ var s=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}'); }catch(e){ var s={}; }
-  return {max:s.max||0, best:s.best||{}, muted:s.muted===true};
+  return {max:s.max||0, best:s.best||{}, muted:s.muted===true,
+    game:(s.game==='m3'||s.game==='mem')?s.game:'link',
+    m3:(s.m3&&typeof s.m3==='object')?{max:s.m3.max||0,best:s.m3.best||{}}:{max:0,best:{}},
+    mem:(s.mem&&typeof s.mem==='object')?{max:s.mem.max||0,best:s.mem.best||{}}:{max:0,best:{}}};
 }
 function storeSave(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(save)); }catch(e){} }
 
@@ -185,22 +189,64 @@ function toast(msg){
 function toolset(on){
   $('act').hidden=!on; $('bHome').hidden=!on;
 }
+function setBrand(name){
+  $('brand').textContent=name;
+  document.title=name;
+}
 function renderHome(){
+  MODE=null; S=null; G=null; M=null;
+  setBrand('小游戏');
   $('home').hidden=false; $('game').hidden=true;
   $('hud').hidden=true; $('tools').hidden=false; toolset(false);
   stopTimer();
+  $('tiles').classList.remove('m3'); $('tiles').classList.remove('mem');
+  var mode=save.game;
+  $('tabLink').classList.toggle('on',mode==='link');
+  $('tabM3').classList.toggle('on',mode==='m3');
+  $('tabMem').classList.toggle('on',mode==='mem');
+  $('lead').textContent=mode==='m3'
+    ?'点相邻两张图交换位置，凑齐 3 张以上相同的图即可消除得分；步数用完前达到目标分数就算过关。'
+    :mode==='mem'
+    ?'所有牌背面朝上，每次翻开两张：同图即配对消掉得分，不同则翻回去；步数用完前配齐全部对子就算过关。'
+    :'点两张相同的图，连线拐弯不超过两次即可消除。每关消完全部图块就算过。';
   var box=$('levels'); box.innerHTML='';
-  LEVELS.forEach(function(lv,i){
-    var n=i+1, unlocked=n<=save.max+1, b=document.createElement('button');
-    b.className='lv'; b.disabled=!unlocked;
-    var best=save.best[n];
-    b.innerHTML='<div class="t">第 '+n+' 关</div><div class="d">'+lv.c+'×'+lv.r+' · '+lv.f+' 种图 · '+fmt(lv.t)+
-      (best?' · 最高 '+best:'')+(unlocked?'':' · 未解锁')+'</div>';
-    b.onclick=function(){ start(n); };
-    box.appendChild(b);
-  });
-  var total=0; for(var k in save.best) total+=save.best[k];
-  $('sMax').textContent=save.max; $('sTotal').textContent=total;
+  if(mode==='m3'){
+    M3_LEVELS.forEach(function(lv,i){
+      var n=i+1, unlocked=n<=save.m3.max+1, b=document.createElement('button');
+      b.className='lv'; b.disabled=!unlocked;
+      var best=save.m3.best[n];
+      b.innerHTML='<div class="t">第 '+n+' 关</div><div class="d">'+lv.c+'×'+lv.r+' · '+lv.f+' 种图 · 目标 '+lv.t+' 分 · '+lv.m+' 步'+
+        (best?' · 最高 '+best:'')+(unlocked?'':' · 未解锁')+'</div>';
+      b.onclick=function(){ startM3(n); };
+      box.appendChild(b);
+    });
+    var t3=0; for(var k3 in save.m3.best) t3+=save.m3.best[k3];
+    $('sMax').textContent=save.m3.max; $('sTotal').textContent=t3;
+  } else if(mode==='mem'){
+    MEM_LEVELS.forEach(function(lv,i){
+      var n=i+1, unlocked=n<=save.mem.max+1, b=document.createElement('button');
+      b.className='lv'; b.disabled=!unlocked;
+      var best=save.mem.best[n];
+      b.innerHTML='<div class="t">第 '+n+' 关</div><div class="d">'+lv.c+'×'+lv.r+' · '+(lv.c*lv.r/2)+' 对 · '+lv.m+' 步'+
+        (best?' · 最高 '+best:'')+(unlocked?'':' · 未解锁')+'</div>';
+      b.onclick=function(){ startMem(n); };
+      box.appendChild(b);
+    });
+    var tm=0; for(var km in save.mem.best) tm+=save.mem.best[km];
+    $('sMax').textContent=save.mem.max; $('sTotal').textContent=tm;
+  } else {
+    LEVELS.forEach(function(lv,i){
+      var n=i+1, unlocked=n<=save.max+1, b=document.createElement('button');
+      b.className='lv'; b.disabled=!unlocked;
+      var best=save.best[n];
+      b.innerHTML='<div class="t">第 '+n+' 关</div><div class="d">'+lv.c+'×'+lv.r+' · '+lv.f+' 种图 · '+fmt(lv.t)+
+        (best?' · 最高 '+best:'')+(unlocked?'':' · 未解锁')+'</div>';
+      b.onclick=function(){ start(n); };
+      box.appendChild(b);
+    });
+    var total=0; for(var k in save.best) total+=save.best[k];
+    $('sMax').textContent=save.max; $('sTotal').textContent=total;
+  }
 }
 
 var SIDE=matchMedia('(min-width:880px)');
@@ -216,9 +262,14 @@ function stageBox(){
 }
 
 function start(level){
+  MODE='link'; G=null; M=null;
+  setBrand('连连看');
+  save.game='link'; storeSave();
   var lv=LEVELS[level-1];
   $('home').hidden=true; $('game').hidden=false;
   $('hud').hidden=false; $('tools').hidden=false; toolset(true);
+  $('tiles').classList.remove('m3');
+  $('hL2').textContent='剩余'; $('hU2').hidden=false; $('hL4').textContent='限时';
   var box=stageBox();
   var d=deal(lv,box.w,box.h,rngOf(Date.now()&0x7fffffff));
   S={lv:lv,no:level,g:d.g,rows:d.rows,cols:d.cols,cell:d.cell,total:d.total,
@@ -248,6 +299,9 @@ function tileEl(r,c,f,cell){
   el.style.left=(c*cell)+'px'; el.style.top=(r*cell)+'px';
   el.style.width=cell+'px'; el.style.height=cell+'px';
   var sp=document.createElement('span');
+  if($('tiles').classList.contains('mem')){
+    var bk=document.createElement('i'); bk.className='bk'; sp.appendChild(bk);
+  }
   var img=document.createElement('img');
   img.src='img/image'+(f-1)+'.jpg'; img.alt=''; img.decoding='async';
   img.onerror=function(){ sp.classList.add('ph'); sp.textContent=f; img.remove(); };
@@ -364,6 +418,470 @@ function dialog(title,text,aTxt,bTxt,aFn,bFn){
   $('mask').hidden=false;
 }
 
+/* ==== 美图消消乐 ==== */
+var M3_LEVELS=[
+  {c:6,r:5,f:5,t:900,m:28,h:5,s:3},
+  {c:6,r:5,f:5,t:1000,m:28,h:5,s:3},
+  {c:7,r:5,f:6,t:1150,m:31,h:4,s:3},
+  {c:7,r:5,f:6,t:1250,m:31,h:4,s:3},
+  {c:7,r:6,f:6,t:1350,m:33,h:4,s:2},
+  {c:8,r:6,f:7,t:1500,m:36,h:3,s:2},
+  {c:8,r:6,f:7,t:1600,m:36,h:3,s:2},
+  {c:8,r:7,f:7,t:1700,m:38,h:3,s:2},
+  {c:8,r:7,f:8,t:1800,m:38,h:2,s:2},
+  {c:9,r:7,f:8,t:1950,m:41,h:2,s:2},
+  {c:9,r:7,f:8,t:2050,m:41,h:2,s:1},
+  {c:9,r:8,f:8,t:2150,m:43,h:2,s:1},
+  {c:9,r:8,f:9,t:2250,m:43,h:2,s:1},
+  {c:10,r:8,f:9,t:2400,m:46,h:1,s:1},
+  {c:10,r:8,f:9,t:2500,m:46,h:1,s:1},
+  {c:10,r:8,f:9,t:2600,m:46,h:1,s:1},
+  {c:10,r:8,f:10,t:2700,m:46,h:1,s:1},
+  {c:11,r:8,f:10,t:2900,m:49,h:1,s:0},
+  {c:11,r:8,f:10,t:3050,m:49,h:1,s:0},
+  {c:12,r:8,f:10,t:3200,m:52,h:1,s:0}
+];
+function fitM3(cols,rows,W,H){
+  var cell=Math.min(W/cols,H/rows,84);
+  if(cell<MIN_CELL) cell=Math.min(MIN_CELL,W/cols);
+  return cell;
+}
+function m3SwapG(g,a,b){ var t=g[a.r][a.c]; g[a.r][a.c]=g[b.r][b.c]; g[b.r][b.c]=t; }
+function m3RunAt(g,r,c){
+  var v=g[r][c], n=1, k;
+  if(!v) return 0;
+  k=c-1; while(k>=0&&g[r][k]===v){ n++; k--; }
+  k=c+1; while(k<g[r].length&&g[r][k]===v){ n++; k++; }
+  if(n>=3) return n;
+  n=1;
+  k=r-1; while(k>=0&&g[k][c]===v){ n++; k--; }
+  k=r+1; while(k<g.length&&g[k][c]===v){ n++; k++; }
+  return n>=3?n:0;
+}
+function m3FindGroups(g){
+  var groups=[], R=g.length, C=g[0].length, r, c, k;
+  for(r=0;r<R;r++){
+    for(c=0;c<C;){
+      var v=g[r][c];
+      if(!v){ c++; continue; }
+      var len=1;
+      while(c+len<C&&g[r][c+len]===v) len++;
+      if(len>=3){ var cs=[]; for(k=0;k<len;k++) cs.push({r:r,c:c+k}); groups.push({cells:cs,len:len}); }
+      c+=len;
+    }
+  }
+  for(c=0;c<C;c++){
+    for(r=0;r<R;){
+      var v2=g[r][c];
+      if(!v2){ r++; continue; }
+      var len2=1;
+      while(r+len2<R&&g[r+len2][c]===v2) len2++;
+      if(len2>=3){ var cs2=[]; for(k=0;k<len2;k++) cs2.push({r:r+k,c:c}); groups.push({cells:cs2,len:len2}); }
+      r+=len2;
+    }
+  }
+  return groups;
+}
+function m3HasMove(g){
+  var R=g.length, C=g[0].length;
+  for(var r=0;r<R;r++) for(var c=0;c<C;c++){
+    if(c+1<C){
+      m3SwapG(g,{r:r,c:c},{r:r,c:c+1});
+      var ok=m3RunAt(g,r,c)>0||m3RunAt(g,r,c+1)>0;
+      m3SwapG(g,{r:r,c:c},{r:r,c:c+1});
+      if(ok) return {a:{r:r,c:c},b:{r:r,c:c+1}};
+    }
+    if(r+1<R){
+      m3SwapG(g,{r:r,c:c},{r:r+1,c:c});
+      var ok2=m3RunAt(g,r,c)>0||m3RunAt(g,r+1,c)>0;
+      m3SwapG(g,{r:r,c:c},{r:r+1,c:c});
+      if(ok2) return {a:{r:r,c:c},b:{r:r+1,c:c}};
+    }
+  }
+  return null;
+}
+function m3Clean(g,f,rnd){
+  var guard=0, runs=m3FindGroups(g);
+  while(runs.length&&guard++<300){
+    for(var i=0;i<runs.length;i++) for(var j=0;j<runs[i].cells.length;j++){
+      var p=runs[i].cells[j];
+      g[p.r][p.c]=1+Math.floor(rnd()*f);
+    }
+    runs=m3FindGroups(g);
+  }
+}
+function m3Deal(lv,rnd){
+  var g=[], r, c;
+  for(r=0;r<lv.r;r++){ var row=[]; for(c=0;c<lv.c;c++) row.push(1+Math.floor(rnd()*lv.f)); g.push(row); }
+  m3Clean(g,lv.f,rnd);
+  var tries=0;
+  while(!m3HasMove(g)&&tries++<60){
+    for(r=0;r<lv.r;r++) for(c=0;c<lv.c;c++) g[r][c]=1+Math.floor(rnd()*lv.f);
+    m3Clean(g,lv.f,rnd);
+  }
+  return g;
+}
+function startM3(level){
+  MODE='m3'; S=null; M=null;
+  setBrand('美图消消乐');
+  save.game='m3'; storeSave();
+  var lv=M3_LEVELS[level-1];
+  $('home').hidden=true; $('game').hidden=false;
+  $('hud').hidden=false; $('tools').hidden=false; toolset(true);
+  $('tiles').classList.add('m3');
+  $('hL2').textContent='步数'; $('hU2').hidden=true; $('hL4').textContent='目标';
+  var box=stageBox();
+  var cell=fitM3(lv.c,lv.r,box.w,box.h);
+  G={lv:lv,no:level,g:m3Deal(lv,rngOf(Date.now()&0x7fffffff)),rows:lv.r,cols:lv.c,cell:cell,
+     moves:lv.m,hint:lv.h,shuf:lv.s,score:0,sel:null,locked:false,over:false};
+  combo=0; lastMatch=0;
+  var board=$('board'), w=lv.c*cell, h=lv.r*cell;
+  board.style.width=w+'px'; board.style.height=h+'px';
+  var line=$('line');
+  line.setAttribute('viewBox','0 0 '+w+' '+h);
+  line.setAttribute('width',w); line.setAttribute('height',h);
+  line.innerHTML='';
+  m3Repaint();
+  $('hLv').textContent=level;
+  syncM3Tools(); syncM3Hud(); stopTimer();
+  ensureMusic();
+}
+function m3Repaint(){
+  var tiles=$('tiles'); tiles.innerHTML='';
+  for(var r=0;r<G.rows;r++) for(var c=0;c<G.cols;c++){
+    var f=G.g[r][c]; if(!f) continue;
+    tiles.appendChild(tileEl(r,c,f,G.cell));
+  }
+}
+function m3SetPos(el,r,c){
+  el.dataset.r=r; el.dataset.c=c;
+  el.style.left=(c*G.cell)+'px'; el.style.top=(r*G.cell)+'px';
+}
+function syncM3Hud(){
+  $('hLeft').textContent=G.moves; $('hScore').textContent=G.score;
+  $('hTime').textContent=G.lv.t;
+  var pct=Math.max(0,Math.min(100,G.score/G.lv.t*100));
+  var bar=$('bar'); bar.style.width=pct+'%';
+  bar.classList.toggle('low',G.moves<=3);
+}
+function syncM3Tools(){
+  $('nHint').textContent=G.hint; $('nShuf').textContent=G.shuf;
+  $('bHint').disabled=G.hint<=0; $('bShuf').disabled=G.shuf<=0;
+}
+function m3ClearSel(){
+  if(G&&G.sel){ var e=tileAt(G.sel.r,G.sel.c); if(e) e.classList.remove('sel'); G.sel=null; }
+}
+function m3Tap(r,c){
+  if(!G||G.locked||G.over) return;
+  if(!G.g[r][c]) return;
+  if(G.sel&&G.sel.r===r&&G.sel.c===c){ m3ClearSel(); return; }
+  if(!G.sel){ G.sel={r:r,c:c}; var e0=tileAt(r,c); if(e0) e0.classList.add('sel'); return; }
+  var a=G.sel;
+  if(Math.abs(a.r-r)+Math.abs(a.c-c)!==1){
+    m3ClearSel(); G.sel={r:r,c:c};
+    var e1=tileAt(r,c); if(e1) e1.classList.add('sel');
+    return;
+  }
+  G.locked=true;
+  m3ClearSel();
+  m3SwapG(G.g,a,{r:r,c:c});
+  var ea=tileAt(a.r,a.c), eb=tileAt(r,c);
+  if(ea) m3SetPos(ea,r,c);
+  if(eb) m3SetPos(eb,a.r,a.c);
+  setTimeout(function(){ m3AfterSwap(a,{r:r,c:c}); },200);
+}
+function m3AfterSwap(a,b){
+  var groups=m3FindGroups(G.g);
+  if(!groups.length){
+    m3SwapG(G.g,a,b);
+    var ex=tileAt(b.r,b.c), ey=tileAt(a.r,a.c);
+    if(ex) m3SetPos(ex,a.r,a.c);
+    if(ey) m3SetPos(ey,b.r,b.c);
+    [ex,ey].forEach(function(e){ if(!e)return; e.classList.add('bad'); setTimeout(function(){e.classList.remove('bad');},240); });
+    toast('这样换没有能消的');
+    setTimeout(function(){ G.locked=false; },200);
+    return;
+  }
+  G.moves--; syncM3Hud();
+  m3Resolve(groups,1);
+}
+function m3Resolve(groups,depth){
+  var gain=0;
+  for(var i=0;i<groups.length;i++){
+    var len=groups[i].len;
+    gain+=len*10*depth+(len===4?30:len>=5?60:0);
+  }
+  G.score+=gain;
+  for(var i2=0;i2<groups.length;i2++) for(var j=0;j<groups[i2].cells.length;j++){
+    var p=groups[i2].cells[j];
+    if(!G.g[p.r][p.c]) continue;
+    G.g[p.r][p.c]=0;
+    var e=tileAt(p.r,p.c);
+    if(e){ e.classList.add('gone'); (function(el){ setTimeout(function(){ el.remove(); },200); })(e); }
+  }
+  syncM3Hud();
+  setTimeout(function(){ m3AfterClear(depth); },240);
+}
+function m3AfterClear(depth){
+  if(G.score>=G.lv.t){ m3Win(); return; }
+  m3Fall(function(){
+    var groups=m3FindGroups(G.g);
+    if(groups.length){ m3Resolve(groups,depth+1); return; }
+    if(!m3HasMove(G.g)){
+      m3Reshuffle(); m3Repaint();
+      toast('没有能换的了，已自动重排');
+    }
+    if(G.moves<=0){ m3Fail(); return; }
+    G.locked=false;
+  });
+}
+function m3Fall(done){
+  var tiles=$('tiles'), fresh=[], spawned=false;
+  for(var c=0;c<G.cols;c++){
+    var write=G.rows-1;
+    for(var r=G.rows-1;r>=0;r--){
+      if(G.g[r][c]){
+        if(write!==r){
+          G.g[write][c]=G.g[r][c]; G.g[r][c]=0;
+          var el=tileAt(r,c);
+          if(el) m3SetPos(el,write,c);
+        }
+        write--;
+      }
+    }
+    var need=write+1;
+    for(var r2=need-1;r2>=0;r2--){
+      var f=1+Math.floor(Math.random()*G.lv.f);
+      G.g[r2][c]=f;
+      var el2=tileEl(r2,c,f,G.cell);
+      el2.style.top=((r2-need)*G.cell)+'px';
+      tiles.appendChild(el2);
+      fresh.push({el:el2,r:r2});
+      spawned=true;
+    }
+  }
+  if(!spawned){ done(); return; }
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    for(var i=0;i<fresh.length;i++) fresh[i].el.style.top=(fresh[i].r*G.cell)+'px';
+    setTimeout(done,240);
+  });});
+}
+function m3Reshuffle(){
+  var cells=[], vals=[], r, c;
+  for(r=0;r<G.rows;r++) for(c=0;c<G.cols;c++) if(G.g[r][c]){ cells.push([r,c]); vals.push(G.g[r][c]); }
+  if(cells.length<4) return;
+  var rnd=rngOf(Date.now()&0x7fffffff);
+  for(var k=0;k<120;k++){
+    var v=shuffled(vals,rnd);
+    for(var i=0;i<cells.length;i++) G.g[cells[i][0]][cells[i][1]]=v[i];
+    if(!m3FindGroups(G.g).length&&m3HasMove(G.g)) return;
+  }
+  G.g=m3Deal(G.lv,rngOf(Date.now()&0x7fffffff));
+}
+function m3Hint(){
+  if(!G||G.hint<=0||G.locked) return;
+  var mv=m3HasMove(G.g);
+  if(!mv){ toast('没有能换的，试试重排'); return; }
+  G.hint--; syncM3Tools();
+  [tileAt(mv.a.r,mv.a.c),tileAt(mv.b.r,mv.b.c)].forEach(function(e){
+    if(!e) return; e.classList.add('hint');
+    setTimeout(function(){e.classList.remove('hint');},2600);
+  });
+}
+function m3ShufBtn(){
+  if(!G||G.shuf<=0||G.locked) return;
+  G.shuf--; m3ClearSel();
+  m3Reshuffle(); m3Repaint(); syncM3Tools();
+}
+function m3Win(){
+  G.over=true;
+  var bonus=G.moves*15;
+  G.score+=bonus;
+  if(!save.m3.best[G.no]||G.score>save.m3.best[G.no]) save.m3.best[G.no]=G.score;
+  if(G.no>save.m3.max) save.m3.max=G.no;
+  storeSave();
+  var last=G.no>=M3_LEVELS.length;
+  dialog(last?'全部通关':'第 '+G.no+' 关完成',
+    '剩 '+G.moves+' 步，奖励 '+bonus+' 分，本关 '+G.score+' 分。',
+    last?'首页':'下一关',
+    last?null:'首页',
+    last?renderHome:function(){ startM3(G.no+1); },
+    last?null:renderHome);
+}
+function m3Fail(){
+  dialog('步数用完','离目标还差 '+(G.lv.t-G.score)+' 分。','再来一次','首页',
+    function(){ startM3(G.no); }, renderHome);
+}
+
+/* ==== 记忆翻牌 ==== */
+var MEM_LEVELS=[
+  {c:4,r:3,f:6,m:14,h:4,s:2},
+  {c:4,r:4,f:8,m:18,h:4,s:2},
+  {c:5,r:4,f:10,m:22,h:3,s:2},
+  {c:6,r:4,f:12,m:26,h:3,s:2},
+  {c:6,r:4,f:12,m:24,h:3,s:1},
+  {c:7,r:4,f:14,m:28,h:3,s:1},
+  {c:6,r:5,f:15,m:30,h:3,s:1},
+  {c:8,r:4,f:16,m:33,h:2,s:1},
+  {c:8,r:4,f:16,m:30,h:2,s:1},
+  {c:9,r:4,f:18,m:34,h:2,s:1},
+  {c:8,r:5,f:20,m:38,h:2,s:1},
+  {c:10,r:4,f:20,m:36,h:2,s:1},
+  {c:8,r:6,f:24,m:44,h:2,s:1},
+  {c:10,r:5,f:25,m:46,h:1,s:1},
+  {c:12,r:4,f:24,m:43,h:1,s:1},
+  {c:10,r:6,f:30,m:54,h:1,s:1},
+  {c:12,r:5,f:30,m:53,h:1,s:1},
+  {c:12,r:5,f:30,m:50,h:1,s:0},
+  {c:12,r:5,f:30,m:48,h:1,s:0},
+  {c:12,r:5,f:30,m:46,h:1,s:0}
+];
+function startMem(level){
+  MODE='mem'; S=null; G=null;
+  setBrand('记忆翻牌');
+  save.game='mem'; storeSave();
+  var lv=MEM_LEVELS[level-1];
+  $('home').hidden=true; $('game').hidden=false;
+  $('hud').hidden=false; $('tools').hidden=false; toolset(true);
+  $('tiles').classList.remove('m3'); $('tiles').classList.add('mem');
+  $('hL2').textContent='剩余'; $('hU2').hidden=false; $('hL4').textContent='步数';
+  var box=stageBox();
+  var cell=fitM3(lv.c,lv.r,box.w,box.h);
+  var rnd=rngOf(Date.now()&0x7fffffff);
+  var pairs=lv.c*lv.r/2, deck=[];
+  for(var i=0;i<pairs;i++){ deck.push(1+i%lv.f); deck.push(1+i%lv.f); }
+  deck=shuffled(deck,rnd);
+  var g=[], k=0;
+  for(var r=0;r<lv.r;r++){ var row=[]; for(var c=0;c<lv.c;c++) row.push(deck[k++]); g.push(row); }
+  M={lv:lv,no:level,g:g,rows:lv.r,cols:lv.c,cell:cell,pairs:pairs,left:pairs,
+     moves:lv.m,hint:lv.h,shuf:lv.s,score:0,streak:0,first:null,busy:false,over:false};
+  combo=0; lastMatch=0;
+  var board=$('board'), w=lv.c*cell, h=lv.r*cell;
+  board.style.width=w+'px'; board.style.height=h+'px';
+  var line=$('line'); line.innerHTML='';
+  memRepaint();
+  $('hLv').textContent=level;
+  syncMemTools(); syncMemHud(); stopTimer();
+  ensureMusic();
+}
+function memRepaint(){
+  var tiles=$('tiles'); tiles.innerHTML='';
+  for(var r=0;r<M.rows;r++) for(var c=0;c<M.cols;c++){
+    var f=M.g[r][c]; if(!f) continue;
+    var el=tileEl(r,c,f,M.cell);
+    el.classList.add('down');
+    tiles.appendChild(el);
+  }
+}
+function syncMemHud(){
+  $('hLeft').textContent=M.left; $('hScore').textContent=M.score;
+  $('hTime').textContent=M.moves;
+  var pct=M.pairs?Math.max(0,Math.min(100,(M.pairs-M.left)/M.pairs*100)):0;
+  var bar=$('bar'); bar.style.width=pct+'%';
+  bar.classList.toggle('low',M.moves<=3);
+}
+function syncMemTools(){
+  $('nHint').textContent=M.hint; $('nShuf').textContent=M.shuf;
+  $('bHint').disabled=M.hint<=0; $('bShuf').disabled=M.shuf<=0;
+}
+function memTap(r,c){
+  if(!M||M.busy||M.over) return;
+  if(!M.g[r][c]) return;
+  var el=tileAt(r,c); if(!el) return;
+  if(M.first&&M.first.r===r&&M.first.c===c){
+    el.classList.add('down'); el.classList.remove('sel');
+    M.first=null; return;
+  }
+  if(!el.classList.contains('down')) return;
+  el.classList.remove('down');
+  if(!M.first){ M.first={r:r,c:c}; el.classList.add('sel'); return; }
+  var a=M.first; M.first=null;
+  var ea=tileAt(a.r,a.c);
+  if(ea) ea.classList.remove('sel');
+  M.moves--;
+  if(M.g[a.r][a.c]===M.g[r][c]){
+    M.streak++; M.left--;
+    M.score+=20+Math.min(50,(M.streak-1)*10);
+    M.busy=true; syncMemHud();
+    setTimeout(function(){
+      [ea,el].forEach(function(e){
+        if(!e) return;
+        e.classList.add('gone');
+        (function(el2){ setTimeout(function(){ el2.remove(); },240); })(e);
+      });
+      M.g[a.r][a.c]=0; M.g[r][c]=0;
+      M.busy=false;
+      syncMemHud();
+      if(M.left<=0) setTimeout(memWin,260);
+    },380);
+  } else {
+    M.streak=0; M.busy=true; syncMemHud();
+    [ea,el].forEach(function(e){ if(e) e.classList.add('bad'); });
+    setTimeout(function(){
+      [ea,el].forEach(function(e){ if(!e) return; e.classList.remove('bad'); e.classList.add('down'); });
+      M.busy=false; syncMemHud();
+      if(M.moves<=0) memFail();
+    },780);
+  }
+}
+function memHint(){
+  if(!M||M.hint<=0||M.busy||M.over) return;
+  if(M.first){
+    var fe=tileAt(M.first.r,M.first.c);
+    if(fe){ fe.classList.add('down'); fe.classList.remove('sel'); }
+    M.first=null;
+  }
+  var map={};
+  for(var r=0;r<M.rows;r++) for(var c=0;c<M.cols;c++){
+    var f=M.g[r][c]; if(!f) continue;
+    (map[f]=map[f]||[]).push({r:r,c:c});
+  }
+  var pair=null;
+  for(var k in map){ if(map[k].length>=2){ pair=map[k].slice(0,2); break; } }
+  if(!pair){ toast('没有可配的了'); return; }
+  M.hint--; syncMemTools();
+  M.busy=true;
+  var els=pair.map(function(p){ var e=tileAt(p.r,p.c); if(e){ e.classList.remove('down'); e.classList.add('hint'); } return e; });
+  setTimeout(function(){
+    els.forEach(function(e){
+      if(!e) return;
+      e.classList.remove('hint');
+      if(!e.classList.contains('gone')) e.classList.add('down');
+    });
+    M.busy=false;
+  },1500);
+}
+function memShufBtn(){
+  if(!M||M.shuf<=0||M.busy||M.over) return;
+  M.shuf--; syncMemTools();
+  var cells=[], vals=[];
+  for(var r=0;r<M.rows;r++) for(var c=0;c<M.cols;c++) if(M.g[r][c]){ cells.push([r,c]); vals.push(M.g[r][c]); }
+  if(!cells.length) return;
+  var v=shuffled(vals,rngOf(Date.now()&0x7fffffff));
+  for(var i=0;i<cells.length;i++) M.g[cells[i][0]][cells[i][1]]=v[i];
+  M.first=null; M.streak=0; M.busy=false;
+  memRepaint();
+}
+function memWin(){
+  M.over=true;
+  var bonus=M.moves*15;
+  M.score+=bonus;
+  if(!save.mem.best[M.no]||M.score>save.mem.best[M.no]) save.mem.best[M.no]=M.score;
+  if(M.no>save.mem.max) save.mem.max=M.no;
+  storeSave();
+  var last=M.no>=MEM_LEVELS.length;
+  dialog(last?'全部通关':'第 '+M.no+' 关完成',
+    '剩 '+M.moves+' 步，奖励 '+bonus+' 分，本关 '+M.score+' 分。',
+    last?'首页':'下一关',
+    last?null:'首页',
+    last?renderHome:function(){ startMem(M.no+1); },
+    last?null:renderHome);
+}
+function memFail(){
+  dialog('步数用完','还剩 '+M.left+' 对没配上。','再来一次','首页',
+    function(){ startMem(M.no); }, renderHome);
+}
+
 var bgm=$('bgm');
 var METING_API='https://api.injahow.cn/meting/?server=netease&type=playlist&id=9086662585';
 var SILENT_WAV='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
@@ -418,9 +936,13 @@ function ensureMusic(){
 
 $('tiles').addEventListener('click',function(e){
   var t=e.target.closest('.tile'); if(!t) return;
-  tap(+t.dataset.r,+t.dataset.c);
+  if(MODE==='mem') memTap(+t.dataset.r,+t.dataset.c);
+  else if(MODE==='m3') m3Tap(+t.dataset.r,+t.dataset.c);
+  else tap(+t.dataset.r,+t.dataset.c);
 });
 $('bHint').onclick=function(){
+  if(MODE==='mem'){ memHint(); return; }
+  if(MODE==='m3'){ m3Hint(); return; }
   if(!S||S.hint<=0) return;
   var mv=findMove(S.g);
   if(!mv){ toast('没有可连的'); return; }
@@ -428,26 +950,55 @@ $('bHint').onclick=function(){
   [tileAt(mv.a.r,mv.a.c),tileAt(mv.b.r,mv.b.c)].forEach(function(e){
     if(!e) return; e.classList.add('hint');
     e.scrollIntoView({block:'nearest',inline:'nearest'});
-    setTimeout(function(){e.classList.remove('hint');},1800);
+    setTimeout(function(){e.classList.remove('hint');},2600);
   });
 };
 $('bShuf').onclick=function(){
+  if(MODE==='mem'){ memShufBtn(); return; }
+  if(MODE==='m3'){ m3ShufBtn(); return; }
   if(!S||S.shuf<=0) return;
   S.shuf--; clearSel();
   reshuffle(S.g,rngOf(Date.now()&0x7fffffff)); repaint(); syncTools();
 };
-$('bRetry').onclick=function(){ if(S) start(S.no); };
+$('bRetry').onclick=function(){ if(M) startMem(M.no); else if(G) startM3(G.no); else if(S) start(S.no); };
 $('bHome').onclick=renderHome;
 $('bMusic').onclick=function(){
   save.muted=!save.muted; storeSave();
   if(save.muted) bgm.pause(); else ensureMusic();
   syncMusic();
 };
+$('tabLink').onclick=function(){ save.game='link'; storeSave(); renderHome(); };
+$('tabM3').onclick=function(){ save.game='m3'; storeSave(); renderHome(); };
+$('tabMem').onclick=function(){ save.game='mem'; storeSave(); renderHome(); };
 var rsT=0;
 addEventListener('resize',function(){
-  if(!S||$('game').hidden) return;
+  if($('game').hidden) return;
   clearTimeout(rsT);
   rsT=setTimeout(function(){
+    if(MODE==='mem'&&M){
+      var boxm=stageBox();
+      var cellm=fitM3(M.cols,M.rows,boxm.w,boxm.h);
+      if(Math.abs(cellm-M.cell)<1) return;
+      M.cell=cellm; M.first=null; M.busy=false;
+      var boardm=$('board');
+      boardm.style.width=(M.cols*cellm)+'px'; boardm.style.height=(M.rows*cellm)+'px';
+      memRepaint();
+      return;
+    }
+    if(MODE==='m3'&&G){
+      var box3=stageBox();
+      var cell3=fitM3(G.cols,G.rows,box3.w,box3.h);
+      if(Math.abs(cell3-G.cell)<1) return;
+      G.cell=cell3;
+      var board3=$('board');
+      board3.style.width=(G.cols*cell3)+'px'; board3.style.height=(G.rows*cell3)+'px';
+      var line3=$('line');
+      line3.setAttribute('viewBox','0 0 '+(G.cols*cell3)+' '+(G.rows*cell3));
+      line3.setAttribute('width',G.cols*cell3); line3.setAttribute('height',G.rows*cell3);
+      m3Repaint();
+      return;
+    }
+    if(!S) return;
     var box=stageBox();
     var cell=Math.min(box.w/(S.cols+2),84,Math.max(MIN_CELL,box.h/(S.rows+2)));
     if(Math.abs(cell-S.cell)<1) return;

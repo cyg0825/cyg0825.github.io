@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="shortcut icon" href="/img/333.png">
-<title>连连看</title>
+<title>小游戏</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header>
-  <div class="brand">连连看</div>
+  <div class="brand" id="brand">小游戏</div>
   <div id="tools">
     <button id="bMusic" class="ico" aria-label="音乐开"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1 0 14 17.55V7h4V3h-6z"/><line class="slash" x1="4.5" y1="19.5" x2="19.5" y2="4.5"/></svg></button>
     <button id="bHome" class="ico" aria-label="首页"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></button>
@@ -17,7 +17,12 @@
 </header>
 <main>
   <section id="home">
-    <p class="lead">点两张相同的图，连线拐弯不超过两次即可消除。每关消完全部图块就算过。</p>
+    <div id="gtabs">
+      <button id="tabLink" class="gt on">连连看</button>
+      <button id="tabM3" class="gt">美图消消乐</button>
+      <button id="tabMem" class="gt">记忆翻牌</button>
+    </div>
+    <p class="lead" id="lead">点两张相同的图，连线拐弯不超过两次即可消除。每关消完全部图块就算过。</p>
     <div id="levels"></div>
     <div class="sum">已过 <b id="sMax">0</b>/<b id="sMaxAll">20</b> 关 · 总分 <b id="sTotal">0</b></div>
   </section>
@@ -26,9 +31,9 @@
       <div id="stat">
         <div id="hud" hidden>
           <span><i>关卡</i><b id="hLv">1</b>/<b id="hLvMax">20</b></span>
-          <span><i>剩余</i><b id="hLeft">0</b> 对</span>
+          <span><i id="hL2">剩余</i><b id="hLeft">0</b> <i id="hU2">对</i></span>
           <span><i>分数</i><b id="hScore">0</b></span>
-          <span><i>限时</i><b id="hTime">--</b></span>
+          <span><i id="hL4">限时</i><b id="hTime">--</b></span>
         </div>
         <div id="barwrap"><div id="bar"></div></div>
       </div>
