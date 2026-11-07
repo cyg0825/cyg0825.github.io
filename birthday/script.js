@@ -832,8 +832,17 @@
         startBtn.textContent = '收下祝福';
     }
 
+    function preloadAssets() {
+        for (var i = 0; i < TOTAL_IMAGES; i++) {
+            var im = new Image();
+            im.src = 'img/image' + i + '.jpg';
+        }
+        import('./cake3d.js').catch(function() {});
+    }
+
     applySeasonCopy();
 
     updateScale();
+    preloadAssets();
     fadeInMainWindow();
 })();
