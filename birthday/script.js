@@ -223,7 +223,11 @@
     var WISH_W = 270;
     var WISH_H_MIN = 120;
     var TOTAL_IMAGES = 21;
-    var TOTAL_AUDIOS = 4;
+    // 音乐用网易云在线歌单（与博客左下角播放器同一歌单），通过 Meting 中转取流，本地不存音频
+    var METING_API = 'https://api.injahow.cn/meting/?server=netease&type=playlist&id=9086662585';
+    // 浏览器规定 play() 必须在用户点击瞬间调用才允许出声；歌单是异步加载的，
+    // 点击时先播这段静音音频"解锁"播放器，歌单到位后再换真正的歌
+    var SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
 
     var MODE_GROWTH = 'growth';
     var MODE_RANDOM = 'random';
@@ -262,6 +266,11 @@
     var bgMounted = false;
     var userMuted = false;
     var curTrack = 0;
+    var playlistUrls = null;
+    var playlistPromise = null;
+    var lastTrackIdx = -1;
+    var audioUnlocked = false;
+    var trackRetries = 0;
 
     var DESIGN_W = 2560;
     var DESIGN_H = 1440;
@@ -627,17 +636,50 @@
         syncMusicBtn();
     }
 
+    function loadPlaylist() {
+        if (playlistPromise) return playlistPromise;
+        playlistPromise = fetch(METING_API).then(function(r) {
+            return r.json();
+        }).then(function(list) {
+            playlistUrls = (list || []).filter(function(t) { return t && t.url; }).map(function(t) { return t.url; });
+            return playlistUrls;
+        }).catch(function(e) {
+            console.log('Playlist load failed:', e);
+            playlistPromise = null;
+            return [];
+        });
+        return playlistPromise;
+    }
+
+    function unlockAudio() {
+        if (audioUnlocked) return;
+        audioUnlocked = true;
+        bgAudio.src = SILENT_WAV;
+        var p = bgAudio.play();
+        if (p && p.catch) p.catch(function() {});
+    }
+
     function playRandomMusic() {
-        var audioIdx = Math.floor(Math.random() * TOTAL_AUDIOS) + 1;
-        curTrack = audioIdx;
-        bgAudio.src = '/vo/' + audioIdx + '.mp3';
-        bgAudio.volume = 0.7;
-        if (userMuted) {
-            syncMusicBtn();
-            return;
-        }
-        bgAudio.play().catch(function(e) {
-            console.log('Audio play failed:', e);
+        loadPlaylist().then(function(urls) {
+            if (!urls || !urls.length) {
+                syncMusicBtn();
+                return;
+            }
+            var idx = Math.floor(Math.random() * urls.length);
+            if (urls.length > 1 && lastTrackIdx >= 0) {
+                while (idx === lastTrackIdx) idx = Math.floor(Math.random() * urls.length);
+            }
+            lastTrackIdx = idx;
+            curTrack = idx + 1;
+            bgAudio.src = urls[idx];
+            bgAudio.volume = 0.7;
+            if (userMuted) {
+                syncMusicBtn();
+                return;
+            }
+            bgAudio.play().catch(function(e) {
+                console.log('Audio play failed:', e);
+            });
         });
     }
 
@@ -647,6 +689,7 @@
     }
 
     function fadeOutAndStart() {
+        unlockAudio();
         mainWindow.classList.add('fading-out');
         setTimeout(function() {
             mainWindow.style.display = 'none';
@@ -799,6 +842,11 @@
     musicBtn.addEventListener('click', toggleMusic);
     bgAudio.addEventListener('play', syncMusicBtn);
     bgAudio.addEventListener('pause', syncMusicBtn);
+    bgAudio.addEventListener('error', function() {
+        if (userMuted || trackRetries >= 5) return;
+        trackRetries++;
+        playRandomMusic();
+    });
 
     window.addEventListener('resize', function() {
         updateScale();
@@ -837,6 +885,7 @@
             var im = new Image();
             im.src = 'img/image' + i + '.jpg';
         }
+        loadPlaylist();
         import('./cake3d.js').catch(function() {});
     }
 

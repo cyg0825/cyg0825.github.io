@@ -365,15 +365,36 @@ function dialog(title,text,aTxt,bTxt,aFn,bFn){
 }
 
 var bgm=$('bgm');
-var MUSIC=['/vo/1.mp3','/vo/2.mp3','/vo/3.mp3','/vo/4.mp3'], musN=-1;
-function nextMusic(){
-  var i=Math.floor(Math.random()*MUSIC.length);
-  if(MUSIC.length>1) while(i===musN) i=Math.floor(Math.random()*MUSIC.length);
-  musN=i; bgm.src=MUSIC[i];
+var METING_API='https://api.injahow.cn/meting/?server=netease&type=playlist&id=9086662585';
+var SILENT_WAV='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+var playlistUrls=null, playlistP=null, musN=-1, unlocked=false, pendingPlay=false, trackRetries=0;
+function loadPlaylist(){
+  if(playlistP) return playlistP;
+  playlistP=fetch(METING_API).then(function(r){ return r.json(); }).then(function(list){
+    playlistUrls=(list||[]).filter(function(t){ return t&&t.url; }).map(function(t){ return t.url; });
+    return playlistUrls;
+  }).catch(function(){ playlistP=null; return []; });
+  return playlistP;
 }
-bgm.addEventListener('ended',function(){
-  nextMusic();
-  if(!save.muted) bgm.play().catch(function(){});
+loadPlaylist();
+function unlockBgm(){
+  if(unlocked) return; unlocked=true;
+  bgm.src=SILENT_WAV;
+  var p=bgm.play(); if(p&&p.catch) p.catch(function(){});
+}
+function nextMusic(auto){
+  loadPlaylist().then(function(list){
+    if(!list||!list.length) return;
+    var i=Math.floor(Math.random()*list.length);
+    if(list.length>1) while(i===musN) i=Math.floor(Math.random()*list.length);
+    musN=i; bgm.src=list[i];
+    if(auto&&!save.muted){ var p=bgm.play(); if(p&&p.catch) p.catch(function(){}); }
+  });
+}
+bgm.addEventListener('ended',function(){ nextMusic(true); });
+bgm.addEventListener('error',function(){
+  if(save.muted||trackRetries>=5) return;
+  trackRetries++; nextMusic(true);
 });
 function syncMusic(){
   var b=$('bMusic'), lab=save.muted?'音乐关':'音乐开';
@@ -383,9 +404,16 @@ function syncMusic(){
 function ensureMusic(){
   syncMusic();
   if(save.muted){ bgm.pause(); return; }
-  if(!bgm.src) nextMusic();
-  var p=bgm.play();
-  if(p&&p.catch) p.catch(function(){ toast('点一下屏幕才能出声'); });
+  unlockBgm();
+  if(playlistUrls&&playlistUrls.length){
+    if(!bgm.src||bgm.src.indexOf('data:')===0){ nextMusic(true); }
+    else { var p=bgm.play(); if(p&&p.catch) p.catch(function(){ toast('点一下屏幕才能出声'); }); }
+  } else {
+    pendingPlay=true;
+    loadPlaylist().then(function(list){
+      if(pendingPlay&&list&&list.length){ pendingPlay=false; nextMusic(true); }
+    });
+  }
 }
 
 $('tiles').addEventListener('click',function(e){
