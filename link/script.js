@@ -205,7 +205,7 @@ function renderHome(){
   $('tabM3').classList.toggle('on',mode==='m3');
   $('tabMem').classList.toggle('on',mode==='mem');
   $('lead').textContent=mode==='m3'
-    ?'点相邻两张图交换位置，凑齐 3 张以上相同的图即可消除得分；步数用完前达到目标分数就算过关。'
+    ?'点相邻两张图交换位置（手机上也可以直接朝相邻方向滑动），凑齐 3 张以上相同的图即可消除得分；步数用完前达到目标分数就算过关。'
     :mode==='mem'
     ?'每关先亮牌 30 秒让你记住位置，然后全部翻面；每次翻开两张：同图即配对消掉得分，不同则翻回去；步数用完前配齐全部对子就算过关。'
     :'点两张相同的图，连线拐弯不超过两次即可消除。每关消完全部图块就算过。';
@@ -269,6 +269,7 @@ function start(level){
   $('home').hidden=true; $('game').hidden=false;
   $('hud').hidden=false; $('tools').hidden=false; toolset(true);
   $('tiles').classList.remove('m3');
+  $('tiles').style.touchAction='';
   $('hL2').textContent='剩余'; $('hU2').hidden=false; $('hL4').textContent='限时';
   var box=stageBox();
   var d=deal(lv,box.w,box.h,rngOf(Date.now()&0x7fffffff));
@@ -530,6 +531,7 @@ function startM3(level){
   $('hud').hidden=false; $('tools').hidden=false; toolset(true);
   $('tiles').classList.add('m3');
   $('hL2').textContent='步数'; $('hU2').hidden=true; $('hL4').textContent='目标';
+  $('tiles').style.touchAction='none';
   var box=stageBox();
   var cell=fitM3(lv.c,lv.r,box.w,box.h);
   G={lv:lv,no:level,g:m3Deal(lv,rngOf(Date.now()&0x7fffffff)),rows:lv.r,cols:lv.c,cell:cell,
@@ -746,6 +748,7 @@ function startMem(level){
   $('hud').hidden=false; $('tools').hidden=false; toolset(true);
   $('tiles').classList.remove('m3'); $('tiles').classList.add('mem');
   $('hL2').textContent='剩余'; $('hU2').hidden=false; $('hL4').textContent='步数';
+  $('tiles').style.touchAction='';
   var box=stageBox();
   var cell=fitM3(lv.c,lv.r,box.w,box.h);
   var rnd=rngOf(Date.now()&0x7fffffff);
@@ -966,6 +969,31 @@ $('tiles').addEventListener('click',function(e){
   else if(MODE==='m3') m3Tap(+t.dataset.r,+t.dataset.c);
   else tap(+t.dataset.r,+t.dataset.c);
 });
+var swipe=null;
+$('tiles').addEventListener('touchstart',function(e){
+  if(MODE!=='m3'||!G||G.locked||G.over||swipe) return;
+  var t=e.target.closest('.tile'); if(!t) return;
+  var p=e.touches[0];
+  swipe={x:p.clientX,y:p.clientY,r:+t.dataset.r,c:+t.dataset.c,done:false};
+},{passive:true});
+$('tiles').addEventListener('touchmove',function(e){
+  if(!swipe||swipe.done) return;
+  var p=e.touches[0];
+  var dx=p.clientX-swipe.x, dy=p.clientY-swipe.y;
+  var th=Math.max(18,G.cell*0.35);
+  if(Math.abs(dx)<th&&Math.abs(dy)<th) return;
+  swipe.done=true;
+  var tr=swipe.r, tc=swipe.c;
+  if(Math.abs(dx)>=Math.abs(dy)) tc+=dx>0?1:-1;
+  else tr+=dy>0?1:-1;
+  if(tr<0||tr>=G.rows||tc<0||tc>=G.cols) return;
+  if(!G.g[tr][tc]) return;
+  m3ClearSel();
+  m3Tap(swipe.r,swipe.c);
+  m3Tap(tr,tc);
+},{passive:true});
+$('tiles').addEventListener('touchend',function(){ setTimeout(function(){ swipe=null; },0); },{passive:true});
+$('tiles').addEventListener('touchcancel',function(){ swipe=null; },{passive:true});
 $('bHint').onclick=function(){
   if(MODE==='mem'){ memHint(); return; }
   if(MODE==='m3'){ m3Hint(); return; }
