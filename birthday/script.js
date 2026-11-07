@@ -216,10 +216,10 @@
         'rgba(26, 42, 66, 0.72)'
     ];
 
-    var TIP_AREA = 26000;
-    var TIP_MIN = 14;
-    var TIP_MAX = 46;
-    var TIP_INTERVAL = 450;
+    var TIP_AREA = 16000;
+    var TIP_MIN = 30;
+    var TIP_MAX = 64;
+    var TIP_INTERVAL = 300;
     var WISH_W = 270;
     var WISH_H_MIN = 120;
     var TOTAL_IMAGES = 21;
