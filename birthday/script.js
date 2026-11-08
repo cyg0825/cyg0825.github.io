@@ -216,12 +216,15 @@
         'rgba(26, 42, 66, 0.72)'
     ];
 
-    var TIP_AREA = 16000;          // 桌面：每 16000px² 约一张卡
-    var TIP_AREA_COMPACT = 26000;  // 小屏卡片小，数量也要收一点，重叠太多字会看不清
-    var TIP_MIN = 30;
+    var TIP_MIN = 12;
     var TIP_MAX = 48;
-    var TIP_MIN_COMPACT = 10;
+    var TIP_MIN_COMPACT = 6;
     var TIP_MAX_COMPACT = 14;
+    // 心形参数方程的固有几何（原始坐标），用于按"轮廓周长"等距布卡、内部均匀填充
+    var HEART_PERIM = 102.2;        // 原始坐标下的周长
+    var HEART_Y_MIN = -11.9233;     // 原始坐标 y 范围（屏幕向下为正）
+    var HEART_Y_MAX = 17.0;
+    var HEART_Y_MID = (HEART_Y_MIN + HEART_Y_MAX) / 2;
     var TIP_INTERVAL = 300;
     // 卡片尺寸不再写死：updateViewport() 按屏幕短边算出来，CSS 用 --card-* 变量同步渲染
     var WISH_W = 270;
@@ -327,9 +330,18 @@
         overlayLayer.style.transform = 'none';
     }
 
+    // 调试用：URL 加 ?mode=curve_cw 可固定布局形态，便于核对每一种形态的效果
+    var FORCED_TEST_MODE = null;
+    try { var _qs = new URLSearchParams(location.search); FORCED_TEST_MODE = _qs.get('mode'); } catch (e) {}
+
     function tipCount() {
-        var n = Math.round(naturalW * naturalH / (isCompact ? TIP_AREA_COMPACT : TIP_AREA));
-        if (naturalH < 520) n = Math.round(n * 0.6);   // 横屏手机高度小，少放几张才不糊成一团
+        var L = heartLayout();
+        // 沿轮廓能放多少张：相邻卡片中心间距不小于卡片宽的 0.62 倍，
+        // 再密相邻卡片就会盖住彼此大半，糊成一团、看不出心形
+        var peri = HEART_PERIM * (L.sx + L.sy) / 2;
+        var n = Math.round(peri / (WISH_W * 0.62));
+        if (naturalH < 520) n = Math.round(n * 0.6);  // 横屏手机高度小，少放几张才不糊成一团
+        if (n % 2) n++;                                // 取偶数：保证 t=0（顶部凹口）和 t=π（底部尖端）都被采到
         return clamp(n, isCompact ? TIP_MIN_COMPACT : TIP_MIN, isCompact ? TIP_MAX_COMPACT : TIP_MAX);
     }
 
@@ -338,7 +350,9 @@
         // 旋转屏幕/拖动窗口时沿用当前模式，避免每帧重排都换个动画
         var mode = forcedMode && modes.indexOf(forcedMode) >= 0
             ? forcedMode
-            : modes[Math.floor(Math.random() * modes.length)];
+            : (FORCED_TEST_MODE && modes.indexOf(FORCED_TEST_MODE) >= 0
+                ? FORCED_TEST_MODE
+                : modes[Math.floor(Math.random() * modes.length)]);
         currentMode = mode;
 
         if (mode === MODE_GROWTH) {
@@ -383,9 +397,9 @@
         }
         return {
             cx: naturalW / 2,
-            // 心形重心在原点偏下，直接以视口中线为基准即可，不要再整体下移，
-            // 否则顶部会被裁切压平、看不出心形
-            cy: naturalH / 2 + (topReserve - bottomReserve) / 2,
+            // 心形几何中心在原始 y=HEART_Y_MID（偏下），把它对齐到"预留区中心"才算真正居中；
+            // 否则心会整体偏上、下方留一大片空白，显得不协调
+            cy: (topReserve + naturalH - bottomReserve) / 2 - HEART_Y_MID * sy,
             sx: sx,
             sy: sy,
             padding: padding
@@ -563,11 +577,49 @@
         return { positions: positions, delays: delays };
     }
 
+    // 点在多边形内判定（射线法），用于心形内部均匀撒点
+    function pointInPolygon(x, y, poly) {
+        var inside = false;
+        for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+            var xi = poly[i][0], yi = poly[i][1];
+            var xj = poly[j][0], yj = poly[j][1];
+            if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+        }
+        return inside;
+    }
+
+    // 心形内部均匀撒点：旧实现用极坐标 frac 缩放，点会向圆心堆积，中间叠成一坨、四周反而空；
+    // 这里随机撒点 + 多边形内判定，得到均匀的实心填充
+    function heartInteriorPoints(fillCount, L) {
+        var poly = [];
+        for (var k = 0; k < 140; k++) {
+            var t = k / 140 * 2 * Math.PI;
+            poly.push([
+                16 * Math.pow(Math.sin(t), 3) * 0.86,
+                (-(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) - HEART_Y_MID) * 0.86 + HEART_Y_MID
+            ]);
+        }
+        var out = [];
+        var tries = 0;
+        var maxTries = fillCount * 80 + 300;
+        while (out.length < fillCount && tries < maxTries) {
+            tries++;
+            var rx = (Math.random() * 2 - 1) * 16;
+            var ry = HEART_Y_MIN + Math.random() * (HEART_Y_MAX - HEART_Y_MIN);
+            if (pointInPolygon(rx, ry, poly)) {
+                out.push(toScreen(rx, ry, L));
+            }
+        }
+        return out;
+    }
+
     function generateOutlineFillPositions(count) {
         var L = heartLayout();
-
-        var outlineCount = Math.floor(count * 0.4);
-        var fillCount = count - outlineCount;
+        // 轮廓用 spacing 上限的整组卡片，保证是一圈连续的心（间距约 0.62 倍卡宽）
+        var outlineCount = count;
+        // 内部填充按数量估算，封顶避免小屏叠成一坨
+        var fillMax = isCompact ? Math.min(4, TIP_MAX_COMPACT - count) : Math.min(16, TIP_MAX - count);
+        var fillCount = clamp(Math.round(count * 0.6), 0, fillMax);
 
         var outlinePositions = [];
         var step = (2 * Math.PI) / outlineCount;
@@ -578,25 +630,14 @@
             outlinePositions.push(toScreen(rawX, rawY, L));
         }
 
-        var fillPositions = [];
-        for (var f = 0; f < fillCount; f++) {
-            var frac = Math.random() * 0.85;
-            var angle = Math.random() * 2 * Math.PI;
-            var fillX = Math.cos(angle) * 16 * frac;
-            var heartY = -(13 * Math.cos(angle) - 5 * Math.cos(2 * angle) - 2 * Math.cos(3 * angle) - Math.cos(4 * angle)) * frac;
-            fillPositions.push(toScreen(fillX, heartY, L));
-        }
+        var fillPositions = heartInteriorPoints(fillCount, L);
 
         var positions = outlinePositions.concat(fillPositions);
 
         var delays = [];
-        for (var d = 0; d < outlinePositions.length; d++) {
-            delays.push(d * 200);
-        }
+        for (var d = 0; d < outlinePositions.length; d++) delays.push(d * 200);
         var fillBaseDelay = outlinePositions.length * 200 + 300;
-        for (var e = 0; e < fillPositions.length; e++) {
-            delays.push(fillBaseDelay + e * 500);
-        }
+        for (var e = 0; e < fillPositions.length; e++) delays.push(fillBaseDelay + e * 500);
 
         return { positions: positions, delays: delays };
     }
@@ -874,7 +915,8 @@
             updateViewport();
             if (heartPositions.length === 0) return;
 
-            var result = generateHeartPositions(heartPositions.length, currentMode);
+            // 重排时按新视口重新算数量（outline_fill 的总数是轮廓数+填充，不能沿用旧长度）
+            var result = generateHeartPositions(tipCount(), currentMode);
             heartPositions = result.positions;
             heartDelays = result.delays || null;
             heartRainfall = result.rainfall || false;
