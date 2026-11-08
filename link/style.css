@@ -172,3 +172,10 @@ polyline.out{transition:opacity .2s; opacity:0}
 .ovcell.broken{opacity:0;transform:scale(.5) rotate(10deg)}
 #tiles.m3 .tile.drop span{background:radial-gradient(circle at 35% 30%,#ffe9a8,#f3b534 62%,#c77c12);border:2px solid #fff3c4;box-shadow:0 0 0 2px rgba(210,140,20,.35),0 2px 8px rgba(0,0,0,.18)}
 #tiles.m3 .tile.drop svg{width:64%;height:64%;fill:#fff8dc;filter:drop-shadow(0 1px 1px rgba(120,70,0,.45))}
+
+/* ==== 记忆翻牌：关卡信息面板图标 ==== */
+#goals .gi.time{background:linear-gradient(135deg,#dff3ff,#8ec9ea);border-color:#bfe4f7}
+#goals .gi.time svg{stroke:#1d6f8c}
+#goals .gi.miss{background:linear-gradient(135deg,#ffe2dd,#f1a79e);border-color:#f4c7bf}
+#goals .gi.miss svg{stroke:#a33c2e}
+#goals .goal.warn b{color:var(--danger)}

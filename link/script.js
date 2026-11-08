@@ -226,7 +226,7 @@ function renderHome(){
   setBrand('小游戏');
   $('home').hidden=false; $('game').hidden=true;
   $('hud').hidden=true; $('tools').hidden=false; toolset(false);
-  stopTimer(); stopMemReveal();
+  stopTimer(); stopMemReveal(); stopMemPair();
   $('tiles').classList.remove('m3'); $('tiles').classList.remove('mem');
   var mode=save.game;
   $('sMaxAll').textContent=mode==='m3'?M3_LEVELS.length:mode==='mem'?MEM_LEVELS.length:LEVELS.length;
@@ -236,7 +236,7 @@ function renderHome(){
   $('lead').textContent=mode==='m3'
     ?'点相邻两张图交换位置（手机上也可以直接朝相邻方向滑动），凑齐 3 张以上相同的图即可消除；步数用完前完成本关全部目标即过关。半透明冰块要消掉它下面的图案，木箱要消掉相邻的图案，掉落物落到最底行即可收集。'
     :mode==='mem'
-    ?'每关先亮牌 30 秒让你记住位置，然后全部翻面；每次翻开两张：同图即配对消掉得分，不同则翻回去；步数用完前配齐全部对子就算过关。'
+    ?'每关先亮牌若干秒记住位置，然后全部翻面；每次翻两张，同图即配对消掉得分，配齐全部对子即过关。第 5 关起有配对限时和允许犯错次数，超时或犯错超限即失败。'
     :'点两张相同的图，连线拐弯不超过两次即可消除。每关消完全部图块就算过。';
   var box=$('levels'); box.innerHTML='';
   if(mode==='m3'){
@@ -253,16 +253,16 @@ function renderHome(){
     $('sMax').textContent=Math.min(save.m3.max,M3_LEVELS.length); $('sTotal').textContent=t3;
   } else if(mode==='mem'){
     MEM_LEVELS.forEach(function(lv,i){
-      var n=i+1, unlocked=n<=save.mem.max+1, b=document.createElement('button');
+      var n=i+1, unlocked=n<=Math.min(save.mem.max+1,MEM_LEVELS.length), b=document.createElement('button');
       b.className='lv'; b.disabled=!unlocked;
       var best=save.mem.best[n];
-      b.innerHTML='<div class="t">第 '+n+' 关</div><div class="d">'+lv.c+'×'+lv.r+' · '+(lv.c*lv.r/2)+' 对 · '+lv.m+' 步'+
+      b.innerHTML='<div class="t">第 '+n+' 关</div><div class="d">'+lv.c+'×'+lv.r+' · '+lv.p+' 张 · '+lv.f+' 对 · 亮牌 '+lv.rev+'s · 配对 '+memLimText(lv)+' · 犯错 '+memErrText(lv)+
         (best?' · 最高 '+best:'')+(unlocked?'':' · 未解锁')+'</div>';
       b.onclick=function(){ startMem(n); };
       box.appendChild(b);
     });
     var tm=0; for(var km in save.mem.best) tm+=save.mem.best[km];
-    $('sMax').textContent=save.mem.max; $('sTotal').textContent=tm;
+    $('sMax').textContent=Math.min(save.mem.max,MEM_LEVELS.length); $('sTotal').textContent=tm;
   } else {
     LEVELS.forEach(function(lv,i){
       var n=i+1, unlocked=n<=save.max+1, b=document.createElement('button');
@@ -300,7 +300,7 @@ function start(level){
   $('tiles').classList.remove('m3');
   $('tiles').style.touchAction='';
   $('hL2').textContent='剩余'; $('hU2').hidden=false; $('hL4').textContent='限时';
-  $('goals').hidden=true; $('ov').innerHTML=''; $('hLvMax').textContent=LEVELS.length;
+  $('goals').hidden=true; $('ov').innerHTML=''; $('hLvMax').textContent=LEVELS.length; stopMemPair();
   var box=stageBox();
   var d=deal(lv,box.w,box.h,rngOf(Date.now()&0x7fffffff));
   S={lv:lv,no:level,g:d.g,rows:d.rows,cols:d.cols,cell:d.cell,total:d.total,
@@ -730,7 +730,7 @@ function startM3(level){
   $('tiles').classList.add('m3');
   $('hL2').textContent='步数'; $('hU2').hidden=true; $('hL4').textContent='目标';
   $('tiles').style.touchAction='none';
-  $('goals').hidden=false;
+  $('goals').hidden=false; stopMemPair();
   var box=stageBox();
   var cell=fitM3(lv.c,lv.r,box.w,box.h);
   var d=m3Deal(lv,level,rngOf(Date.now()&0x7fffffff));
@@ -1049,29 +1049,38 @@ function m3Fail(){
 }
 
 /* ==== 记忆翻牌 ==== */
+/* 关卡表：c/r 棋盘（列×行），f 图种=对数，p 总牌数，rev 展示秒数，
+   t 配对限时秒数（0 = 不限时），e 允许犯错次数（0 = 不限），h 提示次数，s 重排次数 */
 var MEM_LEVELS=[
-  {c:4,r:3,f:6,m:14,h:4,s:2},
-  {c:4,r:4,f:8,m:18,h:4,s:2},
-  {c:5,r:4,f:10,m:22,h:3,s:2},
-  {c:6,r:4,f:12,m:26,h:3,s:2},
-  {c:6,r:4,f:12,m:24,h:3,s:1},
-  {c:7,r:4,f:14,m:28,h:3,s:1},
-  {c:6,r:5,f:15,m:30,h:3,s:1},
-  {c:8,r:4,f:16,m:33,h:2,s:1},
-  {c:8,r:4,f:16,m:30,h:2,s:1},
-  {c:9,r:4,f:18,m:34,h:2,s:1},
-  {c:8,r:5,f:20,m:38,h:2,s:1},
-  {c:10,r:4,f:20,m:36,h:2,s:1},
-  {c:8,r:6,f:24,m:44,h:2,s:1},
-  {c:10,r:5,f:25,m:46,h:1,s:1},
-  {c:12,r:4,f:24,m:43,h:1,s:1},
-  {c:10,r:6,f:30,m:54,h:1,s:1},
-  {c:12,r:5,f:30,m:53,h:1,s:1},
-  {c:12,r:5,f:30,m:50,h:1,s:0},
-  {c:12,r:5,f:30,m:48,h:1,s:0},
-  {c:12,r:5,f:30,m:46,h:1,s:0}
+  {c:3,r:4,f:6,p:12,rev:10,t:0,e:0,h:4,s:2},
+  {c:3,r:4,f:6,p:12,rev:9,t:0,e:0,h:4,s:2},
+  {c:4,r:4,f:8,p:16,rev:11,t:0,e:0,h:3,s:2},
+  {c:4,r:4,f:8,p:16,rev:10,t:0,e:0,h:3,s:2},
+  {c:4,r:5,f:10,p:20,rev:12,t:420,e:8,h:3,s:1},
+  {c:4,r:5,f:10,p:20,rev:11,t:410,e:8,h:3,s:1},
+  {c:4,r:6,f:12,p:24,rev:13,t:430,e:7,h:3,s:1},
+  {c:4,r:6,f:12,p:24,rev:12,t:420,e:7,h:2,s:1},
+  {c:5,r:6,f:15,p:30,rev:14,t:450,e:6,h:2,s:1},
+  {c:5,r:6,f:15,p:30,rev:13,t:440,e:6,h:2,s:1},
+  {c:5,r:6,f:15,p:30,rev:13,t:440,e:6,h:2,s:1},
+  {c:5,r:6,f:15,p:30,rev:12,t:430,e:5,h:1,s:1},
+  {c:6,r:6,f:18,p:36,rev:15,t:460,e:5,h:2,s:1},
+  {c:6,r:6,f:18,p:36,rev:14,t:450,e:5,h:1,s:1},
+  {c:6,r:6,f:18,p:36,rev:14,t:450,e:4,h:1,s:1},
+  {c:6,r:6,f:18,p:36,rev:13,t:440,e:4,h:1,s:1},
+  {c:6,r:8,f:24,p:48,rev:17,t:480,e:4,h:1,s:1},
+  {c:6,r:8,f:24,p:48,rev:16,t:470,e:3,h:1,s:0},
+  {c:6,r:8,f:24,p:48,rev:16,t:470,e:3,h:1,s:0},
+  {c:6,r:8,f:24,p:48,rev:15,t:460,e:2,h:1,s:0}
 ];
-var MEM_REVEAL=30;
+var MEM_CLOCK_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>';
+var MEM_MISS_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+function memLimText(lv){ return lv.t>0?lv.t+'s':'不限时'; }
+function memErrText(lv){ return lv.e>0?lv.e+'次':'不限'; }
+
+var revT=0, pairT=0;
+function stopMemReveal(){ if(revT){ clearInterval(revT); revT=0; } }
+function stopMemPair(){ if(pairT){ clearInterval(pairT); pairT=0; } }
 function startMem(level){
   MODE='mem'; S=null; G=null;
   setBrand('记忆翻牌');
@@ -1080,9 +1089,10 @@ function startMem(level){
   $('home').hidden=true; $('game').hidden=false;
   $('hud').hidden=false; $('tools').hidden=false; toolset(true);
   $('tiles').classList.remove('m3'); $('tiles').classList.add('mem');
-  $('hL2').textContent='剩余'; $('hU2').hidden=false; $('hL4').textContent='步数';
-  $('goals').hidden=true; $('ov').innerHTML=''; $('hLvMax').textContent=MEM_LEVELS.length;
+  $('hL2').textContent='剩余'; $('hU2').hidden=false; $('hL4').textContent='明牌';
+  $('goals').hidden=false; $('ov').innerHTML=''; $('hLvMax').textContent=MEM_LEVELS.length;
   $('tiles').style.touchAction='';
+  stopTimer(); stopMemReveal(); stopMemPair();
   var box=stageBox();
   var cell=fitM3(lv.c,lv.r,box.w,box.h);
   var rnd=rngOf(Date.now()&0x7fffffff);
@@ -1092,14 +1102,15 @@ function startMem(level){
   var g=[], k=0;
   for(var r=0;r<lv.r;r++){ var row=[]; for(var c=0;c<lv.c;c++) row.push(deck[k++]); g.push(row); }
   M={lv:lv,no:level,g:g,rows:lv.r,cols:lv.c,cell:cell,pairs:pairs,left:pairs,
-     moves:lv.m,hint:lv.h,shuf:lv.s,score:0,streak:0,first:null,busy:false,over:false,reveal:MEM_REVEAL};
+     hint:lv.h,shuf:lv.s,score:0,streak:0,first:null,busy:false,over:false,
+     reveal:lv.rev,time:lv.t,errLim:lv.e,err:0,flips:0};
   combo=0; lastMatch=0;
   var board=$('board'), w=lv.c*cell, h=lv.r*cell;
   board.style.width=w+'px'; board.style.height=h+'px';
   var line=$('line'); line.innerHTML='';
   memRepaint();
   $('hLv').textContent=level;
-  syncMemTools(); syncMemHud(); stopTimer();
+  syncMemTools(); syncMemHud();
   startMemReveal();
   ensureMusic();
 }
@@ -1111,17 +1122,19 @@ function memRepaint(){
     if(!M.reveal) el.classList.add('down');
     tiles.appendChild(el);
   }
+  if(M.first){
+    var fe=tileAt(M.first.r,M.first.c);
+    if(fe){ fe.classList.remove('down'); fe.classList.add('sel'); }
+  }
 }
-var revT=0;
-function stopMemReveal(){ if(revT){ clearInterval(revT); revT=0; } }
 function startMemReveal(){
-  stopMemReveal();
+  stopMemReveal(); stopMemPair();
   M.busy=true;
   $('hL4').textContent='明牌';
-  toast('所有牌亮 '+MEM_REVEAL+' 秒，快记住位置！');
+  toast('所有牌亮 '+M.lv.rev+' 秒，快记住位置！');
   syncMemHud();
   revT=setInterval(function(){
-    if(!M){ stopMemReveal(); return; }
+    if(!M||M.over){ stopMemReveal(); return; }
     if(document.hidden||!$('mask').hidden) return;
     M.reveal--;
     if(M.reveal<=0){
@@ -1129,19 +1142,53 @@ function startMemReveal(){
       stopMemReveal();
       var ts=$('tiles').children;
       for(var i=0;i<ts.length;i++) if(!ts[i].classList.contains('gone')) ts[i].classList.add('down');
-      $('hL4').textContent='步数';
+      $('hL4').textContent=M.lv.t>0?'限时':'配对';
       M.busy=false;
-      toast('翻面！开始配对吧');
+      startMemPair();
+      toast('翻面！开始配对吧'+(M.lv.t>0?'，限时 '+fmt(M.lv.t):''));
     }
     syncMemHud();
   },1000);
 }
+/* 配对倒计时只在亮牌结束后启动；关卡设为不限时则不启动 */
+function startMemPair(){
+  stopMemPair();
+  if(!M||M.over||M.lv.t<=0) return;
+  pairT=setInterval(function(){
+    if(!M||M.over||M.left<=0){ stopMemPair(); return; }
+    if(document.hidden||!$('mask').hidden) return;
+    M.time--;
+    if(M.time<=0){
+      M.time=0; stopMemPair(); syncMemHud(); memFail('时间到'); return;
+    }
+    syncMemHud();
+  },1000);
+}
+function memRenderInfo(){
+  var box=$('goals'); if(!box||!M) return;
+  var lv=M.lv;
+  var html='<div class="gh">第 '+M.no+' 关 · '+lv.c+'×'+lv.r+' · '+lv.p+' 张 · 亮牌 '+lv.rev+'s</div>';
+  html+='<div class="goal"><i class="gi time">'+MEM_CLOCK_SVG+'</i><span class="gn">配对'+memLimText(lv)+'</span><b>'+(lv.t>0?fmt(M.time):'∞')+'</b></div>';
+  html+='<div class="goal'+(lv.e>0&&M.err>=lv.e?' warn':'')+'"><i class="gi miss">'+MEM_MISS_SVG+'</i><span class="gn">已犯错</span><b>'+M.err+'/'+(lv.e>0?lv.e:'不限')+'</b></div>';
+  html+='<div class="gs">剩余 '+M.left+' 对 · 翻牌 '+M.flips+' 次 · 提示 '+M.hint+' 次 · 重排 '+M.shuf+' 次</div>';
+  box.innerHTML=html;
+}
 function syncMemHud(){
   $('hLeft').textContent=M.left; $('hScore').textContent=M.score;
-  $('hTime').textContent=M.reveal>0?M.reveal:M.moves;
-  var pct=M.reveal>0?M.reveal/MEM_REVEAL*100:(M.pairs?Math.max(0,Math.min(100,(M.pairs-M.left)/M.pairs*100)):0);
-  var bar=$('bar'); bar.style.width=pct+'%';
-  bar.classList.toggle('low',M.reveal>0?M.reveal<=10:M.moves<=3);
+  var pct;
+  if(M.reveal>0){
+    $('hTime').textContent=M.reveal+'s';
+    pct=M.reveal/M.lv.rev*100;
+  } else if(M.lv.t>0){
+    $('hTime').textContent=fmt(M.time);
+    pct=M.time/M.lv.t*100;
+  } else {
+    $('hTime').textContent='不限时';
+    pct=M.pairs?(M.pairs-M.left)/M.pairs*100:0;
+  }
+  var bar=$('bar'); bar.style.width=Math.max(0,Math.min(100,pct))+'%';
+  bar.classList.toggle('low',M.reveal>0?false:(M.lv.t>0?M.time<=30:(M.errLim>0&&M.err>=M.errLim-1)));
+  memRenderInfo();
 }
 function syncMemTools(){
   $('nHint').textContent=M.hint; $('nShuf').textContent=M.shuf;
@@ -1161,7 +1208,7 @@ function memTap(r,c){
   var a=M.first; M.first=null;
   var ea=tileAt(a.r,a.c);
   if(ea) ea.classList.remove('sel');
-  M.moves--;
+  M.flips++;
   if(M.g[a.r][a.c]===M.g[r][c]){
     M.streak++; M.left--;
     M.score+=20+Math.min(50,(M.streak-1)*10);
@@ -1175,15 +1222,15 @@ function memTap(r,c){
       M.g[a.r][a.c]=0; M.g[r][c]=0;
       M.busy=false;
       syncMemHud();
-      if(M.left<=0) setTimeout(memWin,260);
+      if(M.left<=0){ stopMemPair(); setTimeout(memWin,260); }
     },380);
   } else {
-    M.streak=0; M.busy=true; syncMemHud();
+    M.streak=0; M.err++; M.busy=true; syncMemHud();
     [ea,el].forEach(function(e){ if(e) e.classList.add('bad'); });
     setTimeout(function(){
       [ea,el].forEach(function(e){ if(!e) return; e.classList.remove('bad'); e.classList.add('down'); });
       M.busy=false; syncMemHud();
-      if(M.moves<=0) memFail();
+      if(M.errLim>0&&M.err>M.errLim) memFail('犯错次数用完');
     },780);
   }
 }
@@ -1202,7 +1249,7 @@ function memHint(){
   var pair=null;
   for(var k in map){ if(map[k].length>=2){ pair=map[k].slice(0,2); break; } }
   if(!pair){ toast('没有可配的了'); return; }
-  M.hint--; syncMemTools();
+  M.hint--; syncMemTools(); syncMemHud();
   M.busy=true;
   var els=pair.map(function(p){ var e=tileAt(p.r,p.c); if(e){ e.classList.remove('down'); e.classList.add('hint'); } return e; });
   setTimeout(function(){
@@ -1216,7 +1263,7 @@ function memHint(){
 }
 function memShufBtn(){
   if(!M||M.shuf<=0||M.busy||M.over) return;
-  M.shuf--; syncMemTools();
+  M.shuf--; syncMemTools(); syncMemHud();
   var cells=[], vals=[];
   for(var r=0;r<M.rows;r++) for(var c=0;c<M.cols;c++) if(M.g[r][c]){ cells.push([r,c]); vals.push(M.g[r][c]); }
   if(!cells.length) return;
@@ -1226,23 +1273,34 @@ function memShufBtn(){
   memRepaint();
 }
 function memWin(){
-  M.over=true;
-  var bonus=M.moves*15;
+  if(M.over) return;
+  M.over=true; M.busy=true;
+  stopMemReveal(); stopMemPair();
+  var no=M.no;
+  var bonus=(M.lv.t>0?Math.round(M.time)*2:0)+(M.errLim>0?Math.max(0,M.errLim-M.err)*20:0);
   M.score+=bonus;
-  if(!save.mem.best[M.no]||M.score>save.mem.best[M.no]) save.mem.best[M.no]=M.score;
-  if(M.no>save.mem.max) save.mem.max=M.no;
+  if(!save.mem.best[no]||M.score>save.mem.best[no]) save.mem.best[no]=M.score;
+  if(no>save.mem.max) save.mem.max=Math.min(no,MEM_LEVELS.length);
   storeSave();
-  var last=M.no>=MEM_LEVELS.length;
-  dialog(last?'全部通关':'第 '+M.no+' 关完成',
-    '剩 '+M.moves+' 步，奖励 '+bonus+' 分，本关 '+M.score+' 分。',
+  var parts=[];
+  if(M.lv.t>0) parts.push('剩余 '+fmt(M.time));
+  parts.push('犯错 '+M.err+(M.errLim>0?'/'+M.errLim+' 次':' 次（不限）'));
+  parts.push('奖励 '+bonus+' 分，本关 '+M.score+' 分');
+  var last=no>=MEM_LEVELS.length;
+  dialog(last?'全部通关':'第 '+no+' 关完成',
+    parts.join('，')+'。',
     last?'首页':'下一关',
     last?null:'首页',
-    last?renderHome:function(){ startMem(M.no+1); },
+    last?renderHome:function(){ startMem(no+1); },
     last?null:renderHome);
 }
-function memFail(){
-  dialog('步数用完','还剩 '+M.left+' 对没配上。','再来一次','首页',
-    function(){ startMem(M.no); }, renderHome);
+function memFail(reason){
+  if(M.over) return;
+  M.over=true; M.busy=true;
+  stopMemReveal(); stopMemPair();
+  var no=M.no;
+  dialog(reason||'配对失败','还剩 '+M.left+' 对没配上。','再来一次','首页',
+    function(){ startMem(no); }, renderHome);
 }
 
 var bgm=$('bgm');
