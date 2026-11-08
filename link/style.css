@@ -172,6 +172,9 @@ polyline.out{transition:opacity .2s; opacity:0}
 .ovcell.broken{opacity:0;transform:scale(.5) rotate(10deg)}
 #tiles.m3 .tile.drop span{background:radial-gradient(circle at 35% 30%,#ffe9a8,#f3b534 62%,#c77c12);border:2px solid #fff3c4;box-shadow:0 0 0 2px rgba(210,140,20,.35),0 2px 8px rgba(0,0,0,.18)}
 #tiles.m3 .tile.drop svg{width:64%;height:64%;fill:#fff8dc;filter:drop-shadow(0 1px 1px rgba(120,70,0,.45))}
+/* 底边金线标出「最底行出口」；掉落物先滑到底行再淡出，收集点才看得见 */
+#board.exit #tiles.m3::after{content:'';position:absolute;left:0;right:0;bottom:0;height:4px;z-index:2;pointer-events:none;border-radius:0 0 14px 14px;background:rgba(243,181,52,.9)}
+#tiles.m3 .tile.drop.gone span{transition-delay:.18s}
 
 /* ==== 记忆翻牌：关卡信息面板图标 ==== */
 #goals .gi.time{background:linear-gradient(135deg,#dff3ff,#8ec9ea);border-color:#bfe4f7}

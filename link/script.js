@@ -234,7 +234,7 @@ function renderHome(){
   $('tabM3').classList.toggle('on',mode==='m3');
   $('tabMem').classList.toggle('on',mode==='mem');
   $('lead').textContent=mode==='m3'
-    ?'点相邻两张图交换位置（手机上也可以直接朝相邻方向滑动），凑齐 3 张以上相同的图即可消除；步数用完前完成本关全部目标即过关。半透明冰块要消掉它下面的图案，木箱要消掉相邻的图案，掉落物落到最底行即可收集。'
+    ?'点相邻两张图交换位置（手机上也可以直接朝相邻方向滑动），凑齐 3 张以上相同的图即可消除；步数用完前完成本关全部目标即过关。半透明冰块要消掉它下面的图案，木箱要消掉相邻的图案；掉落物是重物，消掉同一列的图案它就往下沉一格，落到最底行（金色边）才收集。'
     :mode==='mem'
     ?'每关先亮牌若干秒记住位置，然后全部翻面；每次翻两张，同图即配对消掉得分，配齐全部对子即过关。第 5 关起有配对限时和允许犯错次数，超时或犯错超限即失败。'
     :'点两张相同的图，连线拐弯不超过两次即可消除。每关消完全部图块就算过。';
@@ -454,40 +454,42 @@ function dialog(title,text,aTxt,bTxt,aFn,bFn){
 /* ==== 美图消消乐 ==== */
 /* 关卡表字段：c/r 棋盘，f 同屏元素数，m 步数，type/gt 表格里的目标类型与目标量，
    g 目标逻辑（elem 消除指定元素、drop 收集掉落物、ice/crate/obs 消除障碍），
-   sp 特殊机制，h 提示次数，s 手动洗牌次数（第 30 关限 2 次） */
+   sp 特殊机制，h 提示次数，s 手动洗牌次数（第 30 关限 2 次）。
+   掉落物每轮同列消除只下沉一格、落到最底行才算收集，
+   所以含 drop 的关卡目标数压到 2~5 个、步数相应放宽，避免够不着出口。 */
 var M3_LEVELS=[
   {c:7,r:7,f:5,m:20,h:3,s:3,type:'消除指定元素',gt:'15',sp:'',g:[{k:'elem',n:15,t:0}]},
   {c:7,r:7,f:5,m:20,h:3,s:3,type:'消除指定元素',gt:'20',sp:'',g:[{k:'elem',n:20,t:0}]},
   {c:7,r:7,f:5,m:22,h:3,s:3,type:'消除两种元素',gt:'各10',sp:'',g:[{k:'elem',n:10,t:0},{k:'elem',n:10,t:1}]},
   {c:8,r:8,f:5,m:22,h:3,s:3,type:'消除两种元素',gt:'各12',sp:'',g:[{k:'elem',n:12,t:0},{k:'elem',n:12,t:1}]},
-  {c:8,r:8,f:5,m:20,h:3,s:3,type:'收集掉落物',gt:'3',sp:'',g:[{k:'drop',n:3}]},
-  {c:8,r:8,f:6,m:22,h:3,s:3,type:'收集掉落物',gt:'4',sp:'',g:[{k:'drop',n:4}]},
+  {c:8,r:8,f:5,m:26,h:3,s:3,type:'收集掉落物',gt:'2',sp:'',g:[{k:'drop',n:2}]},
+  {c:8,r:8,f:6,m:28,h:3,s:3,type:'收集掉落物',gt:'2',sp:'',g:[{k:'drop',n:2}]},
   {c:8,r:8,f:6,m:20,h:3,s:3,type:'消除指定元素',gt:'30',sp:'',g:[{k:'elem',n:30,t:0}]},
   {c:8,r:8,f:6,m:22,h:3,s:3,type:'消除两种元素',gt:'各15',sp:'',g:[{k:'elem',n:15,t:0},{k:'elem',n:15,t:1}]},
-  {c:8,r:8,f:6,m:22,h:3,s:3,type:'收集掉落物',gt:'5',sp:'',g:[{k:'drop',n:5}]},
-  {c:8,r:8,f:6,m:24,h:3,s:3,type:'混合目标',gt:'元素20+掉落2',sp:'',g:[{k:'elem',n:20,t:0},{k:'drop',n:2}]},
+  {c:8,r:8,f:6,m:30,h:3,s:3,type:'收集掉落物',gt:'3',sp:'',g:[{k:'drop',n:3}]},
+  {c:8,r:8,f:6,m:30,h:3,s:3,type:'混合目标',gt:'元素20+掉落2',sp:'',g:[{k:'elem',n:20,t:0},{k:'drop',n:2}]},
   {c:8,r:8,f:6,m:22,h:3,s:3,type:'消除障碍',gt:'冰块10',sp:'冰块',g:[{k:'ice',n:10}]},
   {c:8,r:8,f:7,m:22,h:3,s:3,type:'消除障碍',gt:'冰块12',sp:'冰块',g:[{k:'ice',n:12}]},
-  {c:9,r:9,f:7,m:24,h:3,s:3,type:'收集掉落物',gt:'6',sp:'',g:[{k:'drop',n:6}]},
-  {c:9,r:9,f:7,m:24,h:3,s:3,type:'混合目标',gt:'元素25+掉落3',sp:'',g:[{k:'elem',n:25,t:0},{k:'drop',n:3}]},
+  {c:9,r:9,f:7,m:32,h:3,s:3,type:'收集掉落物',gt:'3',sp:'',g:[{k:'drop',n:3}]},
+  {c:9,r:9,f:7,m:32,h:3,s:3,type:'混合目标',gt:'元素25+掉落2',sp:'',g:[{k:'elem',n:25,t:0},{k:'drop',n:2}]},
   {c:9,r:9,f:7,m:24,h:3,s:3,type:'消除障碍',gt:'冰块15',sp:'冰块',g:[{k:'ice',n:15}]},
   {c:9,r:9,f:7,m:24,h:3,s:3,type:'消除障碍',gt:'木箱8',sp:'木箱',g:[{k:'crate',n:8}]},
   {c:9,r:9,f:8,m:26,h:3,s:3,type:'混合目标',gt:'元素30+冰块10',sp:'冰块',g:[{k:'elem',n:30,t:0},{k:'ice',n:10}]},
-  {c:9,r:9,f:8,m:26,h:3,s:3,type:'收集掉落物',gt:'8',sp:'木箱阻挡',g:[{k:'drop',n:8}]},
+  {c:9,r:9,f:8,m:36,h:3,s:3,type:'收集掉落物',gt:'4',sp:'木箱阻挡',g:[{k:'drop',n:4}]},
   {c:9,r:9,f:8,m:26,h:3,s:3,type:'混合目标',gt:'元素30+木箱8',sp:'木箱',g:[{k:'elem',n:30,t:0},{k:'crate',n:8}]},
-  {c:9,r:9,f:8,m:28,h:3,s:3,type:'综合挑战',gt:'元素40+掉落5+障碍10',sp:'冰块+木箱',g:[{k:'elem',n:40,t:0},{k:'drop',n:5},{k:'obs',n:10}]},
+  {c:9,r:9,f:8,m:38,h:3,s:3,type:'综合挑战',gt:'元素40+掉落2+障碍10',sp:'冰块+木箱',g:[{k:'elem',n:40,t:0},{k:'drop',n:2},{k:'obs',n:10}]},
   {c:9,r:9,f:8,m:26,h:3,s:3,type:'消除指定元素',gt:'45',sp:'',g:[{k:'elem',n:45,t:0}]},
   {c:9,r:9,f:8,m:28,h:3,s:3,type:'消除两种元素',gt:'各25',sp:'',g:[{k:'elem',n:25,t:0},{k:'elem',n:25,t:1}]},
-  {c:9,r:9,f:8,m:28,h:3,s:3,type:'收集掉落物',gt:'10',sp:'冰块',g:[{k:'drop',n:10}]},
+  {c:9,r:9,f:8,m:38,h:3,s:3,type:'收集掉落物',gt:'4',sp:'冰块',g:[{k:'drop',n:4}]},
   {c:9,r:9,f:8,m:28,h:3,s:3,type:'消除障碍',gt:'木箱12',sp:'木箱',g:[{k:'crate',n:12}]},
   {c:9,r:9,f:8,m:28,h:3,s:3,type:'混合目标',gt:'元素35+冰块12',sp:'冰块',g:[{k:'elem',n:35,t:0},{k:'ice',n:12}]},
   {c:9,r:9,f:8,m:28,h:3,s:3,type:'混合目标',gt:'元素35+木箱10',sp:'木箱',g:[{k:'elem',n:35,t:0},{k:'crate',n:10}]},
-  {c:9,r:9,f:8,m:30,h:3,s:3,type:'收集掉落物',gt:'12',sp:'木箱阻挡',g:[{k:'drop',n:12}]},
-  {c:9,r:9,f:8,m:30,h:3,s:3,type:'混合目标',gt:'元素40+掉落6',sp:'',g:[{k:'elem',n:40,t:0},{k:'drop',n:6}]},
+  {c:9,r:9,f:8,m:42,h:3,s:3,type:'收集掉落物',gt:'5',sp:'木箱阻挡',g:[{k:'drop',n:5}]},
+  {c:9,r:9,f:8,m:38,h:3,s:3,type:'混合目标',gt:'元素40+掉落2',sp:'',g:[{k:'elem',n:40,t:0},{k:'drop',n:2}]},
   {c:9,r:9,f:8,m:32,h:3,s:3,type:'综合目标',gt:'元素40+冰块12+木箱8',sp:'冰块+木箱',g:[{k:'elem',n:40,t:0},{k:'ice',n:12},{k:'crate',n:8}]},
-  {c:9,r:9,f:8,m:34,h:2,s:2,type:'终极综合',gt:'元素50+掉落8+障碍15',sp:'冰块+木箱+限洗牌2次',g:[{k:'elem',n:50,t:0},{k:'drop',n:8},{k:'obs',n:15}]}
+  {c:9,r:9,f:8,m:46,h:2,s:2,type:'终极综合',gt:'元素50+掉落3+障碍15',sp:'冰块+木箱+限洗牌2次',g:[{k:'elem',n:50,t:0},{k:'drop',n:3},{k:'obs',n:15}]}
 ];
-var M3_DROP=-1;                /* 掉落物：不参与匹配，落到最底行即被收集 */
+var M3_DROP=-1;                /* 掉落物：重物，不参与匹配，只有落到最底行才被收集 */
 var M3_ICE=1, M3_CRATE=2;     /* 障碍层：冰块（半透明、可匹配）、木箱（不透明、阻挡） */
 var M3_GOAL_NAME={elem:'消除元素',drop:'收集掉落物',ice:'消除冰块',crate:'消除木箱',obs:'消除障碍'};
 var M3_ICE_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9L4.9 19.1"/></svg>';
@@ -541,11 +543,14 @@ function m3ObstacleCounts(lv){
   if(obsGoal&&ice+crate<obsGoal) crate=Math.min(Math.floor(area*0.22),crate+obsGoal-ice-crate);
   return {ice:ice,crate:crate};
 }
-function m3PlaceObstacles(ov,counts,rnd){
+function m3PlaceObstacles(ov,counts,rnd,exitCols){
   var R=ov.length,C=ov[0].length,rowCrate={},r,c,i,p,nc=0,ni=0;
   var crateCells=[],iceCells=[];
-  /* 棋盘底部几行的图案很少被消到，障碍只布在上部，保证目标可完成；最底行留给掉落物出口 */
+  exitCols=exitCols||[];
+  /* 棋盘底部几行的图案很少被消到，障碍只布在上部，保证目标可完成；最底行留给掉落物出口。
+     掉落物关额外留几列「出口通道」：整列不放冰块/木箱，掉落物才一定能落到最底行 */
   for(r=0;r<R;r++) for(c=0;c<C;c++){
+    if(exitCols.indexOf(c)>=0) continue;
     if(r>=1&&r<R-2) crateCells.push([r,c]);
     if(r<R-3) iceCells.push([r,c]);
   }
@@ -637,6 +642,12 @@ function m3Clean(g,ov,pool,rnd){
 function m3Deal(lv,no,rnd){
   var R=lv.r,C=lv.c,r,c,k,counts=m3ObstacleCounts(lv),g=[],ov=[],tries=0;
   var targets=m3Targets(lv,no), pool=m3FacePool(lv,targets);
+  /* 有掉落物目标时固定三条无障碍出口列，避免木箱铺满所有列导致目标永远完不成 */
+  var exitCols=[], all=[];
+  if(m3DropNeed(lv)){
+    for(c=0;c<C;c++) all.push(c);
+    exitCols=shuffled(all,rnd).slice(0,Math.min(3,C));
+  }
   while(true){
     g=[]; ov=[];
     for(r=0;r<R;r++){
@@ -644,7 +655,7 @@ function m3Deal(lv,no,rnd){
       for(c=0;c<C;c++){ gr.push(m3Face(pool,rnd)); orow.push(0); }
       g.push(gr); ov.push(orow);
     }
-    m3PlaceObstacles(ov,counts,rnd);
+    m3PlaceObstacles(ov,counts,rnd,exitCols);
     m3Clean(g,ov,pool,rnd);
     if(m3HasMove(g,ov)||tries++>60) break;
   }
@@ -655,7 +666,7 @@ function m3Deal(lv,no,rnd){
       m3Clean(g,ov,pool,rnd);
     }
   }
-  return {g:g,ov:ov,targets:targets,pool:pool};
+  return {g:g,ov:ov,targets:targets,pool:pool,exitCols:exitCols};
 }
 /* 图块与障碍层的 DOM */
 function m3TileEl(r,c,v,cell){
@@ -689,31 +700,33 @@ function m3DropOnBoard(){
   for(var r=0;r<G.rows;r++) for(var c=0;c<G.cols;c++) if(G.g[r][c]===M3_DROP) n++;
   return n;
 }
-/* 场上始终保留最多 3 个掉落物，且只放在没有木箱的列，保证目标可完成 */
+/* 场上始终保留最多 3 个掉落物，且只从无障碍的出口列落入。
+   一律落在棋盘中部，留出看得见的下沉距离；最底行是唯一出口 */
 function m3EnsureDrops(mode){
   if(!G.dropNeed) return;
   var want=Math.min(3,G.dropNeed-G.dropGot)-m3DropOnBoard();
   if(want<=0) return;
-  var cols=[],r,c,blocked;
-  for(c=0;c<G.cols;c++){
-    blocked=false;
-    for(r=0;r<G.rows;r++) if(G.ov[r][c]===M3_CRATE){ blocked=true; break; }
-    if(!blocked) cols.push(c);
-  }
+  var cols=G.exitCols||[],r,c,cand=[];
   if(!cols.length) return;
-  var lo=Math.max(1,G.rows-4), cand=[];
-  for(r=lo;r<G.rows-1;r++) for(var ci=0;ci<cols.length;ci++){
-    c=cols[ci];
-    if(G.g[r][c]>0&&G.ov[r][c]===0) cand.push({r:r,c:c});
+  var top=Math.floor(G.rows/3), bot=G.rows-3;
+  /* 一条出口列同时只放一个掉落物，免得几个叠在同一列、到出口时一起淡出 */
+  var order=shuffled(cols.slice(),Math.random);
+  for(var ci=0;ci<order.length&&cand.length<want;ci++){
+    c=order[ci];
+    var free=[],used=false;
+    for(r=0;r<G.rows;r++) if(G.g[r][c]===M3_DROP){ used=true; break; }
+    if(used) continue;
+    for(r=top;r<=bot&&r<G.rows-1;r++)
+      if(G.g[r][c]>0&&G.ov[r][c]===0) free.push(r);
+    if(free.length) cand.push({r:free[Math.floor(Math.random()*free.length)],c:c});
   }
-  cand=shuffled(cand,Math.random);
-  for(var i=0;i<Math.min(want,cand.length);i++){
+  for(var i=0;i<cand.length;i++){
     var p=cand[i];
     G.g[p.r][p.c]=M3_DROP;
     if(mode==='dom'){
       var old=tileAt(p.r,p.c);
       var de=m3TileEl(p.r,p.c,M3_DROP,G.cell);
-      de.style.top=((p.r-G.rows)*G.cell)+'px';
+      de.style.top=((p.r-2)*G.cell)+'px';
       $('tiles').appendChild(de);
       if(old) old.remove();
       (function(e,rr){ requestAnimationFrame(function(){ requestAnimationFrame(function(){ e.style.top=(rr*G.cell)+'px'; }); }); })(de,p.r);
@@ -734,12 +747,14 @@ function startM3(level){
   var box=stageBox();
   var cell=fitM3(lv.c,lv.r,box.w,box.h);
   var d=m3Deal(lv,level,rngOf(Date.now()&0x7fffffff));
-  G={lv:lv,no:level,g:d.g,ov:d.ov,targets:d.targets,pool:d.pool,rows:lv.r,cols:lv.c,cell:cell,
+  G={lv:lv,no:level,g:d.g,ov:d.ov,targets:d.targets,pool:d.pool,exitCols:d.exitCols,
+     rows:lv.r,cols:lv.c,cell:cell,
      moves:lv.m,hint:lv.h,shuf:lv.s,shufUsed:0,score:0,sel:null,locked:false,over:false,
      prog:lv.g.map(function(){return 0;}),dropNeed:m3DropNeed(lv),dropGot:0};
   combo=0; lastMatch=0;
   var board=$('board'), w=lv.c*cell, h=lv.r*cell;
   board.style.width=w+'px'; board.style.height=h+'px';
+  board.classList.toggle('exit',G.dropNeed>0);
   var line=$('line');
   line.setAttribute('viewBox','0 0 '+w+' '+h);
   line.setAttribute('width',w); line.setAttribute('height',h);
@@ -799,7 +814,8 @@ function m3RenderGoals(){
     else icon='<i class="gi obs"></i>';
     html+='<div class="goal'+(done?' done':'')+'">'+icon+'<span class="gn">'+name+'</span><b>'+cur+'/'+q.n+'</b>'+(done?'<em>✓</em>':'')+'</div>';
   }
-  html+='<div class="gs">手动重排 '+G.shuf+'/'+G.lv.s+' 次 · 提示 '+G.hint+' 次</div>';
+  html+='<div class="gs">手动重排 '+G.shuf+'/'+G.lv.s+' 次 · 提示 '+G.hint+' 次'+
+    (G.dropNeed?' · 掉落物落到最底行（金色边）才收集':'')+'</div>';
   box.innerHTML=html;
 }
 function syncM3Hud(){
@@ -820,7 +836,7 @@ function m3ClearSel(){
 function m3Tap(r,c){
   if(!G||G.locked||G.over) return;
   if(G.ov[r][c]===M3_CRATE){ toast('木箱不能交换，消除它旁边的图案即可打碎'); return; }
-  if(G.g[r][c]===M3_DROP){ toast('掉落物不能交换，消掉下方图案让它落到底部'); return; }
+  if(G.g[r][c]===M3_DROP){ toast('掉落物不能交换，消掉同列图案让它下沉，落到最底行才收集'); return; }
   if(!G.g[r][c]) return;
   if(G.sel&&G.sel.r===r&&G.sel.c===c){ m3ClearSel(); return; }
   if(!G.sel){ G.sel={r:r,c:c}; var e0=tileAt(r,c); if(e0) e0.classList.add('sel'); return; }
@@ -916,8 +932,9 @@ function m3AfterClear(depth){
     G.locked=false;
   });
 }
-/* 掉落物比普通图案"重"：本列一旦出现空位就顺着空隙下沉，每次结算最多沉 2 格，
-   这样消掉同列任意位置的图案，都能把掉落物逐步送往底部出口 */
+/* 掉落物是"重物"：本列消掉 k 个图案就空出 k 格，掉落物优先往下占一格，
+   下方图案依次上浮一格（等价于重者下沉、空位上浮）。
+   step 取本列空位数且每轮最多 1 格：本列没消除就不下沉，玩家能看着它逐格落向出口 */
 function m3SinkDrops(c,top,bottom,step){
   if(step<=0) return;
   for(var r=bottom-1;r>=top;r--){
@@ -932,7 +949,8 @@ function m3SinkDrops(c,top,bottom,step){
     if(els[0]) m3SetPos(els[0],target,c);
   }
 }
-/* 列内按木箱分段做重力压实；最底行的掉落物被收集，空位由上方新图案补齐 */
+/* 列内按木箱分段做重力压实；只有真正落在最底行（R-1）的掉落物才被收集，
+   空位由上方新图案补齐 */
 function m3Fall(done){
   var tiles=$('tiles'), fresh=[], R=G.rows, C=G.cols, r, c, si, k, spawned=false;
   for(c=0;c<C;c++){
@@ -956,11 +974,13 @@ function m3Fall(done){
             write--;
           }
         }
-        m3SinkDrops(c,top,bottom,Math.min(2,write-top+1));
+        if(!guard) m3SinkDrops(c,top,bottom,Math.min(1,write-top+1));
+        /* 出口只在最底行：压实后检查一次，收集后再压实，让同列上方的图案继续补位 */
         if(bottom===R-1&&G.g[R-1][c]===M3_DROP){
           G.g[R-1][c]=0;
           var de=tileAt(R-1,c);
-          if(de){ de.classList.add('gone'); (function(e){ setTimeout(function(){ e.remove(); },200); })(de); }
+          /* gone 立即打上（后续压实不再碰它），淡出由 CSS 延迟，先看清它落到最后一行 */
+          if(de){ de.classList.add('gone'); (function(e){ setTimeout(function(){ e.remove(); },420); })(de); }
           if(G.dropGot<G.dropNeed){ G.dropGot++; m3Add('drop',1); }
           if(guard++<R) continue;
         }
