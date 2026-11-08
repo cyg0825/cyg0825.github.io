@@ -166,6 +166,11 @@ button {
     overflow-wrap: anywhere;
 }
 
+/* 表情只和前面几个字绑定，不会单独占一行，也不撑出祝福框 */
+.greeting-text .nb {
+    white-space: nowrap;
+}
+
 .button-group {
     display: flex;
     gap: max(10px, calc(30px * var(--s)));

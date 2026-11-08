@@ -455,39 +455,39 @@ function dialog(title,text,aTxt,bTxt,aFn,bFn){
 /* 关卡表字段：c/r 棋盘，f 同屏元素数，m 步数，type/gt 表格里的目标类型与目标量，
    g 目标逻辑（elem 消除指定元素、drop 收集掉落物、ice/crate/obs 消除障碍），
    sp 特殊机制，h 提示次数，s 手动洗牌次数（第 30 关限 2 次）。
-   掉落物每轮同列消除只下沉一格、落到最底行才算收集，
-   所以含 drop 的关卡目标数压到 2~5 个、步数相应放宽，避免够不着出口。 */
+   目标量与步数严格按表格；掉落物按重力下落（消掉它下方同列图案才下移），
+   通过出口列数量与同列排队保证 8~12 个掉落物在表格步数内可收集。 */
 var M3_LEVELS=[
   {c:7,r:7,f:5,m:20,h:3,s:3,type:'消除指定元素',gt:'15',sp:'',g:[{k:'elem',n:15,t:0}]},
   {c:7,r:7,f:5,m:20,h:3,s:3,type:'消除指定元素',gt:'20',sp:'',g:[{k:'elem',n:20,t:0}]},
   {c:7,r:7,f:5,m:22,h:3,s:3,type:'消除两种元素',gt:'各10',sp:'',g:[{k:'elem',n:10,t:0},{k:'elem',n:10,t:1}]},
   {c:8,r:8,f:5,m:22,h:3,s:3,type:'消除两种元素',gt:'各12',sp:'',g:[{k:'elem',n:12,t:0},{k:'elem',n:12,t:1}]},
-  {c:8,r:8,f:5,m:26,h:3,s:3,type:'收集掉落物',gt:'2',sp:'',g:[{k:'drop',n:2}]},
-  {c:8,r:8,f:6,m:28,h:3,s:3,type:'收集掉落物',gt:'2',sp:'',g:[{k:'drop',n:2}]},
+  {c:8,r:8,f:5,m:20,h:3,s:3,type:'收集掉落物',gt:'3',sp:'',g:[{k:'drop',n:3}]},
+  {c:8,r:8,f:6,m:22,h:3,s:3,type:'收集掉落物',gt:'4',sp:'',g:[{k:'drop',n:4}]},
   {c:8,r:8,f:6,m:20,h:3,s:3,type:'消除指定元素',gt:'30',sp:'',g:[{k:'elem',n:30,t:0}]},
   {c:8,r:8,f:6,m:22,h:3,s:3,type:'消除两种元素',gt:'各15',sp:'',g:[{k:'elem',n:15,t:0},{k:'elem',n:15,t:1}]},
-  {c:8,r:8,f:6,m:30,h:3,s:3,type:'收集掉落物',gt:'3',sp:'',g:[{k:'drop',n:3}]},
-  {c:8,r:8,f:6,m:30,h:3,s:3,type:'混合目标',gt:'元素20+掉落2',sp:'',g:[{k:'elem',n:20,t:0},{k:'drop',n:2}]},
+  {c:8,r:8,f:6,m:22,h:3,s:3,type:'收集掉落物',gt:'5',sp:'',g:[{k:'drop',n:5}]},
+  {c:8,r:8,f:6,m:24,h:3,s:3,type:'混合目标',gt:'元素20+掉落2',sp:'',g:[{k:'elem',n:20,t:0},{k:'drop',n:2}]},
   {c:8,r:8,f:6,m:22,h:3,s:3,type:'消除障碍',gt:'冰块10',sp:'冰块',g:[{k:'ice',n:10}]},
   {c:8,r:8,f:7,m:22,h:3,s:3,type:'消除障碍',gt:'冰块12',sp:'冰块',g:[{k:'ice',n:12}]},
-  {c:9,r:9,f:7,m:32,h:3,s:3,type:'收集掉落物',gt:'3',sp:'',g:[{k:'drop',n:3}]},
-  {c:9,r:9,f:7,m:32,h:3,s:3,type:'混合目标',gt:'元素25+掉落2',sp:'',g:[{k:'elem',n:25,t:0},{k:'drop',n:2}]},
+  {c:9,r:9,f:7,m:24,h:3,s:3,type:'收集掉落物',gt:'6',sp:'',g:[{k:'drop',n:6}]},
+  {c:9,r:9,f:7,m:24,h:3,s:3,type:'混合目标',gt:'元素25+掉落3',sp:'',g:[{k:'elem',n:25,t:0},{k:'drop',n:3}]},
   {c:9,r:9,f:7,m:24,h:3,s:3,type:'消除障碍',gt:'冰块15',sp:'冰块',g:[{k:'ice',n:15}]},
   {c:9,r:9,f:7,m:24,h:3,s:3,type:'消除障碍',gt:'木箱8',sp:'木箱',g:[{k:'crate',n:8}]},
   {c:9,r:9,f:8,m:26,h:3,s:3,type:'混合目标',gt:'元素30+冰块10',sp:'冰块',g:[{k:'elem',n:30,t:0},{k:'ice',n:10}]},
-  {c:9,r:9,f:8,m:36,h:3,s:3,type:'收集掉落物',gt:'4',sp:'木箱阻挡',g:[{k:'drop',n:4}]},
+  {c:9,r:9,f:8,m:26,h:3,s:3,type:'收集掉落物',gt:'8',sp:'木箱阻挡',g:[{k:'drop',n:8}]},
   {c:9,r:9,f:8,m:26,h:3,s:3,type:'混合目标',gt:'元素30+木箱8',sp:'木箱',g:[{k:'elem',n:30,t:0},{k:'crate',n:8}]},
-  {c:9,r:9,f:8,m:38,h:3,s:3,type:'综合挑战',gt:'元素40+掉落2+障碍10',sp:'冰块+木箱',g:[{k:'elem',n:40,t:0},{k:'drop',n:2},{k:'obs',n:10}]},
+  {c:9,r:9,f:8,m:28,h:3,s:3,type:'综合挑战',gt:'元素40+掉落5+障碍10',sp:'冰块+木箱',g:[{k:'elem',n:40,t:0},{k:'drop',n:5},{k:'obs',n:10}]},
   {c:9,r:9,f:8,m:26,h:3,s:3,type:'消除指定元素',gt:'45',sp:'',g:[{k:'elem',n:45,t:0}]},
   {c:9,r:9,f:8,m:28,h:3,s:3,type:'消除两种元素',gt:'各25',sp:'',g:[{k:'elem',n:25,t:0},{k:'elem',n:25,t:1}]},
-  {c:9,r:9,f:8,m:38,h:3,s:3,type:'收集掉落物',gt:'4',sp:'冰块',g:[{k:'drop',n:4}]},
+  {c:9,r:9,f:8,m:28,h:3,s:3,type:'收集掉落物',gt:'10',sp:'冰块',g:[{k:'drop',n:10}]},
   {c:9,r:9,f:8,m:28,h:3,s:3,type:'消除障碍',gt:'木箱12',sp:'木箱',g:[{k:'crate',n:12}]},
   {c:9,r:9,f:8,m:28,h:3,s:3,type:'混合目标',gt:'元素35+冰块12',sp:'冰块',g:[{k:'elem',n:35,t:0},{k:'ice',n:12}]},
   {c:9,r:9,f:8,m:28,h:3,s:3,type:'混合目标',gt:'元素35+木箱10',sp:'木箱',g:[{k:'elem',n:35,t:0},{k:'crate',n:10}]},
-  {c:9,r:9,f:8,m:42,h:3,s:3,type:'收集掉落物',gt:'5',sp:'木箱阻挡',g:[{k:'drop',n:5}]},
-  {c:9,r:9,f:8,m:38,h:3,s:3,type:'混合目标',gt:'元素40+掉落2',sp:'',g:[{k:'elem',n:40,t:0},{k:'drop',n:2}]},
+  {c:9,r:9,f:8,m:30,h:3,s:3,type:'收集掉落物',gt:'12',sp:'木箱阻挡',g:[{k:'drop',n:12}]},
+  {c:9,r:9,f:8,m:30,h:3,s:3,type:'混合目标',gt:'元素40+掉落6',sp:'',g:[{k:'elem',n:40,t:0},{k:'drop',n:6}]},
   {c:9,r:9,f:8,m:32,h:3,s:3,type:'综合目标',gt:'元素40+冰块12+木箱8',sp:'冰块+木箱',g:[{k:'elem',n:40,t:0},{k:'ice',n:12},{k:'crate',n:8}]},
-  {c:9,r:9,f:8,m:46,h:2,s:2,type:'终极综合',gt:'元素50+掉落3+障碍15',sp:'冰块+木箱+限洗牌2次',g:[{k:'elem',n:50,t:0},{k:'drop',n:3},{k:'obs',n:15}]}
+  {c:9,r:9,f:8,m:34,h:2,s:2,type:'终极综合',gt:'元素50+掉落8+障碍15',sp:'冰块+木箱+限洗牌2次',g:[{k:'elem',n:50,t:0},{k:'drop',n:8},{k:'obs',n:15}]}
 ];
 var M3_DROP=-1;                /* 掉落物：重物，不参与匹配，只有落到最底行才被收集 */
 var M3_ICE=1, M3_CRATE=2;     /* 障碍层：冰块（半透明、可匹配）、木箱（不透明、阻挡） */
@@ -529,17 +529,18 @@ function m3ObstacleCounts(lv){
   var area=lv.r*lv.c, ice=0, crate=0, iceGoal=0, crateGoal=0, obsGoal=0, i, q;
   for(i=0;i<lv.g.length;i++){
     q=lv.g[i];
-    if(q.k==='ice'){ ice=Math.max(ice,q.n+3); iceGoal=Math.max(iceGoal,q.n); }
-    if(q.k==='crate'){ crate=Math.max(crate,q.n+2); crateGoal=Math.max(crateGoal,q.n); }
+    /* 多铺几个备用障碍：目标只要求清掉其中一部分，避免"全清才达标" */
+    if(q.k==='ice'){ ice=Math.max(ice,q.n+6); iceGoal=Math.max(iceGoal,q.n); }
+    if(q.k==='crate'){ crate=Math.max(crate,q.n+6); crateGoal=Math.max(crateGoal,q.n); }
     if(q.k==='obs'){
-      ice=Math.max(ice,Math.ceil(q.n/2)+3); crate=Math.max(crate,Math.floor(q.n/2)+3);
+      ice=Math.max(ice,Math.ceil(q.n/2)+4); crate=Math.max(crate,Math.floor(q.n/2)+4);
       obsGoal=Math.max(obsGoal,q.n);
     }
   }
   if(lv.sp.indexOf('冰块')>=0&&!ice) ice=Math.min(8,Math.floor(area*0.12));
   if(lv.sp.indexOf('木箱')>=0&&!crate) crate=Math.min(6,Math.floor(area*0.1));
-  ice=Math.max(Math.min(ice,Math.floor(area*0.3)),iceGoal);
-  crate=Math.max(Math.min(crate,Math.floor(area*0.16)),crateGoal);
+  ice=Math.max(Math.min(ice,Math.floor(area*0.32)),iceGoal);
+  crate=Math.max(Math.min(crate,Math.floor(area*0.22)),crateGoal);
   if(obsGoal&&ice+crate<obsGoal) crate=Math.min(Math.floor(area*0.22),crate+obsGoal-ice-crate);
   return {ice:ice,crate:crate};
 }
@@ -707,15 +708,16 @@ function m3EnsureDrops(mode){
   if(!G.dropNeed) return;
   var cols=G.exitCols||[],r,c,cand=[];
   if(!cols.length) return;
-  var want=Math.min(3,cols.length,G.dropNeed-G.dropGot)-m3DropOnBoard();
+  /* 每个出口列最多同时两个掉落物，列内排队下落 */
+  var want=Math.min(2*cols.length,G.dropNeed-G.dropGot)-m3DropOnBoard();
   if(want<=0) return;
   for(var ci=0;ci<cols.length&&cand.length<want;ci++){
     c=cols[(G.nextDropCol+ci)%cols.length];
-    var used=false;
-    for(r=0;r<G.rows;r++) if(G.g[r][c]===M3_DROP){ used=true; break; }
-    if(used) continue;
-    /* 顶行被障碍占住时退到第 1 行，出口列本身不放障碍，正常都落在第 0 行 */
-    for(r=0;r<=Math.min(1,G.rows-2);r++)
+    var cnt=0;
+    for(r=0;r<G.rows;r++) if(G.g[r][c]===M3_DROP) cnt++;
+    if(cnt>=2) continue;
+    /* 顶行被障碍占住时退到下面几行，出口列本身不放障碍，正常都落在顶部 */
+    for(r=0;r<Math.min(3,G.rows-1);r++)
       if(G.g[r][c]>0&&G.ov[r][c]===0){ cand.push({r:r,c:c}); break; }
   }
   for(var i=0;i<cand.length;i++){
@@ -750,7 +752,7 @@ function startM3(level){
      rows:lv.r,cols:lv.c,cell:cell,
      moves:lv.m,hint:lv.h,shuf:lv.s,shufUsed:0,score:0,sel:null,locked:false,over:false,
      prog:lv.g.map(function(){return 0;}),dropNeed:m3DropNeed(lv),dropGot:0,
-     nextDropCol:0,clearedCols:{},sinkUsed:{}};
+     nextDropCol:0};
   combo=0; lastMatch=0;
   var board=$('board'), w=lv.c*cell, h=lv.r*cell;
   board.style.width=w+'px'; board.style.height=h+'px';
@@ -817,7 +819,7 @@ function m3RenderGoals(){
     html+='<div class="goal'+(done?' done':'')+'">'+icon+'<span class="gn">'+name+'</span><b>'+cur+'/'+q.n+'</b>'+(done?'<em>✓</em>':'')+'</div>';
   }
   html+='<div class="gs">手动重排 '+G.shuf+'/'+G.lv.s+' 次 · 提示 '+G.hint+' 次'+
-    (G.dropNeed?' · 消掉落物所在列的图案让它下沉，到最底行（金色边）才收集':'')+'</div>';
+    (G.dropNeed?' · 消掉掉落物正下方同列的图案，它才会落下来，到最底行（金色边）才收集':'')+'</div>';
   box.innerHTML=html;
 }
 function syncM3Hud(){
@@ -838,7 +840,7 @@ function m3ClearSel(){
 function m3Tap(r,c){
   if(!G||G.locked||G.over) return;
   if(G.ov[r][c]===M3_CRATE){ toast('木箱不能交换，消除它旁边的图案即可打碎'); return; }
-  if(G.g[r][c]===M3_DROP){ toast('掉落物不能交换，消掉它所在列的图案让它逐格下沉，落到最底行才收集'); return; }
+  if(G.g[r][c]===M3_DROP){ toast('掉落物不能交换，消掉它下方同列的图案，它才会落到最底行被收集'); return; }
   if(!G.g[r][c]) return;
   if(G.sel&&G.sel.r===r&&G.sel.c===c){ m3ClearSel(); return; }
   if(!G.sel){ G.sel={r:r,c:c}; var e0=tileAt(r,c); if(e0) e0.classList.add('sel'); return; }
@@ -869,8 +871,6 @@ function m3AfterSwap(a,b){
     return;
   }
   G.moves--;
-  /* 一次有效交换（含后续连锁）统一结算：记下哪些列真的消过图案，每列最多推进掉落物 2 格 */
-  G.clearedCols={}; G.sinkUsed={};
   syncM3Hud();
   m3Resolve(groups,1);
 }
@@ -887,7 +887,6 @@ function m3Resolve(groups,depth){
     if(v<=0||G.ov[p.r][p.c]===M3_CRATE) continue;
     G.g[p.r][p.c]=0;
     cleared.push({r:p.r,c:p.c,v:v});
-    G.clearedCols[p.c]=(G.clearedCols[p.c]||0)+1;
     var e=tileAt(p.r,p.c);
     if(e){ e.classList.add('gone'); (function(el){ setTimeout(function(){ el.remove(); },200); })(e); }
     m3Add('elem',1,v);
@@ -938,25 +937,8 @@ function m3AfterClear(depth){
     G.locked=false;
   });
 }
-/* 掉落物是"重物"：只有它所在的出口列本轮真的消掉了图案，才往下占一格，
-   下方图案依次上浮一格（等价于重者下沉、空位上浮）。
-   一次有效交换（含连锁）里每列最多推进 2 格，下沉原因和节奏都可预期 */
-function m3SinkDrops(c,top,bottom,step){
-  if(step<=0) return;
-  for(var r=bottom-1;r>=top;r--){
-    if(G.g[r][c]!==M3_DROP) continue;
-    var s=Math.min(step,bottom-r), q, els=[], target;
-    if(s<=0) continue;
-    target=r+s;
-    for(q=r;q<=target;q++) els.push(tileAt(q,c));
-    for(q=r;q<target;q++) G.g[q][c]=G.g[q+1][c];
-    G.g[target][c]=M3_DROP;
-    for(q=0;q<s;q++) if(els[q+1]) m3SetPos(els[q+1],r+q,c);
-    if(els[0]) m3SetPos(els[0],target,c);
-  }
-}
-/* 列内按木箱分段做重力压实；只有真正落在最底行（R-1）的掉落物才被收集，
-   空位由上方新图案补齐 */
+/* 掉落物和普通图案一样受重力支配：只有它正下方同列的图案被消掉，它才随压实下落，
+   旁边或上方的消除不会推动它。落到最底行（R-1）才被收集，空位由上方新图案补齐 */
 function m3Fall(done){
   var tiles=$('tiles'), fresh=[], R=G.rows, C=G.cols, r, c, si, k, spawned=false;
   for(c=0;c<C;c++){
@@ -979,11 +961,6 @@ function m3Fall(done){
             }
             write--;
           }
-        }
-        /* 本列本次交换确有消除、有空位、且本轮推进没超过 2 格，才让掉落物沉 1 格 */
-        if(!guard&&(G.sinkUsed[c]||0)<2&&(G.clearedCols[c]||0)>0&&write-top+1>0){
-          G.sinkUsed[c]=(G.sinkUsed[c]||0)+1;
-          m3SinkDrops(c,top,bottom,1);
         }
         /* 出口只在最底行：压实后检查一次，收集后再压实，让同列上方的图案继续补位 */
         if(bottom===R-1&&G.g[R-1][c]===M3_DROP){

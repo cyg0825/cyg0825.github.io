@@ -944,16 +944,23 @@
         if (titleText) titleText.textContent = '今日祝福';
         if (greetingText) {
             greetingText.textContent = '';
-            // 第一行：今天的小幸运已送达 🌿（整段不换行，表情不会单独成行）
+            // 第一行：今天的小幸运已送达 🌿
+            // 整行可换行，只把「送达 🌿」绑成不可断的一段，
+            // 窄屏时换行发生在「送达」前，表情不会落单也不会撑出祝福框
             var line1 = document.createElement('span');
-            line1.style.whiteSpace = 'nowrap';
-            line1.textContent = '今天的小幸运已送达 🌿';
-            // 第二行：随机祝福 + ✨（✨ 与前面的字绑在一起，不会落单成行）
+            line1.appendChild(document.createTextNode('今天的小幸运已'));
+            var tail1 = document.createElement('span');
+            tail1.className = 'nb';
+            tail1.textContent = '送达 🌿';
+            line1.appendChild(tail1);
+            // 第二行：随机祝福 + ✨，把祝福最后两字和 ✨ 绑在一起，同样不会落单
             var line2 = document.createElement('span');
-            line2.appendChild(document.createTextNode(randomFrom(DAILY_WISHES)));
+            var wish = randomFrom(DAILY_WISHES);
+            var cut = Math.max(0, wish.length - 2);
+            line2.appendChild(document.createTextNode(wish.slice(0, cut)));
             var spark = document.createElement('span');
-            spark.style.whiteSpace = 'nowrap';
-            spark.textContent = ' ✨';
+            spark.className = 'nb';
+            spark.textContent = wish.slice(cut) + ' ✨';
             line2.appendChild(spark);
             greetingText.appendChild(line1);
             greetingText.appendChild(document.createElement('br'));
