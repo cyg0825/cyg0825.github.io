@@ -1,26 +1,27 @@
 /* ==== 核心逻辑 ==== */
 var LEVELS=[
   {c:6,r:4,f:6,t:150,h:5,s:3},
-  {c:8,r:4,f:8,t:170,h:5,s:3},
-  {c:8,r:5,f:10,t:195,h:4,s:3},
-  {c:10,r:5,f:12,t:225,h:4,s:3},
-  {c:10,r:6,f:14,t:255,h:4,s:2},
-  {c:12,r:6,f:16,t:290,h:3,s:2},
-  {c:12,r:7,f:18,t:325,h:3,s:2},
-  {c:12,r:8,f:20,t:360,h:3,s:2},
-  {c:14,r:7,f:22,t:395,h:2,s:2},
-  {c:14,r:8,f:24,t:435,h:2,s:2},
-  {c:16,r:7,f:24,t:470,h:2,s:1},
-  {c:16,r:8,f:26,t:510,h:2,s:1},
-  {c:16,r:8,f:26,t:500,h:2,s:1},
-  {c:16,r:8,f:28,t:490,h:1,s:1},
-  {c:16,r:8,f:28,t:480,h:1,s:1},
-  {c:16,r:8,f:30,t:470,h:1,s:1},
-  {c:16,r:8,f:30,t:460,h:1,s:1},
-  {c:16,r:8,f:30,t:450,h:1,s:0},
-  {c:16,r:8,f:30,t:440,h:1,s:0},
-  {c:16,r:8,f:30,t:430,h:1,s:0}
+  {c:8,r:4,f:8,t:180,h:5,s:3},
+  {c:6,r:6,f:6,t:200,h:4,s:3},
+  {c:8,r:6,f:8,t:260,h:4,s:3},
+  {c:8,r:6,f:12,t:280,h:4,s:2},
+  {c:10,r:6,f:10,t:300,h:3,s:2},
+  {c:8,r:8,f:8,t:300,h:3,s:2},
+  {c:10,r:8,f:10,t:360,h:3,s:2},
+  {c:10,r:8,f:16,t:380,h:2,s:2},
+  {c:10,r:8,f:20,t:400,h:2,s:2},
+  {c:12,r:8,f:12,t:340,h:2,s:1},
+  {c:10,r:10,f:10,t:350,h:2,s:1},
+  {c:10,r:10,f:20,t:370,h:2,s:1},
+  {c:12,r:10,f:12,t:400,h:1,s:1},
+  {c:12,r:10,f:20,t:440,h:1,s:1,grav:'left'},
+  {c:12,r:10,f:24,t:420,h:1,s:1},
+  {c:14,r:10,f:14,t:460,h:1,s:1},
+  {c:12,r:12,f:24,t:500,h:1,s:0,grav:'center'},
+  {c:14,r:12,f:28,t:560,h:1,s:0},
+  {c:15,r:12,f:30,t:640,h:1,s:2,grav:'random'}
 ];
+var GRAV_TXT={left:'聚拢·左',center:'聚拢·中',random:'聚拢·随机'};
 var NFACE=30;
 var DIRS=[[-1,0],[1,0],[0,-1],[0,1]];
 
@@ -160,6 +161,32 @@ function reshuffle(g,rnd){
   }
   return !!findMove(g);
 }
+function compactG(g,mode){
+  var R=g.length,C=g[0].length,r,c,i;
+  var dir=mode==='random'?['left','right','up','down'][Math.floor(Math.random()*4)]:mode;
+  if(dir==='left'||dir==='right'){
+    for(r=1;r<R-1;r++){
+      var vals=[]; for(c=1;c<C-1;c++) if(g[r][c]) vals.push(g[r][c]);
+      for(c=1;c<C-1;c++) g[r][c]=0;
+      var st=dir==='left'?1:C-1-vals.length;
+      for(i=0;i<vals.length;i++) g[r][st+i]=vals[i];
+    }
+  } else if(dir==='up'||dir==='down'){
+    for(c=1;c<C-1;c++){
+      var vals2=[]; for(r=1;r<R-1;r++) if(g[r][c]) vals2.push(g[r][c]);
+      for(r=1;r<R-1;r++) g[r][c]=0;
+      var st2=dir==='up'?1:R-1-vals2.length;
+      for(i=0;i<vals2.length;i++) g[st2+i][c]=vals2[i];
+    }
+  } else if(dir==='center'){
+    for(r=1;r<R-1;r++){
+      var vals3=[]; for(c=1;c<C-1;c++) if(g[r][c]) vals3.push(g[r][c]);
+      for(c=1;c<C-1;c++) g[r][c]=0;
+      var st3=1+Math.floor((C-2-vals3.length)/2);
+      for(i=0;i<vals3.length;i++) g[r][st3+i]=vals3[i];
+    }
+  }
+}
 /* ==== 界面 ==== */
 var $=function(id){return document.getElementById(id);};
 var SAVE_KEY='link-save';
@@ -239,7 +266,7 @@ function renderHome(){
       var n=i+1, unlocked=n<=save.max+1, b=document.createElement('button');
       b.className='lv'; b.disabled=!unlocked;
       var best=save.best[n];
-      b.innerHTML='<div class="t">第 '+n+' 关</div><div class="d">'+lv.c+'×'+lv.r+' · '+lv.f+' 种图 · '+fmt(lv.t)+
+      b.innerHTML='<div class="t">第 '+n+' 关</div><div class="d">'+lv.r+'×'+lv.c+' · '+lv.f+' 种图 · '+fmt(lv.t)+(lv.grav?' · '+GRAV_TXT[lv.grav]:'')+
         (best?' · 最高 '+best:'')+(unlocked?'':' · 未解锁')+'</div>';
       b.onclick=function(){ start(n); };
       box.appendChild(b);
@@ -274,7 +301,7 @@ function start(level){
   var box=stageBox();
   var d=deal(lv,box.w,box.h,rngOf(Date.now()&0x7fffffff));
   S={lv:lv,no:level,g:d.g,rows:d.rows,cols:d.cols,cell:d.cell,total:d.total,
-     left:d.total,time:lv.t,hint:lv.h,shuf:lv.s,score:0,sel:null,locked:false};
+     left:d.total,time:lv.t,hint:lv.h,shuf:lv.s,score:0,sel:null,locked:false,grav:lv.grav||null};
   runBase=S.score;
   combo=0; lastMatch=0;
   var board=$('board'), size=(d.cols+2)*d.cell, height=(d.rows+2)*d.cell;
@@ -291,6 +318,7 @@ function start(level){
   $('hLv').textContent=level;
   $('bHint').disabled=false; $('bShuf').disabled=false;
   syncTools(); syncHud(); startTimer();
+  if(S.grav) toast('特殊规则：每次消除后'+GRAV_TXT[S.grav]+(level===LEVELS.length?'，洗牌限 '+lv.s+' 次':''));
   ensureMusic();
 }
 
@@ -368,6 +396,7 @@ function tap(r,c){
     $('line').innerHTML='';
     S.locked=false;
     if(S.left<=0){ win(); return; }
+    if(S.grav){ compactG(S.g,S.grav); repaint(); }
     if(!findMove(S.g)){
       if(reshuffle(S.g,rngOf(Date.now()&0x7fffffff))){ repaint(); toast('没有可连的了，已自动重排'); }
     }
