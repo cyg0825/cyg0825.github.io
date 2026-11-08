@@ -234,10 +234,10 @@ function renderHome(){
   $('tabM3').classList.toggle('on',mode==='m3');
   $('tabMem').classList.toggle('on',mode==='mem');
   $('lead').textContent=mode==='m3'
-    ?'点相邻两张图交换位置（手机上也可以直接朝相邻方向滑动），凑齐 3 张以上相同的图即可消除；步数用完前完成本关全部目标即过关。半透明冰块要消掉它下面的图案，木箱要消掉相邻的图案；掉落物从顶部沿标出的出口列落下，消掉它所在列的图案才会逐格下沉，落到最底行（金色边）才收集。'
+    ?'交换相邻两张图，凑齐 3 张以上相同即消除；限步内完成目标即过关。冰块消其下方、木箱消相邻；掉落物落到底行金线才收集。'
     :mode==='mem'
-    ?'每关先亮牌若干秒记住位置，然后全部翻面；每次翻两张，同图即配对消掉得分，配齐全部对子即过关。第 5 关起有配对限时和允许犯错次数，超时或犯错超限即失败。'
-    :'点两张相同的图，连线拐弯不超过两次即可消除。每关消完全部图块就算过。';
+    ?'亮牌记住位置后全翻面，每次翻两张、同图配对得分，配齐即过关；第 5 关起限时、限犯错次数。'
+    :'点两张相同的图，连线拐弯不超两次即可消除；消完全部图块即过关。';
   var box=$('levels'); box.innerHTML='';
   if(mode==='m3'){
     M3_LEVELS.forEach(function(lv,i){
@@ -754,6 +754,7 @@ function startM3(level){
   combo=0; lastMatch=0;
   var board=$('board'), w=lv.c*cell, h=lv.r*cell;
   board.style.width=w+'px'; board.style.height=h+'px';
+  board.style.setProperty('--cell',cell+'px');
   board.classList.toggle('exit',G.dropNeed>0);
   var line=$('line');
   line.setAttribute('viewBox','0 0 '+w+' '+h);
