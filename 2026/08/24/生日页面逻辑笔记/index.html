@@ -1,0 +1,1050 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>生日祝福页逻辑笔记 | 学海拾茜</title><meta name="author" content="61飞兔"><meta name="copyright" content="61飞兔"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="生日祝福页的实现笔记：按日期切换两套祝福语、心形曲线排布卡片、three.js 3D 背景动态导入、图片预加载与部署踩坑。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="生日祝福页逻辑笔记">
+<meta property="og:url" content="https://cyg0825.github.io/2026/08/24/%E7%94%9F%E6%97%A5%E9%A1%B5%E9%9D%A2%E9%80%BB%E8%BE%91%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:site_name" content="学海拾茜">
+<meta property="og:description" content="生日祝福页的实现笔记：按日期切换两套祝福语、心形曲线排布卡片、three.js 3D 背景动态导入、图片预加载与部署踩坑。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cyg0825.github.io/img/birthday/bd-05-cake3d.webp">
+<meta property="article:published_time" content="2026-08-24T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-11-08T02:00:00.000Z">
+<meta property="article:author" content="61飞兔">
+<meta property="article:tag" content="CSS">
+<meta property="article:tag" content="JavaScript">
+<meta property="article:tag" content="three.js">
+<meta property="article:tag" content="生日祝福页">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cyg0825.github.io/img/birthday/bd-05-cake3d.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "生日祝福页逻辑笔记",
+  "url": "https://cyg0825.github.io/2026/08/24/%E7%94%9F%E6%97%A5%E9%A1%B5%E9%9D%A2%E9%80%BB%E8%BE%91%E7%AC%94%E8%AE%B0/",
+  "image": "https://cyg0825.github.io/img/birthday/bd-05-cake3d.webp",
+  "datePublished": "2026-08-24T01:00:00.000Z",
+  "dateModified": "2026-11-08T02:00:00.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "61飞兔",
+      "url": "https://cyg0825.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/333.png"><link rel="canonical" href="https://cyg0825.github.io/2026/08/24/%E7%94%9F%E6%97%A5%E9%A1%B5%E9%9D%A2%E9%80%BB%E8%BE%91%E7%AC%94%E8%AE%B0/index.html"><link rel="preconnect" href="https://cdn.staticfile.org"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/css/fontawesome/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.staticfile.org/egjs-infinitegrid/4.12.0/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '生日祝福页逻辑笔记',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><style>
+/* 手机端复用右侧收起按钮，整块侧栏（个人信息等卡片）可收起 */
+@media (max-width: 900px) {
+  #rightside #hide-aside-btn { display: block !important; }
+  html.hide-aside .layout > #aside-content { display: none; }
+  /* 个人信息卡折叠进抽屉，页面里不再单独占一块 */
+  #aside-content > .card-info { display: none; }
+}
+#sidebar-menus .sidebar-author-name { margin: 6px 0 0; font-size: 1.3em; font-weight: 700; text-align: center; }
+#sidebar-menus .sidebar-follow { display: block; margin: 14px 20px 0; padding: 9px 0; border-radius: 8px; background: var(--btn-bg); color: var(--btn-color); text-align: center; }
+#sidebar-menus .sidebar-follow i { margin-right: 6px; }
+/* 沿用线上站点：页脚透明，让背景色直接透出 */
+#footer { background: transparent !important; }
+#footer::before { background: transparent !important; }
+[data-theme="dark"] #footer::before { background: transparent !important; }
+/* 头图蒙版改成毛玻璃：轻微模糊 + 极淡压色，做出朦胧感但不挡画面 */
+#page-header:not(.not-top-img)::before {
+  background: linear-gradient(180deg, rgba(238,242,252,.16), rgba(214,222,242,.07) 55%, rgba(196,206,232,.20)) !important;
+  -webkit-backdrop-filter: blur(6px) brightness(.94) saturate(1.02);
+  backdrop-filter: blur(6px) brightness(.94) saturate(1.02);
+}
+[data-theme="dark"] #page-header:not(.not-top-img)::before {
+  background: linear-gradient(180deg, rgba(16,18,26,.20), rgba(16,18,26,.09) 55%, rgba(8,10,16,.26)) !important;
+  -webkit-backdrop-filter: blur(6px) brightness(.88);
+  backdrop-filter: blur(6px) brightness(.88);
+}
+/* 播放器遇到不可播曲目的自动跳过提示不显示 */
+.aplayer .aplayer-notice { display: none !important; }
+/* 主题只写了旧版高亮类名，补上 highlight.js 11 的这批 token，配色沿用主题的 light 色板 */
+#article-container figure.highlight pre .selector-tag,
+#article-container figure.highlight pre .selector-class,
+#article-container figure.highlight pre .selector-id,
+#article-container figure.highlight pre .selector-pseudo,
+#article-container figure.highlight pre .selector-attr,
+#article-container figure.highlight pre .property { color: #e53935; }
+#article-container figure.highlight pre .function_ { color: #6182b8; }
+#article-container figure.highlight pre .class_ { color: #ffb62c; }
+#article-container figure.highlight pre .constant_ { color: #f76d47; }
+#article-container figure.highlight pre .type { color: #6182b8; }
+#article-container figure.highlight pre .invoke__,
+#article-container figure.highlight pre .subst { color: #f76d47; }
+#article-container figure.highlight pre .language_,
+#article-container figure.highlight pre .bullet { color: #7c4dff; }
+/* 菜单图标位是原样落到 <i class="fa-fw …"> 的类名；不用 fontawesome 时把它变成一张图，
+   宽度沿用 .fa-fw 的 1.25em 以对齐同级菜单项，只补上空白 <i> 需要的高度和基线 */
+i.fa-fw.img-notelume {
+  background: url(/img/notelume.png) center / contain no-repeat;
+  height: 1em; display: inline-block; vertical-align: -.15em;
+}
+</style><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-color: #bbdefb;"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">66</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">30</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">24</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-code"></i><span> 项目</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/"><i class="fa-fw fas fa-book"></i><span> 学生选课系统</span></a></li><li><a class="site-page child" target="_blank" rel="noopener" href="https://hackersnail.github.io/NoteLume/"><i class="fa-fw img-notelume"></i><span> NoteLume</span></a></li><li><a class="site-page child" href="/birthday/"><i class="fa-fw fas fa-heart"></i><span> 祝福</span></a></li><li><a class="site-page child" href="/link/"><i class="fa-fw fas fa-puzzle-piece"></i><span> 小游戏</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-file-alt"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/tags/%E8%AF%B4%E8%AF%B4/"><i class="fa-fw fas fa-comment-dots"></i><span> 说说</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/img/birthday/bd-05-cake3d.webp);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/333.png" alt="Logo"><span class="site-name">学海拾茜</span></a><a class="nav-page-title" href="/"><span class="site-name">生日祝福页逻辑笔记</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-code"></i><span> 项目</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/"><i class="fa-fw fas fa-book"></i><span> 学生选课系统</span></a></li><li><a class="site-page child" target="_blank" rel="noopener" href="https://hackersnail.github.io/NoteLume/"><i class="fa-fw img-notelume"></i><span> NoteLume</span></a></li><li><a class="site-page child" href="/birthday/"><i class="fa-fw fas fa-heart"></i><span> 祝福</span></a></li><li><a class="site-page child" href="/link/"><i class="fa-fw fas fa-puzzle-piece"></i><span> 小游戏</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-file-alt"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/tags/%E8%AF%B4%E8%AF%B4/"><i class="fa-fw fas fa-comment-dots"></i><span> 说说</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">生日祝福页逻辑笔记</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-08-24T01:00:00.000Z" title="发表于 2026-08-24 09:00:00">2026-08-24</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-11-08T02:00:00.000Z" title="更新于 2026-11-08 10:00:00">2026-11-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AD%A6%E4%B9%A0/">学习</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AD%A6%E4%B9%A0/%E5%89%8D%E7%AB%AF/">前端</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><blockquote>
+<p>对应文件：<a href="/birthday/script.js">script.js</a>（主逻辑）、<a href="/birthday/cake3d.js">cake3d.js</a>（3D 背景）</p>
+</blockquote>
+<p>这一篇按「一局祝福从打开页面到收下全部」的顺序，把两份代码摊开讲：先说页面有哪些状态、坐标怎么算，再说卡片怎么排、怎么建、怎么调度，最后说音乐、3D 背景和加载性能。读法和本系列的小游戏笔记一样——每段先给结论，再摊开代码逐行说「为什么这么写」，最后讲边界和取舍；文中标了源码文件与函数名的链接，点开可以对照着看。</p>
+<hr>
+<h2 id="一、这个页面是什么"><a href="#一、这个页面是什么" class="headerlink" title="一、这个页面是什么"></a>一、这个页面是什么</h2><p>同一个页面有两种身份，打开时按日期自动切换：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>生日季（8 月 20–25 日）</th>
+<th>平时</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>标题</td>
+<td>生日快乐</td>
+<td>今天也要好好的</td>
+</tr>
+<tr>
+<td>卡片内容</td>
+<td>生日祝福语（约 124 条池子）</td>
+<td>每日鼓励语（约 64 条池子）</td>
+</tr>
+<tr>
+<td>3D 背景</td>
+<td>生日蛋糕（cake 场景）</td>
+<td>星空（star 场景）</td>
+</tr>
+</tbody></table>
+<p>两种身份的欢迎窗：</p>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/birthday/bd-01-welcome-daily.webp" alt="平时：今日祝福欢迎窗"></p>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/birthday/bd-02-welcome-birthday.webp" alt="生日季：生日快乐欢迎窗"></p>
+<p>为什么这么设计：这个页面一年只用 6 天可惜了，平时当作”每日小鼓励”页，生日季自动变身，一套代码两份价值。</p>
+<p>把一次访问拆成数据流看，会发现「两套身份」其实只由<strong>一个布尔值</strong> <code>isBirthday</code> 派生：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">日期 → isBirthdaySeason() → isBirthday</span><br><span class="line">                          ├→ 文案池：BIRTHDAY_WISHES / DAILY_WISHES</span><br><span class="line">                          ├→ 3D 场景：&#x27;cake&#x27; / &#x27;star&#x27;</span><br><span class="line">                          └→ 页面文案：保留原始 HTML / 调 applySeasonCopy() 改写</span><br></pre></td></tr></table></figure>
+
+<p>这样写的好处是<strong>分支只有一处</strong>：判断写在第四节，其余代码只读 <code>isBirthday</code> 或 <code>ACTIVE_WISHES</code>，不必在每段里重复问「今天是不是生日季」。若散落成十几个 <code>if (now.getMonth()===7 ...)</code>，改一次日期区间要翻遍全文件，而且页面跨过零点时各处判断还可能给出不同答案。</p>
+<p><strong>为什么不做成两个页面</strong>：两套 HTML 意味着两套卡片逻辑、两套图片预加载、两套音乐解锁都要各维护一份，改一个动画得改两遍；而且站点上多一份文件就多一份缓存失效的成本。这里两份身份共用同一套流程，只换「数据」和「场景参数」，是同一份代码的两个输入。</p>
+<p>页面上每一步对应哪个函数，先给一张地图，后面各节都按它展开：</p>
+<table>
+<thead>
+<tr>
+<th>用户动作</th>
+<th>负责的函数</th>
+<th>所在节</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>打开页面</td>
+<td><code>applySeasonCopy()</code> → <code>updateScale()</code> → <code>preloadAssets()</code> → <code>fadeInMainWindow()</code></td>
+<td>四、六、十四、十五</td>
+</tr>
+<tr>
+<td>点「生日快乐 &#x2F; 收下祝福」</td>
+<td><code>fadeOutAndStart()</code> → <code>unlockAudio()</code>，500ms 后 <code>playRandomMusic()</code> + <code>startTipWindows()</code></td>
+<td>十一、十</td>
+</tr>
+<tr>
+<td>卡片逐张出现</td>
+<td><code>startTipWindows()</code> 排定时器 → <code>createRandomTipWindow()</code> 建 DOM</td>
+<td>十、九</td>
+</tr>
+<tr>
+<td>背景亮起</td>
+<td><code>mountBackground()</code> 动态 <code>import(&#39;./cake3d.js&#39;)</code></td>
+<td>十二、十三</td>
+</tr>
+<tr>
+<td>点单张「收下」</td>
+<td>卡片自己的 click 回调，淡出后 <code>remove()</code></td>
+<td>九</td>
+</tr>
+<tr>
+<td>点「收下全部 &#x2F; 悄悄溜走 &#x2F; ×」</td>
+<td><code>closeAllWindows()</code></td>
+<td>十</td>
+</tr>
+<tr>
+<td>点「重新开启」</td>
+<td><code>restartWishes()</code></td>
+<td>十五</td>
+</tr>
+<tr>
+<td>拖动窗口</td>
+<td><code>resize</code> 回调重算缩放与心形点</td>
+<td>六、十五</td>
+</tr>
+</tbody></table>
+<p>先记住这张表，读源码时就不容易在十几个函数之间迷路：所有入口都在 <code>script.js</code> 末尾那几行 <code>addEventListener</code> 里，往下追一层就是对应的实现。</p>
+<p><strong>用户看到的流程</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">打开页面 → 中央欢迎窗（收下祝福 / 悄悄溜走）</span><br><span class="line">  → 点开始：随机音乐响起</span><br><span class="line">  → 祝福卡片按心形轨迹逐张弹出（共 30~64 张）</span><br><span class="line">  → 点单张&quot;收下&quot;，或右上角爱心&quot;收下全部&quot;</span><br><span class="line">  → 可点&quot;重新开启&quot;再来一遍</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="二、文件构成"><a href="#二、文件构成" class="headerlink" title="二、文件构成"></a>二、文件构成</h2><table>
+<thead>
+<tr>
+<th>文件</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>index.html</code></td>
+<td>页面骨架，只有十几个元素，卡片全部由 JS 动态创建</td>
+</tr>
+<tr>
+<td><code>style.css</code></td>
+<td>样式，卡片弹窗是拟物”小窗”风格</td>
+</tr>
+<tr>
+<td><code>script.js</code></td>
+<td>全部页面逻辑（本文重点）</td>
+</tr>
+<tr>
+<td><code>cake3d.js</code></td>
+<td>用 three.js 画的 3D 背景，对外只暴露一个 <code>mount()</code>（算法细节见第十三节）</td>
+</tr>
+<tr>
+<td><code>js/three.module.js</code></td>
+<td>three.js 引擎 v160（官方压缩版）</td>
+</tr>
+<tr>
+<td><code>img/image0~20.jpg</code></td>
+<td>卡片配图，共 21 张</td>
+</tr>
+<tr>
+<td>（无本地音乐）</td>
+<td>音乐改为网易云在线歌单在线播放，见第十一节</td>
+</tr>
+</tbody></table>
+<p>注意：项目里还有一份 <code>Birthday/</code> 目录是独立单页版（不经过 hexo，可单独双击打开），改了 <code>source/birthday/</code> 的代码要手动同步过去，两份内容保持一致。<code>Link/</code> 与 <code>source/link/</code> 同理。</p>
+<p><strong>路径为什么这样写</strong>：<code>index.html</code> 里引用的是 <code>style.css</code>、<code>script.js</code> 这种不带斜杠的相对路径，浏览器会按「当前页面所在目录」拼成 <code>/birthday/style.css</code>；<code>script.js</code> 里的 <code>img/imageN.jpg</code>、<code>./cake3d.js</code> 同理，也相对 <code>/birthday/</code> 解析。所以整份代码可以整目录搬到任何位置，不用改一行路径——这正是 <code>Birthday/</code> 独立单页版能直接双击打开的原因。本文里写的 <code>/birthday/script.js</code> 是<strong>从站点根目录出发</strong>的绝对路径，只用于笔记里的链接，和代码里的相对路径不是一回事，别混了。</p>
+<p><code>index.html</code> 顶部 front-matter 里的 <code>layout: false</code> 也别删：它告诉 Hexo「这页不要套主题的页眉页脚和侧栏，原样输出」。少了它，生日页会被塞进博客的文章模板，固定设计稿缩放（第六节）就全乱了。</p>
+<p><strong>依赖是单向的</strong>：<code>index.html</code> → <code>script.js</code> →（运行时）<code>cake3d.js</code> → <code>js/three.module.js</code>。<code>script.js</code> 完全不知道 three.js 的存在，只调一个 <code>mount()</code>；反过来 <code>cake3d.js</code> 也不碰卡片 DOM，只往传进来的容器里画。两边通过「一个容器元素 + 一个 scene 字符串」通信，这是第十二节说的隔离能成立的前提。</p>
+<hr>
+<h2 id="三、为什么代码包在-function-里"><a href="#三、为什么代码包在-function-里" class="headerlink" title="三、为什么代码包在 (function(){...})() 里"></a>三、为什么代码包在 <code>(function(){...})()</code> 里</h2><p><a href="/birthday/script.js">script.js:1</a></p>
+<p>这是 Immediately Invoked Function Expression（立即执行函数）。原因：hexo 博客的每个页面共用同一个浏览器全局环境，主题脚本、搜索脚本都会定义全局变量。如果这里直接写 <code>var naturalW = 0</code>，万一主题里也有个 <code>naturalW</code>，谁后加载谁覆盖谁，会出现”别的页面坏了”这种很难查的 bug。包一层后，这里所有变量都是函数内部的私有变量，外面看不见，从根上避免冲突。</p>
+<p>把文件的首尾对着看，形状是这样：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">(<span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> <span class="variable constant_">BIRTHDAY_WISHES</span> = [ ... ];</span><br><span class="line">    <span class="keyword">var</span> isBirthday = <span class="title function_">isBirthdaySeason</span>();</span><br><span class="line">    ...</span><br><span class="line">    <span class="title function_">applySeasonCopy</span>();</span><br><span class="line">    <span class="title function_">updateScale</span>();</span><br><span class="line">    <span class="title function_">preloadAssets</span>();</span><br><span class="line">    <span class="title function_">fadeInMainWindow</span>();</span><br><span class="line">&#125;)();</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>(function(){ ... })</code>：把函数体整个包进圆括号，圆括号里的内容会被当成<strong>表达式</strong>而不是函数声明，所以后面能直接跟 <code>()</code> 调用；</li>
+<li>末尾 <code>()</code>：立刻执行，且只执行一次。整个文件没有一句代码留在全局作用域里执行；</li>
+<li>里面所有 <code>var</code> 都是这个函数的局部变量。函数执行完按理该消失，但因为事件回调（<code>click</code>、<code>resize</code>、<code>error</code>）还引用着它们，这些变量随<strong>闭包</strong>一直活着，成为这一页的「状态」——相当于一个没有打包成对象的状态集，和小游戏笔记里把一整局塞进 <code>S</code> &#x2F; <code>G</code> &#x2F; <code>M</code> 是同一件事的两种写法。</li>
+</ul>
+<p>顺手把这份「散装状态」列成表，读后面各节时可以回来对照：</p>
+<table>
+<thead>
+<tr>
+<th>变量</th>
+<th>记的是什么</th>
+<th>谁改它</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>naturalW</code> &#x2F; <code>naturalH</code></td>
+<td>设计稿画布的宽高，恒为 2560 &#x2F; 1440</td>
+<td><code>updateScale()</code></td>
+</tr>
+<tr>
+<td><code>isBirthday</code> &#x2F; <code>ACTIVE_WISHES</code></td>
+<td>本局身份与选中的文案池</td>
+<td>开局算一次，之后只读</td>
+</tr>
+<tr>
+<td><code>heartPositions</code> &#x2F; <code>heartDelays</code> &#x2F; <code>heartRainfall</code></td>
+<td>本局心形点位、出现节奏、是否落体</td>
+<td><code>generateHeartPositions()</code>、resize</td>
+</tr>
+<tr>
+<td><code>timeouts</code> &#x2F; <code>wishElements</code></td>
+<td>所有待触发的定时器、已创建的卡片 DOM</td>
+<td><code>startTipWindows()</code> &#x2F; <code>closeAllWindows()</code></td>
+</tr>
+<tr>
+<td><code>isClosing</code></td>
+<td>「玩家已收下全部」的闸门</td>
+<td><code>closeAllWindows()</code> 置真，<code>restartWishes()</code> 置假</td>
+</tr>
+<tr>
+<td><code>bgMounted</code></td>
+<td>3D 背景挂过没有，防重复挂载</td>
+<td><code>mountBackground()</code></td>
+</tr>
+<tr>
+<td><code>playlistPromise</code> &#x2F; <code>playlistUrls</code> &#x2F; <code>lastTrackIdx</code></td>
+<td>歌单请求、地址列表、上一首编号</td>
+<td><code>loadPlaylist()</code> &#x2F; <code>playRandomMusic()</code></td>
+</tr>
+<tr>
+<td><code>audioUnlocked</code> &#x2F; <code>userMuted</code> &#x2F; <code>trackRetries</code></td>
+<td>播放器解锁、静音开关、坏歌重试次数</td>
+<td><code>unlockAudio()</code> &#x2F; <code>toggleMusic()</code> &#x2F; error 回调</td>
+</tr>
+</tbody></table>
+<p><strong>为什么不用 <code>&lt;script type=&quot;module&quot;&gt;</code></strong>：模块作用域确实也能隔离变量，但模块脚本默认 <code>defer</code> 且受 CORS 限制，用 <code>file://</code> 直接双击打开独立单页版时会被浏览器拦下。IIFE 是最老也最不挑环境的隔离办法，兼容到十年前的浏览器；而且这份代码全是 ES5 写法（<code>var</code>、<code>function</code>），正是为了在任何环境都能跑。代价是没有 <code>const</code>、箭头函数、顶层 <code>await</code>，写起来啰嗦一点——第十节那个循环里额外包一层 IIFE 就是为了补 <code>var</code> 没有块级作用域的坑。</p>
+<p>一个容易忽略的边界：IIFE 只隔离<strong>变量</strong>，不隔离 DOM。若主题脚本也去取 <code>#startBtn</code> 这种 id，照样会撞上。所以这里的 id 都用了完整业务名称，且唯一的全局入口就是 <code>index.html</code> 里那十几个元素。</p>
+<hr>
+<h2 id="四、两套祝福语池-日期判断"><a href="#四、两套祝福语池-日期判断" class="headerlink" title="四、两套祝福语池 + 日期判断"></a>四、两套祝福语池 + 日期判断</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> <span class="variable constant_">BIRTHDAY_MONTH</span> = <span class="number">7</span>;          <span class="comment">// 为什么是 7？JS 的月份从 0 开始数，7 = 8 月</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">BIRTHDAY_DAY_START</span> = <span class="number">20</span>;</span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">BIRTHDAY_DAY_END</span> = <span class="number">25</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>isBirthdaySeason()</code>（<a href="/birthday/script.js">script.js:198</a>）：拿当前日期和上面的区间比对，返回 true&#x2F;false。<strong>只判断一次</strong>，结果存在 <code>isBirthday</code> 里，之后整个页面都用这个结果。</li>
+<li><code>ACTIVE_WISHES = isBirthday ? BIRTHDAY_WISHES : DAILY_WISHES</code>：选出本次要用的文案池，后面所有卡片都从这里随机抽。</li>
+</ul>
+<p><strong>意义</strong>：判断逻辑只写一处，生日当月改日期区间就能调整”生日季”，其他代码一行不用动。</p>
+<p><strong>为什么文案直接写死在代码里</strong>：站点部署在 GitHub Pages 上，是纯静态托管，没有服务器和数据库，文案只能放前端。纯静态是这类个人博客的常态。</p>
+<p>把判断函数摊开看，一共四行：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">isBirthdaySeason</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> now = <span class="keyword">new</span> <span class="title class_">Date</span>();</span><br><span class="line">    <span class="keyword">return</span> now.<span class="title function_">getMonth</span>() === <span class="variable constant_">BIRTHDAY_MONTH</span></span><br><span class="line">        &amp;&amp; now.<span class="title function_">getDate</span>() &gt;= <span class="variable constant_">BIRTHDAY_DAY_START</span></span><br><span class="line">        &amp;&amp; now.<span class="title function_">getDate</span>() &lt;= <span class="variable constant_">BIRTHDAY_DAY_END</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>new Date()</code> 不带参数就是「此刻」，读的是<strong>浏览器所在机器的本地时间</strong>，不是服务器时间、也不是 UTC。纯静态站点没有服务端可问，只能这样；好处是访客在自己时区的 8 月 24 日打开就是生日版，坏处是东西半球差一天，跨零点时可能和博主所在地不一致——对一页祝福页来说可以接受；</li>
+<li><code>getMonth()</code> 返回 0~11，所以 8 月写成 <code>7</code>。这是 JS 最经典的差一错误，第十六节速查表里专门标了「月份记得减 1」；</li>
+<li>两个 <code>&gt;=</code> &#x2F; <code>&lt;=</code> 是<strong>闭区间</strong>，20 号和 25 号都算，一共 6 天，正好对上第一节表格里的「8 月 20–25 日」；写成 <code>&lt; DAY_END</code> 会少一天；</li>
+<li><code>&amp;&amp;</code> 短路：月份不对时后面两个比较根本不会算。这里省不了多少，但「先写最便宜、最能排除的判断」是写条件表达式的习惯。</li>
+</ul>
+<p><code>var isBirthday = isBirthdaySeason();</code> 在<strong>模块初始化时只算一次</strong>。这意味着页面开着跨过午夜 12 点，身份也不会中途跳变——欢迎窗是生日版、卡片却是平日版这种撕裂状态不会出现。想让它实时响应，得挂定时器每分钟重算并同步改文案池和 3D 场景，收益极小、复杂度陡增，不值得。</p>
+<p><code>ACTIVE_WISHES</code> 拿到的是其中一个数组的<strong>引用</strong>，不是复制一份。两个文案池加起来不到两百条字符串，复制也不贵，但引用更直接：后面 <code>randomFrom(ACTIVE_WISHES)</code> 每抽一张卡都读它，读写都走同一个入口。</p>
+<p><strong>为什么用数组 + 随机，而不是按顺序轮播</strong>：顺序轮播意味着每次打开都是同一句开场白，第三次访问就腻了；随机抽取让 124 条（或 64 条）文案在 30<del>64 张卡片里组合出几乎不重样的排布。代价是同一屏里偶尔会抽到重复的两句——池子比卡片数大 2</del>4 倍，重复概率不高，且祝福语重复并不刺眼，属于可以接受的取舍。真要彻底不重复，得先洗牌再按序取（第八节那套 Fisher-Yates 就能复用），多维护一个索引而已。</p>
+<hr>
+<h2 id="五、卡片数量与尺寸常量"><a href="#五、卡片数量与尺寸常量" class="headerlink" title="五、卡片数量与尺寸常量"></a>五、卡片数量与尺寸常量</h2><p><a href="/birthday/script.js">script.js:219-226</a></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> <span class="variable constant_">TIP_AREA</span> = <span class="number">16000</span>;   <span class="comment">// 每 16000 平方像素屏幕面积 ≈ 1 张卡片</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">TIP_MIN</span> = <span class="number">30</span>;       <span class="comment">// 最少 30 张，保证小窗口心形也够密</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">TIP_MAX</span> = <span class="number">64</span>;       <span class="comment">// 最多 64 张，防止超大屏幕一次弹太多卡顿</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">TIP_INTERVAL</span> = <span class="number">300</span>; <span class="comment">// 卡片逐张出现的间隔（毫秒）</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">WISH_W</span> = <span class="number">270</span>;       <span class="comment">// 卡片宽度（设计稿单位，见下节）</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">WISH_H_MIN</span> = <span class="number">120</span>;   <span class="comment">// 卡片最小高度</span></span><br></pre></td></tr></table></figure>
+
+<p>数量计算在 <code>tipCount()</code>（<a href="/birthday/script.js">script.js:295</a>）：<code>屏幕宽 × 高 ÷ 16000</code>，再被 min&#x2F;max 夹住。</p>
+<ul>
+<li>为什么按面积算：屏幕大就多放、屏幕小就少放，心形的”密度感”在任何设备上接近。</li>
+<li>为什么有下限：之前下限是 14，小窗口打开时心形稀稀拉拉（你反馈的”距离太大、数量少”就是这个），2026-11-07 调成 30&#x2F;64，实测小窗也饱满。</li>
+</ul>
+<p>把计算摊开：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">tipCount</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> n = <span class="title class_">Math</span>.<span class="title function_">round</span>(<span class="variable language_">window</span>.<span class="property">innerWidth</span> * <span class="variable language_">window</span>.<span class="property">innerHeight</span> / <span class="variable constant_">TIP_AREA</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="title class_">Math</span>.<span class="title function_">max</span>(<span class="variable constant_">TIP_MIN</span>, <span class="title class_">Math</span>.<span class="title function_">min</span>(<span class="variable constant_">TIP_MAX</span>, n));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>Math.round</code> 先取整，卡片数必须是整数；用 <code>floor</code> 也行，只是同尺寸下少一张，视觉无差别；</li>
+<li><code>Math.min(TIP_MAX, n)</code> 先压上限，再 <code>Math.max(TIP_MIN, …)</code> 抬下限。两个夹子合起来就是常见的 clamp 写法；先夹哪一头在这里结果相同，但「先夹上界再夹下界」的写法在改常量时更不容易踩坑；</li>
+<li>代几个真实尺寸：1280×800 → <code>1024000/16000 = 64</code>，正好卡在上限；1920×1080 → <code>129.6 → 130 → 64</code>；手机 390×844 → <code>20.6 → 21 → 30</code>，被下限抬到 30。也就是说<strong>绝大多数桌面屏拿满 64 张，绝大多数手机拿 30 张</strong>，中间段（约 640×750 到 1280×800）才真正体现「按面积算」。</li>
+</ul>
+<p>上限 64 不只是怕 DOM 多、动画卡：心形采样是 <code>t = i × 2π/count</code>，点数越多相邻两点越近，卡片宽 270（设计稿单位）会大面积重叠成一坨，反而看不出心形。所以 <code>TIP_MAX</code> 同时也是<strong>视觉上限</strong>。</p>
+<p>这些常量集中写在文件顶部一段（<a href="/birthday/script.js">script.js:219-226</a>），是刻意安排的：调密度只改 <code>TIP_AREA</code>，调节奏只改 <code>TIP_INTERVAL</code>，调大小只改 <code>WISH_W</code> &#x2F; <code>WISH_H_MIN</code>，不用翻到算法里找魔数。第十六节的速查表就是这段常量的「人类可读版」。改 <code>WISH_W</code> 时，心形采样的 <code>availableW</code> 会自动跟着减（第七节），但 <code>style.css</code> 里卡片的 CSS 宽度要手动同步，这是全文最容易漏改的一处。</p>
+<hr>
+<h2 id="六、（旧方案，已废弃）固定设计稿-2560×1440-整体缩放"><a href="#六、（旧方案，已废弃）固定设计稿-2560×1440-整体缩放" class="headerlink" title="六、（旧方案，已废弃）固定设计稿 2560×1440 + 整体缩放"></a>六、（旧方案，已废弃）固定设计稿 2560×1440 + 整体缩放</h2><blockquote>
+<p><strong>2026-11-08 已改造为真实视口自适应</strong>：<code>updateViewport()</code> 直接用真实视口当坐标系，不再整体缩放；所有 UI 尺寸由统一比例系数 <code>--s = clamp(0.60 × (短边/1080)^0.55, 0.40, 0.72)</code> 派生（桌面卡片约 162px、手机约 108px），文字与触摸目标有 px 下限保证看得清点得到。横屏心形等比、竖屏最多纵向拉伸 1.6 倍，坐标经 <code>toScreen()</code> 夹在视口内；<code>resize</code> &#x2F; <code>orientationchange</code> &#x2F; <code>visualViewport.resize</code> 防抖重排并沿用当前动画模式。卡片已去掉「收下」按钮，只留图片和文字，高度随文案变化，创建时用 <code>offsetHeight</code> 实测、<code>wishTop()</code> 把中心重新对齐到心形点位。以下为改造前的实现记录。</p>
+</blockquote>
+<p><a href="/birthday/script.js">script.js:278</a> <code>updateScale()</code></p>
+<p><strong>写法</strong>：卡片坐标不是按你的屏幕尺寸算的，而是在一张虚拟的 2560×1440 “画布”（<code>overlayLayer</code>）上算，然后用 <code>transform: scale()</code> 把整张画布等比缩放到刚好装进真实窗口。</p>
+<p><strong>为什么这么写</strong>：</p>
+<ol>
+<li>心形位置、卡片大小只需按一套坐标写死，不用为每种手机&#x2F;电脑分辨率单独适配；</li>
+<li>任何屏幕上，心形相对屏幕的比例、卡片之间的疏密关系完全一致；</li>
+<li>窗口大小变化（<code>resize</code> 事件）时只需重算一个缩放值，而不是重算几十张卡片的位置。</li>
+</ol>
+<p><code>scale = min(窗口宽/2560, 窗口高/1440)</code>：取小的那个，保证画布完整显示、上下或左右不留裁剪。</p>
+<p>代码比公式多做了两件事：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">updateScale</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> vw = <span class="variable language_">window</span>.<span class="property">innerWidth</span>, vh = <span class="variable language_">window</span>.<span class="property">innerHeight</span>;</span><br><span class="line">    <span class="keyword">if</span> (!vw || !vh) <span class="keyword">return</span>;</span><br><span class="line">    naturalW = <span class="variable constant_">DESIGN_W</span>; naturalH = <span class="variable constant_">DESIGN_H</span>;</span><br><span class="line">    <span class="keyword">var</span> scale = <span class="title class_">Math</span>.<span class="title function_">min</span>(vw / <span class="variable constant_">DESIGN_W</span>, vh / <span class="variable constant_">DESIGN_H</span>);</span><br><span class="line">    bgContainer.<span class="property">style</span>.<span class="property">width</span>  = <span class="title class_">Math</span>.<span class="title function_">round</span>(<span class="variable constant_">DESIGN_W</span> * scale) + <span class="string">&#x27;px&#x27;</span>;</span><br><span class="line">    bgContainer.<span class="property">style</span>.<span class="property">height</span> = <span class="title class_">Math</span>.<span class="title function_">round</span>(<span class="variable constant_">DESIGN_H</span> * scale) + <span class="string">&#x27;px&#x27;</span>;</span><br><span class="line">    overlayLayer.<span class="property">style</span>.<span class="property">width</span>  = naturalW + <span class="string">&#x27;px&#x27;</span>;   <span class="comment">// 仍是 2560</span></span><br><span class="line">    overlayLayer.<span class="property">style</span>.<span class="property">height</span> = naturalH + <span class="string">&#x27;px&#x27;</span>;   <span class="comment">// 仍是 1440</span></span><br><span class="line">    overlayLayer.<span class="property">style</span>.<span class="property">transform</span> = <span class="string">&#x27;scale(&#x27;</span> + scale + <span class="string">&#x27;)&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>if (!vw || !vh) return</code>：某些浏览器在页面刚创建、或窗口被最小化时会给出 0，除下去会得到 0 或 <code>Infinity</code>，先把这种输入挡掉；</li>
+<li><strong>两层各自的角色</strong>：<code>bgContainer</code> 被设成「缩放后的真实像素尺寸」，负责在页面里占对位置；<code>overlayLayer</code> 始终保持 2560×1440 的设计稿尺寸，只对它施加 <code>transform: scale()</code>。所以所有卡片坐标都以设计稿单位写，从不考虑真实屏幕——这正是这套写法省事的地方；</li>
+<li><code>transform</code> 缩放<strong>不改变元素的布局尺寸</strong>，只改视觉呈现，配合 <code>transform-origin</code> 才能按预期收缩；这也是为什么还要手动给 <code>bgContainer</code> 写像素宽高，否则外层盒子会按 2560 去撑开页面，出现横向滚动条；</li>
+<li>取 <code>min</code> 而非 <code>max</code>：取大的那个会把短边撑出视口，心形尖端被裁掉。取小的保证<strong>完整可见</strong>，代价是长边那一侧留出空白——1280×800 的窗口，<code>scale = min(0.5, 0.555…) = 0.5</code>，画布显示成 1280×720，上下各留 40px；深蓝背景会把这点留白吃掉，看不出来。</li>
+</ul>
+<p><strong>为什么不用响应式断点或百分比坐标</strong>：心形轮廓是数学公式算出来的点，任何「按屏幕百分比摆」的方案都得为不同宽高比重算一遍，而 2560×1440 是一张固定的虚拟画布，公式、卡片尺寸、留白都只有一套数字。窗口变化时 <code>resize</code> 回调只重算一个 <code>scale</code>，再按新画布重采样心形点（第十五节），不必重写任何坐标常量。</p>
+<p>一个隐含约束：因为所有坐标都是设计稿单位，<code>WISH_W = 270</code> 指的是「画布上的 270」，在 1280 宽的屏幕上实际只有 135 CSS 像素。调卡片大小时要在<strong>设计稿尺度</strong>上想，别拿真实像素去估。</p>
+<hr>
+<h2 id="七、心形曲线公式（整个布局的数学核心）"><a href="#七、心形曲线公式（整个布局的数学核心）" class="headerlink" title="七、心形曲线公式（整个布局的数学核心）"></a>七、心形曲线公式（整个布局的数学核心）</h2><p><a href="/birthday/script.js">script.js:323</a> <code>sampleHeartPoints()</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rawX = <span class="number">16</span> × sin³(t)</span><br><span class="line">rawY = −(<span class="number">13</span>·cos t − <span class="number">5</span>·cos 2t − <span class="number">2</span>·cos 3t − cos 4t)   （整体取负：屏幕 y 轴朝下）</span><br></pre></td></tr></table></figure>
+
+<p><strong>这是什么</strong>：经典的”心形参数方程”。参数 t 从 0 转到 2π，每个 t 算出一个 (x, y)，连起来就是心形轮廓。t 的步长 &#x3D; 2π ÷ 卡片数，所以<strong>想要多少个点都行</strong>，且沿轮廓等弧度分布——不用手工摆 30 多个点位，改一个数量参数就能重排整颗心。</p>
+<p><strong>坐标范围推导</strong>（决定后面所有缩放）：</p>
+<ul>
+<li>x 方向：sin³t 最大是 1，所以 x ∈ [−16, +16]，宽 <strong>32</strong>；</li>
+<li>y 方向（数学坐标，y 朝上）：t&#x3D;0 时 y &#x3D; 13−5−2−1 &#x3D; <strong>+5</strong>（两瓣之间的凹口），t&#x3D;π 时 y &#x3D; −13−5+2−1 &#x3D; <strong>−17</strong>（下尖端），瓣顶最高约 <strong>+12</strong>——整个心形高约 29；</li>
+<li>代码整体取负号：屏幕坐标 y 是朝下长的，负号把心形”翻”成正立（两瓣在上、尖朝下）。</li>
+</ul>
+<p><strong>从公式坐标到屏幕坐标的换算</strong>（<a href="/birthday/script.js">script.js:326-347</a>）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">屏幕x = 画布中心x + rawX × heartScale − 卡片宽/2</span><br><span class="line">屏幕y = 画布中心y + offsetY + rawY × heartScale − 卡片高/2</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><code>heartScale = min(可用宽÷32, 可用高÷32)</code>（<a href="/birthday/script.js">script.js:332</a>）：公式宽 32，除以 32 就把心形刚好缩放进可用区域；宽高各算一次取<strong>小的</strong>，保证两个方向都不出界。可用区域 &#x3D; 画布 − 左右各 20px 留白 − 卡片自身尺寸（先把卡片占的地方扣掉）。高度方向实际只需除 29，统一除 32 是”宁可略小、绝不越界”的简化，视觉无差别。</li>
+<li><code>− 卡片宽/2 / − 卡片高/2</code>：算出来的点当卡片<strong>中心</strong>用，减半张卡片换算成左上角——CSS 的 left&#x2F;top 定位基准是左上角。</li>
+<li><code>offsetY = −画布高 × 15%</code>：心形公式天生”下重上轻”（下尖 −17、上瓣 +12），正中放会显得偏下，整体上移 15% 视觉才居中。</li>
+<li><code>Math.max(5, …)</code>：最后兜底，任何卡片离屏幕边缘至少 5px。</li>
+</ol>
+<p><strong>去重逻辑（目前关着，故意的）</strong>：dedup 开启时先按”离形状中心的距离”排序，再两两比对，距离小于 <code>min(270,120) × 35% = 42</code>（设计稿像素）的丢弃（<a href="/birthday/script.js">script.js:360-381</a>）。这是 O(n²) 的朴素算法——最多 64 个点，平方也才 4096 次比较，不值得上更聪明的数据结构。目前 8 个模式全部传 <code>dedup=false</code>：卡片适度重叠才有”堆满一屏”的密度感，完全不让重叠反而显得稀疏（踩过的坑）。</p>
+<p><strong>参数方程和隐式方程的区别</strong>：心形也可以写成一个 <code>f(x,y)=0</code> 的隐式方程（例如 <code>(x²+y²−1)³ − x²y³ = 0</code>），但要沿轮廓<strong>均匀取 30 个点</strong>，得先解出边界、再按弧长重采样，很麻烦。参数方程直接给「走一圈的路径」：t 从 0 到 2π 就是沿轮廓走一整圈，把这一圈等分成 count 份就得到 count 个点。公式里 <code>cos t</code>、<code>cos 2t</code>、<code>cos 3t</code>、<code>cos 4t</code> 是几个不同频率的谐波叠加——正是它们把单纯的椭圆「捏」出上面的两个瓣和下面的尖；<code>16·sin³t</code> 负责左右对称且让左右边缘饱满。</p>
+<p><strong>为什么 t 等分不等于弧长等分</strong>：参数走匀速时，曲线弯得急的地方点会密、平缓处点会疏。心形在尖端和凹口曲率大，那里卡片会挤一点。要严格按弧长均匀，得先算累积弧长再做反查表；这里没做，因为卡片本身有宽度、允许重叠，几十像素的疏密差肉眼看不出来，而弧长采样会多出一倍代码。<strong>能省的算法就省，把复杂度花在看得见的地方</strong>，和上面去重那段 O(n²) 的判断是同一个取舍。</p>
+<p><strong>换一种做法行不行</strong>：手工摆 30 多个点位当然可以，但数量一变（第五节按屏幕面积算 30~64）就要重摆一遍；用 CSS <code>clip-path</code> 或 SVG 路径也只能画形状，放不进几十个带图片和按钮的独立 DOM。参数方程是「一个数量参数决定整颗心」最经济的写法。</p>
+<p><strong>读代码时的两个小坑</strong>：<code>sampleHeartPoints()</code> 开头会调一次 <code>updateScale()</code> 重新取 <code>naturalW/naturalH</code>，所以采样永远基于当前设计稿状态，不会用到上一次窗口的旧值；返回的每个点带 <code>dist</code>（到中心的距离），只在去重开启时用于排序，<code>dedup === false</code> 时会被剥掉 <code>dist</code> 只留 <code>{x, y}</code>——<strong>返回结构随参数变化</strong>，这是为了不让下游拿到用不到的字段，也提醒读代码的人两种分支并不完全对称。</p>
+<hr>
+<h2 id="八、8-种心形布局模式：每次打开不重样"><a href="#八、8-种心形布局模式：每次打开不重样" class="headerlink" title="八、8 种心形布局模式：每次打开不重样"></a>八、8 种心形布局模式：每次打开不重样</h2><p><a href="/birthday/script.js">script.js:300</a> <code>generateHeartPositions()</code> 每次随机挑一种。点数相同，<strong>区别只在出现顺序和节奏</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>效果</th>
+<th>为什么这么设计</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>growth</td>
+<td>沿轮廓顺序出现</td>
+<td>像一笔画爱心</td>
+</tr>
+<tr>
+<td>random</td>
+<td>位置铺满轮廓，出现顺序随机</td>
+<td>铺开感，不呆板</td>
+</tr>
+<tr>
+<td>curve_cw &#x2F; curve_ccw</td>
+<td>沿轮廓顺&#x2F;逆时针依次点亮</td>
+<td>有”描边”的仪式感</td>
+</tr>
+<tr>
+<td>ripple</td>
+<td>按离中心距离分 4 圈，从内到外荡开，每圈内乱序（间隔 260ms）</td>
+<td>像涟漪扩散</td>
+</tr>
+<tr>
+<td>heartbeat</td>
+<td>位置随机，节奏 150ms-150ms-500ms 循环</td>
+<td>模拟心跳”咚、咚、——“</td>
+</tr>
+<tr>
+<td>outline_fill</td>
+<td>40% 先描边（间隔 200ms），描完再随机向内部填充（间隔 500ms）</td>
+<td>先画空心爱心再填满，层次最丰富</td>
+</tr>
+<tr>
+<td>rainfall</td>
+<td>位置随机，每张卡从上方 0.3 屏高处落下就位</td>
+<td>卡片雨，动感最强</td>
+</tr>
+</tbody></table>
+<p><strong>共同的返回格式</strong>：每个模式返回 <code>{ positions, delays }</code>，<code>delays[i]</code> 是第 i 张卡出现的毫秒数；<strong><code>delays = null</code> 表示”没有特殊节奏”，调度器就用统一的 300ms 间隔</strong>（<a href="/birthday/script.js">script.js:826</a> 的兜底 <code>idx * TIP_INTERVAL</code>）。把”在哪里”（positions）和”什么时候”（delays）<strong>分开返回</strong>，总调度函数就不用关心每个模式的动画细节——加新模式只要多写一个生成函数。</p>
+<p>逐个拆开看算法：</p>
+<p><strong>growth &#x2F; curve_cw &#x2F; curve_ccw</strong>（<a href="/birthday/script.js">script.js:384</a>、<a href="/birthday/script.js">399</a>、<a href="/birthday/script.js">430</a>）<br>三个是同一份心形采样的三种”读法”：位置完全一样（都按 t &#x3D; i × 步长 沿轮廓取点），curve_ccw 用 t &#x3D; 2π − i × 步长 反着走一遍。delays 全是 null → 300ms 匀速。growth 和 curve_cw 的位置代码是重复的两份——两个才 30 行的小函数，抽成”带方向参数”的公共函数反而多一层绕，<strong>小重复优于早抽象</strong>。</p>
+<p><strong>random</strong>（<a href="/birthday/script.js">script.js:388</a>）：轮廓点取完后 Fisher-Yates 洗牌，再 300ms 匀速弹出。</p>
+<p><strong>ripple</strong>（<a href="/birthday/script.js">script.js:461</a>）分六步：</p>
+<ol>
+<li>取心形轮廓点；</li>
+<li>算每个点到”抬高后的中心”的距离（中心 y 同样 −15%，和心形对齐，否则涟漪圆心和心错位）；</li>
+<li>按距离升序排序；</li>
+<li>距离区间四等分切成 4 圈：第 r 圈 &#x3D; [r × maxDist&#x2F;4, (r+1) × maxDist&#x2F;4)；</li>
+<li>每圈内部 Fisher-Yates 乱序；</li>
+<li>四圈首尾相接排成一列，延迟逐个 +260ms 累加。</li>
+</ol>
+<p>效果：先内圈后外圈荡开，同圈内先后随机——像水波，但不是死板的同心圆。</p>
+<p><strong>heartbeat</strong>（<a href="/birthday/script.js">script.js:508</a>）：位置洗牌后，延迟是 [150, 150, 500] 循环的<strong>累加和</strong>——“咚、咚、——停顿”。30 张卡总时长 &#x3D; 10 组 × 800ms &#x3D; 8 秒，64 张约 17 秒。</p>
+<p><strong>outline_fill</strong>（<a href="/birthday/script.js">script.js:532</a>）：</p>
+<ol>
+<li>40% 的卡（<code>floor(count × 0.4)</code>）放在轮廓上（心形采样，步长改成 2π ÷ 轮廓数），每张间隔 200ms，先把空心爱心描完；</li>
+<li>描完停 300ms，剩下 60% 往内部填：随机角度 + 随机比例 frac（0 ~ 0.85），x &#x3D; 16 × cos(角度) × frac，y 用<strong>心形公式在同样角度的函数值 × frac</strong>——相当于把整颗心形”向心压扁”后撒点，内部点会跟着心形轮廓的形状走，而不是撒成一个圆盘；frac 上限 0.85 是防止内部点戳出轮廓外；</li>
+<li>填充每张间隔 500ms，比描边慢一倍多——先看清是颗心，再慢慢被填满。</li>
+</ol>
+<p>一个遗留细节：填充循环里算了 <code>rawY</code> 但最终用的是 <code>heartY</code>，<code>rawY</code> 是没用上的死变量（<a href="/birthday/script.js">script.js:565</a>），读到别疑惑。</p>
+<p><strong>rainfall</strong>（<a href="/birthday/script.js">script.js:587</a>）：位置洗牌 + 300ms 匀速，但每张卡创建时先被放在”目标位置上方 max(0.3 屏, 200px)”处，并换一条专属 CSS 过渡（<code>top 0.6s cubic-bezier(0.23,1,0.32,1)</code>，急出缓停的落体手感），下一帧把 top 改成目标值——CSS transition 自动补间出”落下”动画。因为要先渲染一帧初始位置再改，这里用了<strong>两层嵌套 requestAnimationFrame</strong>（<a href="/birthday/script.js">script.js:799-808</a>），普通模式只要一层。</p>
+<p><strong>洗牌为什么用 Fisher-Yates</strong>（<a href="/birthday/script.js">script.js:390</a>）：从最后一个元素往前，每个位置和”它前面（含自己）随机一个”交换，n 个元素 n−1 次交换、O(n)，每种排列<strong>等概率</strong>出现。老写法 <code>sort(() =&gt; Math.random() - 0.5)</code> 看似随机，实际分布有偏且结果依赖浏览器排序实现——数组洗牌一律用 Fisher-Yates。</p>
+<p><strong>模式是怎么选的</strong>（<a href="/birthday/script.js">script.js:300</a>）：八个常量排成 <code>modes</code> 数组，<code>modes[Math.floor(Math.random() * modes.length)]</code> 等概率抽一个，再用一串 <code>if/else if</code> 派到对应的生成函数。没有用 <code>switch</code>、也没用「函数名映射表」，因为八个分支里有的要额外返回 <code>rainfall: true</code> 和落体距离，返回值形状不统一，写成表反而要塞特例。<strong>分支少、形状不齐时，直白的 if 链最好读。</strong></p>
+<p>顺着把返回值的<strong>完整契约</strong>补全：除了 <code>{ positions, delays }</code>，rainfall 还会多带 <code>rainfall: true</code> 与 <code>rainfallFallDistance</code>，调度器（第十节）把它存进 <code>heartRainfall</code> &#x2F; <code>heartRainfallDistance</code>，建卡片时才知道要不要先放到上方、过渡用哪条曲线。这类「可选字段」用 <code>|| false</code> &#x2F; <code>|| 0</code> 兜底读取，没给的字段自动取默认值，新增模式不必回来改所有旧模式。</p>
+<p><strong>delays 是累加和还是绝对时间</strong>：是<strong>绝对时间</strong>——<code>heartDelays[i]</code> 直接交给 <code>setTimeout(..., delay)</code>，表示「从开始算起第 i 张在第几毫秒出现」。代码里各模式用 <code>delay += interval</code> 一路累加生成，所以数组单调递增；这里若误写成每次嵌套 <code>setTimeout</code>、把 interval 当成相对上一位的间隔，节奏会越走越慢（每张都等前面那张再加 interval）。<code>delays = null</code> 时退化的 <code>idx * TIP_INTERVAL</code> 同样是绝对时间，两种写法在调度器里才对得上。</p>
+<p><strong>怎么加第九种模式</strong>：① 加一个 <code>MODE_XXX</code> 常量并放进 <code>modes</code> 数组；② 写一个返回 <code>{positions, delays}</code> 的函数，位置仍从 <code>sampleHeartPoints(count, false)</code> 取，别自己造坐标，否则缩放和去重规则会不一致；③ 在 <code>generateHeartPositions</code> 的 if 链里加一支。调度器、卡片创建、resize 三处都不用动——这就是把「在哪里」和「什么时候」分开返回换来的扩展性。</p>
+<p><strong>为什么不用 CSS <code>animation-delay</code> 一次把 64 张卡全建好</strong>：那样 DOM 一开始就全在，浏览器要同时维护 64 个图层和 64 段动画，首屏内存和合成开销都上去了；现在的写法是「到点才建 DOM」，任意时刻场上只有已出现的卡片。代价是 64 个 <code>setTimeout</code> 要管，于是有了第十节那套 <code>timeouts</code> 数组。</p>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/birthday/bd-03-heart-star.webp" alt="心形轨迹铺开的祝福卡片（平时 · 星空场景）"></p>
+<hr>
+<h2 id="九、卡片是怎么创建的"><a href="#九、卡片是怎么创建的" class="headerlink" title="九、卡片是怎么创建的"></a>九、卡片是怎么创建的</h2><p><a href="/birthday/script.js">script.js:743</a> <code>createRandomTipWindow(index)</code></p>
+<p>每张卡片纯 JS 创建，由四样东西组成：</p>
+<ol>
+<li><strong>随机配图</strong>：从 21 张图里随机挑一张 <code>img/imageN.jpg</code>；</li>
+<li><strong>随机文案</strong>：从当前文案池随机抽一条；</li>
+<li><strong>随机底色</strong>：10 种半透明深蓝紫色调（<code>TIP_BG_COLORS</code>，透明度 0.72 左右——太实会挡住 3D 背景，太透文字看不清，0.72 是试出来的平衡值）；</li>
+<li><strong>“收下”按钮</strong>：点击后 300ms 淡出再从 DOM 移除。</li>
+</ol>
+<p>几个值得注意的细节：</p>
+<ul>
+<li><code>wishImage.onerror = 隐藏图片</code>：图片万一加载失败，卡片只剩文字照样能用，不会出现一个破图图标（兜底逻辑，成本一行）。</li>
+<li>位置 <code>heartPositions[index % heartPositions.length]</code>：取余是防御——万一某模式去重后返回的点比卡片数少，也不会取到 undefined。</li>
+<li>落下动画：rainfall 模式先把卡片放到”目标位置上方 0.3 屏”，下一帧再改回目标位置，靠 CSS transition 产生下落感（算法见第八节）。</li>
+<li>入场时机：普通模式一层 <code>requestAnimationFrame</code>，rainfall 两层（<a href="/birthday/script.js">script.js:799</a>）——必须等浏览器先完成一帧布局，再添加 <code>visible</code> 类（或改 top），过渡动画才会生效。直接加类的话浏览器会把”初始状态+动画状态”合并成一帧，卡片就没有入场动画了——这是前端动画的经典坑。</li>
+</ul>
+<p>把创建过程按执行顺序摊开（<a href="/birthday/script.js">script.js:743</a>）：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> wishPopup = <span class="variable language_">document</span>.<span class="title function_">createElement</span>(<span class="string">&#x27;div&#x27;</span>);</span><br><span class="line">wishPopup.<span class="property">className</span> = <span class="string">&#x27;wish-popup&#x27;</span>;</span><br><span class="line">wishPopup.<span class="property">style</span>.<span class="title function_">setProperty</span>(<span class="string">&#x27;--card-tint&#x27;</span>, bgColor);</span><br><span class="line"><span class="keyword">var</span> wishImage = <span class="variable language_">document</span>.<span class="title function_">createElement</span>(<span class="string">&#x27;img&#x27;</span>);</span><br><span class="line">wishImage.<span class="property">src</span> = imgSrc;</span><br><span class="line">wishImage.<span class="property">onerror</span> = <span class="keyword">function</span>(<span class="params"></span>) &#123; <span class="variable language_">this</span>.<span class="property">style</span>.<span class="property">display</span> = <span class="string">&#x27;none&#x27;</span>; &#125;;</span><br><span class="line"><span class="keyword">var</span> wishTextEl = <span class="variable language_">document</span>.<span class="title function_">createElement</span>(<span class="string">&#x27;div&#x27;</span>);</span><br><span class="line">wishTextEl.<span class="property">textContent</span> = wishText;</span><br><span class="line"><span class="keyword">var</span> wishBtn = <span class="variable language_">document</span>.<span class="title function_">createElement</span>(<span class="string">&#x27;button&#x27;</span>);</span><br><span class="line">wishBtn.<span class="title function_">addEventListener</span>(<span class="string">&#x27;click&#x27;</span>, <span class="keyword">function</span>(<span class="params"></span>) &#123; <span class="comment">/* 淡出后 remove */</span> &#125;);</span><br><span class="line">wishPopup.<span class="title function_">appendChild</span>(wishImage);</span><br><span class="line">wishPopup.<span class="title function_">appendChild</span>(wishTextEl);</span><br><span class="line">wishPopup.<span class="title function_">appendChild</span>(wishBtn);</span><br><span class="line">wishesContainer.<span class="title function_">appendChild</span>(wishPopup);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>style.setProperty(&#39;--card-tint&#39;, bgColor)</code> 把随机底色写进 <strong>CSS 自定义属性</strong>，样式表里只管 <code>background: var(--card-tint)</code>。颜色有 10 种却不用写 10 个 class，改配色也只动 <code>TIP_BG_COLORS</code> 数组；</li>
+<li><code>textContent</code> 而不是 <code>innerHTML</code>：文案是硬编码字符串，本来没有注入风险，但用 <code>textContent</code> 是习惯——它把内容当纯文本，万一以后文案里出现 <code>&lt;3</code> 之类的符号也不会被当成标签解析；第十五节 <code>applySeasonCopy()</code> 拼两行问候语时用的是 <code>createTextNode</code> + <code>&lt;br&gt;</code>，同一个道理；</li>
+<li><code>wishImage.onerror</code> 里 <code>this</code> 是那张 <code>&lt;img&gt;</code>，直接 <code>display:none</code>，卡片自动缩成「只有文字 + 按钮」，不会出现裂图图标。这是一行成本的降级；</li>
+<li>三个 <code>appendChild</code> 的<strong>顺序就是视觉叠放顺序</strong>：图上、文字中、按钮下，和本节截图里看到的一致；</li>
+<li>「收下」按钮的回调里先改 <code>opacity</code> 和 <code>transform: scale(0.8)</code>，300ms 后才 <code>remove()</code> 并把它从 <code>wishElements</code> 里 <code>filter</code> 掉。<strong>动画期间元素还在数组里</strong>，若此时点「收下全部」，<code>closeAllWindows()</code> 会把它再淡出一次——重复操作是安全的，因为 <code>remove()</code> 调两次不会报错，数组 <code>filter</code> 也是幂等的。</li>
+</ul>
+<p><strong>为什么每张卡片是独立 DOM，而不是一整块 canvas 画出来</strong>：卡片里有图片、文字、可点按钮，还要各自淡入淡出和单独被「收下」。用 DOM 这些全是浏览器现成能力（事件、过渡、焦点）；换成 canvas 得自己实现命中检测、文字排版和焦点管理，成本不成比例。3D 背景用 canvas 恰恰相反——那里只有点，没有交互元素，所以两种技术各用在了合适的一侧（见第十三节）。</p>
+<p><code>heartPositions[index % heartPositions.length]</code> 的取余还有一层含义：<code>index</code> 是<strong>第几张卡</strong>，<code>heartPositions</code> 是<strong>这一局的点位表</strong>，两者数量本来相等；取余只是在 resize 提前重算、或未来某个模式去重后点数变少时，兜住「点不够」的情况，避免读到 <code>undefined.x</code> 直接抛错。</p>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/birthday/bd-04-cards-pop.webp" alt="生日季开场，卡片沿心形轨迹逐张弹出"></p>
+<hr>
+<h2 id="十、总调度：startTipWindows"><a href="#十、总调度：startTipWindows" class="headerlink" title="十、总调度：startTipWindows"></a>十、总调度：startTipWindows</h2><p><a href="/birthday/script.js">script.js:811</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">算数量( tipCount ) → 选布局模式( 拿到 positions + delays )</span><br><span class="line">→ 为每张卡设一个 setTimeout(delay 后调 createRandomTipWindow)</span><br><span class="line">→ 所有定时器 ID 存进 timeouts 数组</span><br></pre></td></tr></table></figure>
+
+<p>delay 取值规则（<a href="/birthday/script.js">script.js:826</a>）：模式给了 delays 就用 <code>delays[i]</code>，没给（null）就退回 <code>i × 300ms</code> 匀速。</p>
+<p><strong>为什么要把定时器都记下来</strong>：用户可能刚点开就点”收下全部”。<code>closeAllWindows()</code>（<a href="/birthday/script.js">script.js:701</a>）会把所有未触发的 setTimeout 全部取消（<code>clearTimeout</code>），并设 <code>isClosing = true</code> 作为双保险——即使某个 setTimeout 恰好已进入回调，回调开头的 <code>if (isClosing) return</code> 也会拦住。<strong>意义</strong>：没有这套机制，关掉页面后卡片还会陆续冒出来——“幽灵卡片”。</p>
+<p>把调度器摊开（<a href="/birthday/script.js">script.js:811</a>）：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">startTipWindows</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="title function_">updateScale</span>();</span><br><span class="line">    closeAllBtn.<span class="property">classList</span>.<span class="title function_">add</span>(<span class="string">&#x27;visible&#x27;</span>);</span><br><span class="line">    musicBtn.<span class="property">classList</span>.<span class="title function_">add</span>(<span class="string">&#x27;visible&#x27;</span>);</span><br><span class="line">    <span class="title function_">syncMusicBtn</span>();</span><br><span class="line">    <span class="title function_">mountBackground</span>();</span><br><span class="line">    <span class="keyword">var</span> count = <span class="title function_">tipCount</span>();</span><br><span class="line">    <span class="keyword">var</span> result = <span class="title function_">generateHeartPositions</span>(count);</span><br><span class="line">    heartPositions = result.<span class="property">positions</span>;</span><br><span class="line">    heartDelays = result.<span class="property">delays</span> || <span class="literal">null</span>;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; count; i++) &#123;</span><br><span class="line">        (<span class="keyword">function</span>(<span class="params">idx</span>) &#123;</span><br><span class="line">            <span class="keyword">var</span> delay = heartDelays ? (heartDelays[idx] || idx * <span class="variable constant_">TIP_INTERVAL</span>) : idx * <span class="variable constant_">TIP_INTERVAL</span>;</span><br><span class="line">            <span class="keyword">var</span> timeout = <span class="built_in">setTimeout</span>(<span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!isClosing) <span class="title function_">createRandomTipWindow</span>(idx);</span><br><span class="line">            &#125;, delay);</span><br><span class="line">            timeouts.<span class="title function_">push</span>(timeout);</span><br><span class="line">        &#125;)(i);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>开头几行是<strong>界面状态复位</strong>：按钮亮起、音乐按钮同步、3D 背景挂载，然后才算点位。把「挂载」放在算点位之前，是因为 3D 是异步 import，先发起请求能和后面的计算并行；</li>
+<li><code>(function(idx){ ... })(i)</code> 是个 IIFE，和第三节那个大 IIFE 是同一手法，但目的不同：这里为了给<strong>每一次循环</strong>造一份独立的 <code>idx</code>。若直接用 <code>var i</code>，64 个回调全都闭包到同一个 <code>i</code>，执行时读到的都是循环结束后的 <code>count</code>，所有卡片会挤在同一个点位上。这是 <code>var</code> 没有块级作用域的经典坑，用 <code>let i</code> 也能解，但这份代码整体是 ES5 风格，就统一用 IIFE；</li>
+<li><code>heartDelays[idx] || idx * TIP_INTERVAL</code>：<code>||</code> 顺便兜住 delays 数组比卡片数短的情况（某个模式少给了一个延迟），退回匀速，不会变成 <code>undefined</code> 让 <code>setTimeout</code> 当成 0；</li>
+<li><code>setTimeout</code> 的延迟是<strong>从排队的那一刻算起</strong>的，不是「上一张出现后再等 delay」。所以 64 张 × 300ms ≈ 19 秒铺完；heartbeat 模式按累加和排，总时长由最后一个 delays 决定，第八节算过约 17 秒。</li>
+</ul>
+<p><strong>为什么 <code>clearTimeout</code> 之外还要 <code>isClosing</code></strong>：定时器回调一旦被压进事件队列，<code>clearTimeout</code> 就拦不住了——它只能取消「还没到点」的，取消不了「已经到点、正排队等执行」的。<code>closeAllWindows()</code> 先置 <code>isClosing = true</code>，再清空数组并逐个 <code>clearTimeout</code>；调度器回调开头和 <code>createRandomTipWindow()</code> 开头各有一次 <code>if (isClosing) return</code>，两道门把竞态窗口堵死。<strong>状态标志 + 资源清理</strong>这套组合，但凡有异步任务可取消都该这么写。</p>
+<p><code>restartWishes()</code> 是它的镜像：把 <code>isClosing</code> 置回 <code>false</code>、<code>userMuted</code> 复位，再调 <code>playRandomMusic()</code> 和 <code>startTipWindows()</code>。注意它<strong>不清空 <code>timeouts</code> &#x2F; <code>wishElements</code></strong>——那是 <code>closeAllWindows()</code> 已经做过的事，重开时数组本来就是空的。若哪天允许「不收下全部就重开」，这里就得补一次清理，否则旧定时器会继续往场上加卡片。</p>
+<hr>
+<h2 id="十一、音乐：网易云在线歌单"><a href="#十一、音乐：网易云在线歌单" class="headerlink" title="十一、音乐：网易云在线歌单"></a>十一、音乐：网易云在线歌单</h2><p><code>loadPlaylist()</code>（<a href="/birthday/script.js">script.js:639</a>）&#x2F; <code>playRandomMusic()</code>（<a href="/birthday/script.js">script.js:662</a>）（与博客左下角固定播放器用同一个歌单：网易云 <strong>9086662585</strong>，七百来首）</p>
+<p>2026-11-07 起音乐不再存本地文件，改为在线播放。原理：</p>
+<ul>
+<li><strong>页面打开时</strong>就 <code>fetch</code> 一次 Meting 中转（<code>api.injahow.cn</code>）拿歌单列表，约 199KB，和图片预加载并行，不挡任何事；<code>loadPlaylist()</code> 用”Promise 缓存”保证整个页面只请求一次，谁要结果都等同一个；</li>
+<li><strong>点开始时</strong>从列表随机挑一首，把中转给的音频流地址塞给 <code>&lt;audio&gt;</code>，浏览器跟着 302 跳到网易云 CDN 边播边缓冲，不用等整首下完；随机时会避开上一首（<code>lastTrackIdx</code>）；</li>
+<li>一首播完或<strong>加载出错</strong>时自动换下一首（<code>error</code> 事件监听 <a href="/birthday/script.js">script.js:845</a>，最多重试 5 次，防止坏歌死循环）；单首仍然 <code>loop</code> 循环，行为和以前一致。</li>
+</ul>
+<p>两个关键坑：</p>
+<ul>
+<li><strong>自动播放限制</strong>：浏览器规定 <code>play()</code> 必须发生在用户点击的那一瞬间，而歌单是异步到达的。解法是点击瞬间先给 <code>&lt;audio&gt;</code> 塞一段<strong>静音音频</strong>（<code>SILENT_WAV</code>，<code>unlockAudio()</code>）播一下”解锁”播放器，歌单到了再换真歌就能响了。两个页面都这么干。</li>
+<li><strong>中转站依赖</strong>：音乐走 <code>api.injahow.cn</code> 免费中转（实测国内可用）。它挂了音乐就不响，但不影响页面其他功能——<code>fetch</code> 失败只记日志。</li>
+</ul>
+<p><strong>为什么需要中转</strong>：网易云的直接外链（<code>music.163.com/song/media/outer/url</code>）已对匿名访问全面拦截（实测全部跳 404），hexo 圈通行的方案就是 Meting 中转——由中转服务器带着凭据去解析真实音频流。</p>
+<p><strong>歌单联动</strong>：往网易云歌单里加歌&#x2F;删歌，网页里随机到的歌跟着变，不用重新部署。连连看页（<code>source/link/script.js</code>）用同一套逻辑和同一个歌单。</p>
+<blockquote>
+<p>本地不再有 <code>source/vo/</code> 目录。想换歌单：改 <code>METING_API</code> 里的歌单 ID（生日页和连连看两处都要改）。</p>
+</blockquote>
+<p>把「Promise 缓存」摊开看，这是全篇最值得记住的一个小模式（<a href="/birthday/script.js">script.js:639</a>）：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">loadPlaylist</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (playlistPromise) <span class="keyword">return</span> playlistPromise;</span><br><span class="line">    playlistPromise = <span class="title function_">fetch</span>(<span class="variable constant_">METING_API</span>).<span class="title function_">then</span>(<span class="keyword">function</span>(<span class="params">r</span>) &#123; <span class="keyword">return</span> r.<span class="title function_">json</span>(); &#125;)</span><br><span class="line">        .<span class="title function_">then</span>(<span class="keyword">function</span>(<span class="params">list</span>) &#123;</span><br><span class="line">            playlistUrls = (list || []).<span class="title function_">filter</span>(<span class="keyword">function</span>(<span class="params">t</span>) &#123; <span class="keyword">return</span> t &amp;&amp; t.<span class="property">url</span>; &#125;)</span><br><span class="line">                                      .<span class="title function_">map</span>(<span class="keyword">function</span>(<span class="params">t</span>) &#123; <span class="keyword">return</span> t.<span class="property">url</span>; &#125;);</span><br><span class="line">            <span class="keyword">return</span> playlistUrls;</span><br><span class="line">        &#125;).<span class="title function_">catch</span>(<span class="keyword">function</span>(<span class="params">e</span>) &#123;</span><br><span class="line">            <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;Playlist load failed:&#x27;</span>, e);</span><br><span class="line">            playlistPromise = <span class="literal">null</span>;   <span class="comment">// 失败要允许重试</span></span><br><span class="line">            <span class="keyword">return</span> [];</span><br><span class="line">        &#125;);</span><br><span class="line">    <span class="keyword">return</span> playlistPromise;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第一行是全部机关：缓存的是<strong>那个 Promise 本身</strong>，不是结果。<code>preloadAssets()</code> 在页面加载时调一次、点开始时又调一次，第二次拿到的还是同一个 Promise，于是两个调用者一起等同一次网络请求，不会发两遍 199KB；</li>
+<li><code>.filter(...)</code> 把中转返回里没有 <code>url</code> 的条目剔掉，<code>.map(...)</code> 只留地址字符串。下游 <code>playRandomMusic()</code> 因此可以假定「数组里每一项都能直接塞给 <code>audio.src</code>」，不必各自判空；</li>
+<li><code>.catch</code> 里除了记日志，还把 <code>playlistPromise</code> <strong>清空</strong>，这样下次调用会重新发起请求——中转偶尔抽风时能自愈。同时返回 <code>[]</code> 让调用方走「没有歌」的分支：页面照常弹卡片，只是没声音。<strong>外部依赖失败必须能降级，不能让主流程陪葬</strong>；</li>
+<li><code>return []</code> 而不是 <code>throw</code>：错误已经在函数内部被消化了，调用方不需要写 <code>try/catch</code>，<code>.then</code> 里判断 <code>!urls || !urls.length</code> 即可。</li>
+</ul>
+<p><code>unlockAudio()</code> 为什么必须放在点击的<strong>同步调用栈</strong>里：<code>fadeOutAndStart()</code> 第一句就是 <code>unlockAudio()</code>，它给 <code>&lt;audio&gt;</code> 塞一段 base64 静音 wav 并立刻 <code>play()</code>。浏览器认的是「用户手势之后紧接着的播放动作」，一旦进了 <code>setTimeout</code> 或 <code>.then</code>，手势凭据就过期了。之后 <code>playRandomMusic()</code> 在 Promise 里换 <code>src</code> 再 <code>play()</code>，属于「已解锁的播放器换内容」，不再被拦。这也是为什么 500ms 的欢迎窗淡出要放在解锁<strong>之后</strong>。</p>
+<p><code>playRandomMusic()</code> 里 <code>while (idx === lastTrackIdx)</code> 避开上一首：歌单七百来首，撞车概率本来极低，但连续两首同一首歌会很明显，加一行就免了。注意 <code>urls.length &gt; 1</code> 的判断——只有一首时这个 while 会死循环，别漏。</p>
+<p><code>error</code> 回调里 <code>trackRetries &gt;= 5</code> 是<strong>重试上限</strong>：网易云有些歌因版权返回坏链，不设上限就会在坏歌之间无限打转并刷爆日志；满 5 次就安静下来，等用户手动点音乐按钮。这条和第八节「rainfall 两层 rAF」、第十节「isClosing 双保险」是同一类防御：把「理论上不会发生但一旦发生很难查」的情况用一行挡住。</p>
+<hr>
+<h2 id="十二、3D-背景：为什么用”动态-import”"><a href="#十二、3D-背景：为什么用”动态-import”" class="headerlink" title="十二、3D 背景：为什么用”动态 import”"></a>十二、3D 背景：为什么用”动态 import”</h2><p><a href="/birthday/script.js">script.js:730</a> <code>mountBackground()</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span>(<span class="string">&#x27;./cake3d.js&#x27;</span>).<span class="title function_">then</span>(<span class="keyword">function</span>(<span class="params">mod</span>) &#123; mod.<span class="title function_">mount</span>(cakeStage, &#123; <span class="attr">scene</span>: ... &#125;) &#125;)</span><br></pre></td></tr></table></figure>
+
+<p><code>import()</code> 是运行时才加载模块的写法，和顶部 <code>import</code> 的区别就是”用到才下载”。这里用它有三个原因：</p>
+<ol>
+<li><strong>three.module.js 有 655KB</strong>，是全页最大的文件。用户还停在欢迎窗时不必下载，点了开始才拉取，首屏更快；</li>
+<li><strong>同一模块只会下载一次</strong>：第二次 <code>import(&#39;./cake3d.js&#39;)</code> 直接命中浏览器缓存（本页的”重新开启”就靠这个，秒重挂）；</li>
+<li><code>scene</code> 参数一个文件出两种背景：生日季传 <code>&#39;cake&#39;</code> 出蛋糕，平时传 <code>&#39;star&#39;</code> 出星空，不用写两个文件。</li>
+</ol>
+<p><code>cake3d.js</code> 对外只暴露一个 <code>mount(容器, 选项)</code>，页面逻辑完全不知道里面 three.js 怎么用——渲染细节和页面逻辑隔离，以后换渲染引擎（比如换 CSS 动画）只动这一个文件。</p>
+<p>把挂载函数摊开（<a href="/birthday/script.js">script.js:730</a>）：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">mountBackground</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (bgMounted || !cakeStage) <span class="keyword">return</span>;</span><br><span class="line">    bgMounted = <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">import</span>(<span class="string">&#x27;./cake3d.js&#x27;</span>).<span class="title function_">then</span>(<span class="keyword">function</span>(<span class="params">mod</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (mod &amp;&amp; mod.<span class="property">mount</span>) &#123;</span><br><span class="line">            <span class="keyword">var</span> bg = mod.<span class="title function_">mount</span>(cakeStage, &#123; <span class="attr">scene</span>: isBirthday ? <span class="string">&#x27;cake&#x27;</span> : <span class="string">&#x27;star&#x27;</span> &#125;);</span><br><span class="line">            <span class="keyword">if</span> (bg) cakeStage.<span class="property">classList</span>.<span class="title function_">add</span>(<span class="string">&#x27;on&#x27;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;).<span class="title function_">catch</span>(<span class="keyword">function</span>(<span class="params">e</span>) &#123; <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;Background load failed:&#x27;</span>, e); &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>bgMounted</code> 在<strong>发起 import 之前</strong>就置真。<code>import()</code> 是异步的，若用户在这段等待里又触发一次调度（例如重开），没有这个标志就会挂两个 WebGL 画布、跑两套渲染循环，GPU 直接翻倍。布尔标志要放在异步操作之前，这是通用写法；</li>
+<li><code>if (mod &amp;&amp; mod.mount)</code>：模块加载成功不代表导出了预期的函数，先探一下再调，避免版本不匹配时白屏；</li>
+<li><code>cakeStage.classList.add(&#39;on&#39;)</code> 只在 <code>mount()</code> 返回真值后加，样式靠这个 class 做淡入。意思是「渲染确实起来了才让容器可见」，否则用户会先看到一块空白矩形；</li>
+<li><code>.catch</code> 只记日志：3D 是<strong>装饰层</strong>，加载失败时 <code>cakeStage</code> 保持透明，页面原来的深蓝渐变背景还在，卡片、音乐、按钮全都不受影响。动态 import 的失败必须能吞掉，不能让它冒泡成未处理的 Promise rejection。</li>
+</ul>
+<p><strong>两次 import 的关系</strong>：第十四节 <code>preloadAssets()</code> 里有一句 <code>import(&#39;./cake3d.js&#39;).catch(function(){})</code>，那次是<strong>预热</strong>——只为了在用户还看欢迎窗时就把模块（和它依赖的 655KB three.js）拉进浏览器模块缓存，不调用任何导出。等 <code>mountBackground()</code> 再 import 时，浏览器按 URL 命中模块缓存，直接返回同一个模块对象，不产生第二次网络请求。所以「重新开启」几乎是瞬间的，不用重新下载引擎。这也是 ES 模块规范里「同一 URL 只求值一次」带来的免费收益。</p>
+<p><strong>为什么不用顶部静态 <code>import</code></strong>：静态 import 会在 <code>script.js</code> 一执行就把整条模块图下载并执行完，首屏要等 655KB；而且传统 <code>&lt;script&gt;</code>（非 module）里根本写不了静态 import。动态 <code>import()</code> 可以在普通脚本里用，返回 Promise，正好配合「点了开始才挂载」的时机。代价是首帧会有一小段空窗，所以才配了预热那一行。</p>
+<hr>
+<h2 id="十三、3D-背景的算法（cake3d-js）"><a href="#十三、3D-背景的算法（cake3d-js）" class="headerlink" title="十三、3D 背景的算法（cake3d.js）"></a>十三、3D 背景的算法（cake3d.js）</h2><p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/birthday/bd-05-cake3d.webp" alt="收下全部卡片后留下的蛋糕点云场景"></p>
+<p><a href="/birthday/cake3d.js">cake3d.js</a> 全文约 1200 行，没有用任何外部模型&#x2F;贴图文件——<strong>画面里所有东西都是代码算出来的点</strong>。拆成几块看：</p>
+<h3 id="13-1-一切皆是”点云”"><a href="#13-1-一切皆是”点云”" class="headerlink" title="13.1 一切皆是”点云”"></a>13.1 一切皆是”点云”</h3><p>主体用 three.js 的 <code>Points</code> 点云：每个形状是几千个带颜色的小点，点的外观是 canvas 现画的径向渐变贴图（圆点 <code>sphereTexture</code>、软光斑 <code>softSprite</code>、五角星 <code>starSprite</code>），一种形状一组缓冲 ≈ 1 次 draw call。两个例外：爆开的彩带是真网格（见 13.3），流星尾巴除了点还用一条 <code>Line</code> 连成连续光痕（见 13.4）。为什么不用实体模型：没有建模资源，一个 glTF 模型几百 KB 还得加载，点云只要代码，而且”星光颗粒”风格和页面的像素小窗风统一。</p>
+<h3 id="13-2-可复现随机数：mulberry32（cake3d-js-59）"><a href="#13-2-可复现随机数：mulberry32（cake3d-js-59）" class="headerlink" title="13.2 可复现随机数：mulberry32（cake3d.js:59）"></a>13.2 可复现随机数：mulberry32（<a href="/birthday/cake3d.js">cake3d.js:59</a>）</h3><p>每次挂载生成一个随机种子，用它派生出 <strong>3 条互不干扰的随机流</strong>（<code>seed ^ 0x9E3779B9</code>、<code>seed ^ 0x85EBCA6B</code>）：主流 <code>rnd</code> 同时供蛋糕几何和飘带&#x2F;流星&#x2F;星空这些环境粒子，<code>brng</code> 专门给爆开的 150 条彩带网格，<code>crng</code> 专门给彩纸。<strong>为什么</strong>：mulberry32 是可设种子的伪随机数生成器——同一个种子永远生成同一串”随机”数，画面可以完整复现（调试时改一个参数，其他都不变，才知道改动的效果）；分 3 条流是防止蛋糕多撒一个点、丝带就少一个随机数，两个系统互相”抢数”，牵一发动全身。</p>
+<p>把生成器本身摊开（<a href="/birthday/cake3d.js">cake3d.js:59</a>）：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">mulberry</span>(<span class="params">seed</span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> a = seed &gt;&gt;&gt; <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">        a += <span class="number">0x6D2B79F5</span>;</span><br><span class="line">        <span class="keyword">var</span> t = a;</span><br><span class="line">        t = <span class="title class_">Math</span>.<span class="title function_">imul</span>(t ^ (t &gt;&gt;&gt; <span class="number">15</span>), t | <span class="number">1</span>);</span><br><span class="line">        t ^= t + <span class="title class_">Math</span>.<span class="title function_">imul</span>(t ^ (t &gt;&gt;&gt; <span class="number">7</span>), t | <span class="number">61</span>);</span><br><span class="line">        <span class="keyword">return</span> ((t ^ (t &gt;&gt;&gt; <span class="number">14</span>)) &gt;&gt;&gt; <span class="number">0</span>) / <span class="number">4294967296</span>;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>seed &gt;&gt;&gt; 0</code> 把种子整理成 32 位无符号整数；<code>a</code> 是闭包里活着的状态，每调一次累加一个魔数再做几轮异或&#x2F;乘法把位搅乱，最后除以 2³² 归一到 [0,1)。<code>Math.imul</code> 是 32 位整数乘法，避免普通 <code>*</code> 超过 2⁵³ 丢精度；</li>
+<li>为什么不用 <code>Math.random()</code>：它<strong>不能设种子</strong>，同一段代码每次刷新画面都不一样，调参数时根本分不清「是我改出来的效果」还是「这次随机换了一副」。可复现的伪随机数在图形调试里是刚需，和小游戏笔记里用固定种子复现牌局是同一个动机；</li>
+<li>三条流用 <code>seed ^ 0x9E3779B9</code> 这类<strong>不同魔数异或</strong>派生，得到的三个起始状态互相错开。注意它们不是「三份独立的随机数表」，而是同一个算法的三个不同起点；好处是只需记住一个种子就能复现整幅画面。</li>
+</ul>
+<h3 id="13-3-形状怎么变成点（采样算法）"><a href="#13-3-形状怎么变成点（采样算法）" class="headerlink" title="13.3 形状怎么变成点（采样算法）"></a>13.3 形状怎么变成点（采样算法）</h3><ul>
+<li><strong>圆柱</strong>（<code>sampleCylinder</code>，<a href="/birthday/cake3d.js">cake3d.js:260</a>）：68% 的点撒在侧面（半径 ±1.5% 抖动，让表面有绒感），32% 撒在顶面。顶面撒点用 <code>√rnd × 半径</code>——如果半径直接均匀随机，点会中间密边上稀；<strong>开平方后面积上均匀</strong>（半径 ∝ √面积）。三层圆柱叠出蛋糕的三层。</li>
+<li><strong>椭球</strong>（<code>sampleEllipsoid</code>，<a href="/birthday/cake3d.js">cake3d.js:282</a>）：装饰球、糖珠用。u∈[−1,1] 当 cosφ 定纬度，再取 <code>k = ∛rnd</code>（三次方根）缩放半径——体积均匀采样要求”半径 ∝ 三次方根”，和圆盘开平方是同一个道理的 3D 版。</li>
+<li><strong>文字转点云</strong>（<code>textPoints</code> &#x2F; <code>extrudeText</code>，<a href="/birthday/cake3d.js">cake3d.js:296</a>）：倒计时数字 3、2、1 和 “Happy Birthday” 都不用字体文件——把白字画到黑底离屏 canvas 上 → 逐像素读亮度（红通道 &gt;128 即笔画）→ 每隔 step 像素取一个点 → 换算成世界坐标；<code>extrudeText</code> 再给每个点随机 z 厚度变成 3D 字。零资源依赖，改字只改一个字符串。</li>
+<li><strong>火焰</strong>（<code>flame</code>，<a href="/birthday/cake3d.js">cake3d.js:473</a>）：每根蜡烛两层火焰（外橙 1400 点、内黄 1000 点）。半径随高度线性收缩到 0（火苗上尖下粗），点的高度 y &#x3D; h × u^0.7 却<strong>偏向尖端</strong>——越细的地方点撒得越密，尖端才不会暗掉；运行时再按正弦缩放抖动（<code>deform</code>），看起来在摇。</li>
+<li><strong>丝带网格</strong>（<code>ribbonGeometry</code>，<a href="/birthday/cake3d.js">cake3d.js:352</a>）：爆炸彩带是真正的网格（不是点）：8 段窄条，边缘 <code>x = 0.08 × sin(波数)</code> 起波浪，每段两个三角形，双面材质。</li>
+</ul>
+<h3 id="13-4-粒子系统：一个套路”循环复用”"><a href="#13-4-粒子系统：一个套路”循环复用”" class="headerlink" title="13.4 粒子系统：一个套路”循环复用”"></a>13.4 粒子系统：一个套路”循环复用”</h3><p>固定大小的 <code>Float32Array</code> 缓冲（点数永远不变，<strong>每帧零内存分配</strong>），粒子飞出活动盒就从另一侧重生：</p>
+<ul>
+<li><strong>飘落丝带</strong>（<code>makeRibbons</code>，<a href="/birthday/cake3d.js">cake3d.js:919</a>）：匀速下落 + <code>sin</code> 横摆，出底部回顶部；</li>
+<li><strong>星空闪烁</strong>（<code>makeStarfield</code>，<a href="/birthday/cake3d.js">cake3d.js:1047</a>）：整层透明度按 <code>sin</code> 呼吸，每层相位、频率不同 → 星星各自闪不齐步；x 方向还有极慢漂移；</li>
+<li><strong>流星</strong>（<code>makeMeteors</code>，<a href="/birthday/cake3d.js">cake3d.js:961</a>）：每条流星 &#x3D; 头部亮点 + 沿运动反方向等距排的 16~18 个尾巴点，同一份坐标再叠一条 <code>Line</code> 把尾巴连成连续光痕；尾巴颜色从流星色向夜空色渐变（<code>pow 0.55</code> 曲线控制衰减快慢）；飞出边界就换随机方向重生；</li>
+<li><strong>彩纸</strong>（confetti，500 个）：初始随机方向速度下落，出界回顶部。</li>
+</ul>
+<h3 id="13-5-时间线状态机（蛋糕场景的开场演出）"><a href="#13-5-时间线状态机（蛋糕场景的开场演出）" class="headerlink" title="13.5 时间线状态机（蛋糕场景的开场演出）"></a>13.5 时间线状态机（蛋糕场景的开场演出）</h3><p>逻辑按固定 30 帧&#x2F;秒推进（<code>frame</code> 计数，<a href="/birthday/cake3d.js">cake3d.js:698</a> <code>tick()</code>）：</p>
+<table>
+<thead>
+<tr>
+<th>帧</th>
+<th>事件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0–35</td>
+<td>倒计时 3→2→1：每个数字 12 帧（0.4 秒），出现瞬间从 1.5 倍缩到 1（前 35% 完成），像”砸”下来</td>
+</tr>
+<tr>
+<td>36（CDEND）</td>
+<td>“Happy Birthday” 弹入：0.4→1 缩放，缓动 <code>1 − (1−p)³</code>（先快后慢的 pop 手感）</td>
+</tr>
+<tr>
+<td>46–80</td>
+<td>文字 ±3% 正弦”呼吸”35 帧</td>
+</tr>
+<tr>
+<td>81–100</td>
+<td>再放大到 2.5 倍 + 淡出（<code>p^1.6</code> 加速曲线）</td>
+</tr>
+<tr>
+<td>101（HBFADE）</td>
+<td>500 粒彩纸在满屏随机位置显现、开始飘落（不是从中心炸开）；150 条网格彩带才从中心炸开：方向球面均匀随机（<code>acos(2rnd−1)</code>，避免两极扎堆），带重力 0.012&#x2F;帧²、自旋，330 帧后消失（彩纸则无限循环重生）</td>
+</tr>
+<tr>
+<td>106（CAKEEF）</td>
+<td>蛋糕 + 蜡烛显形，整个场景开始 0.002 弧度&#x2F;帧的慢速旋转</td>
+</tr>
+</tbody></table>
+<h3 id="13-6-固定-30-帧步进：动画速度和显示器刷新率解耦"><a href="#13-6-固定-30-帧步进：动画速度和显示器刷新率解耦" class="headerlink" title="13.6 固定 30 帧步进：动画速度和显示器刷新率解耦"></a>13.6 固定 30 帧步进：动画速度和显示器刷新率解耦</h3><p><a href="/birthday/cake3d.js">cake3d.js:819</a> <code>loop()</code>：渲染按浏览器节奏（requestAnimationFrame，通常 60 次&#x2F;秒），但逻辑 tick 用<strong>累加器</strong>驱动——攒够 1000&#x2F;30 毫秒才跑一步，一次最多补 3 步。<strong>为什么</strong>：60Hz 和 144Hz 屏幕上动画快慢一致（逻辑按时间走，不按渲染帧数走）；机器卡顿时动画最多变慢，不会跳帧穿帮。</p>
+<p>把累加器摊开（<a href="/birthday/cake3d.js">cake3d.js:819</a>）：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> <span class="variable constant_">STEP</span> = <span class="number">1000</span> / <span class="number">30</span>;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">loop</span>(<span class="params">ts</span>) &#123;</span><br><span class="line">    acc += ts - prev; prev = ts;</span><br><span class="line">    <span class="keyword">var</span> steps = <span class="title class_">Math</span>.<span class="title function_">min</span>(<span class="number">3</span>, <span class="title class_">Math</span>.<span class="title function_">floor</span>(acc / <span class="variable constant_">STEP</span>));</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; steps; i++) <span class="title function_">tick</span>();</span><br><span class="line">    acc -= steps * <span class="variable constant_">STEP</span>;</span><br><span class="line">    <span class="title function_">resize</span>(); renderer.<span class="title function_">render</span>(scene, camera);</span><br><span class="line">    raf = <span class="title function_">requestAnimationFrame</span>(loop);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>acc</code> 是<strong>时间欠账</strong>：这一帧距上一帧过了多少毫秒，就往里存多少；攒够一个 STEP（33.3ms）才跑一次 <code>tick()</code>，<code>acc -= steps * STEP</code> 把用掉的扣掉，余数留到下一帧。60Hz 屏大约每两帧跑一次逻辑，144Hz 大约每五帧一次，但<strong>每秒都恰好 30 次 tick</strong>；</li>
+<li><code>Math.min(3, …)</code> 是<strong>防死亡螺旋</strong>：页面被切到后台再回来，<code>ts - prev</code> 可能是好几秒，不封顶就会一帧内补跑几百次 tick，直接卡死；封顶后最多补 3 步，多余的时间被丢弃——动画「慢一点」比「卡住」好；</li>
+<li><code>renderer.render()</code> 在 <code>for</code> 之外，仍按浏览器刷新率每帧画一次。逻辑步进和画面刷新解耦，是游戏循环的标准写法。</li>
+</ul>
+<h3 id="13-7-鼠标交互的三个算法"><a href="#13-7-鼠标交互的三个算法" class="headerlink" title="13.7 鼠标交互的三个算法"></a>13.7 鼠标交互的三个算法</h3><ul>
+<li><strong>指针平滑</strong>（<code>makePointer</code>，<a href="/birthday/cake3d.js">cake3d.js:157</a>）：<code>当前值 += (目标值 − 当前值) × 0.08</code>，指数趋近——鼠标猛甩，视角柔顺跟进，不抖。</li>
+<li><strong>视差</strong>（<code>parallax</code>，<a href="/birthday/cake3d.js">cake3d.js:252</a>）：先把相机的 right&#x2F;up 基向量存下来（<code>captureCam</code>），然后让相机沿<strong>自己的</strong>右&#x2F;上方向平移 0.45 个世界单位——移动的是相机不是场景，整个画面像在”转头看”。</li>
+<li><strong>指针斥力</strong>（<code>makeInteract</code>，<a href="/birthday/cake3d.js">cake3d.js:191</a>）：把每个注册过的点变换到世界坐标，算它到<strong>鼠标射线</strong>（不是屏幕上的一个点）的垂直距离，<code>f = 1 − 距离/半径</code> 线性衰减，按 f 把点沿垂直方向推开、颜色向白混 85%——星星会被鼠标”拨开发光”，松手弹回。</li>
+</ul>
+<h3 id="13-8-性能手段"><a href="#13-8-性能手段" class="headerlink" title="13.8 性能手段"></a>13.8 性能手段</h3><ul>
+<li>渲染分辨率封顶 1600px（<code>makeResize</code>，<a href="/birthday/cake3d.js">cake3d.js:42</a>），devicePixelRatio 封顶 2——4K 屏也不会按物理像素渲染烧 GPU；</li>
+<li>点材质用 <code>alphaTest</code> 裁掉透明像素，而不是开真透明排序——省掉昂贵的深度排序；</li>
+<li><code>frustumCulled = false</code>：点云会整体移动&#x2F;旋转，关掉视锥剔除防止整团星星突然消失的 bug；</li>
+<li>每帧只改 BufferAttribute 数组再标记 <code>needsUpdate</code>，不重建几何体——GC 压力为零。</li>
+</ul>
+<p><strong>四条性能手段各自在省什么</strong>：① 分辨率封顶省的是<strong>片元数量</strong>（4K 屏按物理像素渲染，像素数是 1080p 的四倍）；② <code>alphaTest</code> 省的是<strong>透明排序</strong>——真正半透明要按深度从后往前排几千个点，而点云是圆形贴图，直接把 alpha 低于阈值的像素丢弃即可，视觉一样、排序全省；③ <code>frustumCulled = false</code> 看着像「关掉优化」，其实是避开误判：整团点会旋转&#x2F;移动，包围盒不准时会被整批剔除，画面突然一空；④ 每帧只改 <code>Float32Array</code> 再 <code>needsUpdate = true</code>，省的是<strong>对象分配与 GC</strong>——若每帧新建几何体，几秒后就会有一次可见的卡顿。四条分别对应 GPU 填充、CPU 排序、剔除正确性、内存分配，读性能代码时按这四类去找，比逐行看快得多。</p>
+<h3 id="13-9-star-场景（平时身份）"><a href="#13-9-star-场景（平时身份）" class="headerlink" title="13.9 star 场景（平时身份）"></a>13.9 star 场景（平时身份）</h3><p><a href="/birthday/cake3d.js">cake3d.js:1079</a> <code>buildStar()</code>：同一套粒子系统的小型组合——1500~2200 个上升星尘 + 飘落丝带 + 流星 + 两层星空（圆点层 + 五角星层），相机位置固定（只有鼠标视差微动），没有时间线演出。蛋糕场景里那套机制基本都复用了，新代码只有星尘上升的十几行。</p>
+<hr>
+<h2 id="十四、图片预加载"><a href="#十四、图片预加载" class="headerlink" title="十四、图片预加载"></a>十四、图片预加载</h2><p><a href="/birthday/script.js">script.js:883</a> <code>preloadAssets()</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; <span class="variable constant_">TOTAL_IMAGES</span>; i++) &#123;</span><br><span class="line">    <span class="keyword">var</span> im = <span class="keyword">new</span> <span class="title class_">Image</span>();</span><br><span class="line">    im.<span class="property">src</span> = <span class="string">&#x27;img/image&#x27;</span> + i + <span class="string">&#x27;.jpg&#x27;</span>;   <span class="comment">// 只创建不插入页面，纯触发下载</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">import</span>(<span class="string">&#x27;./cake3d.js&#x27;</span>).<span class="title function_">catch</span>(<span class="keyword">function</span>(<span class="params"></span>) &#123;&#125;);  <span class="comment">// 顺便把 3D 引擎也预热</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>为什么必须预加载</strong>：站点托管在 GitHub Pages，从国内访问单个请求延迟很高（页面本身可能要 30 秒才打开）。原版逻辑是”卡片弹出那一刻才开始下载配图”，等于 21 张图各自排队等 GitHub 响应，卡片开出来图片区域长时间空白。</p>
+<p><strong>改法</strong>：页面一打开就把 21 张图（总共才 860K）全部下载进浏览器缓存。等用户看完欢迎窗、卡片开始弹的时候，图片早就在本地了，弹出即显示。代价是打开时多占一点带宽，换来整段观看期零等待——对慢网络是划算的交换。</p>
+<p><code>new Image()</code> 只设 <code>src</code> 不插进 DOM，是标准的”纯下载”手法：浏览器发现同一个 URL 已在缓存，卡片真正创建 <code>&lt;img&gt;</code> 时直接用缓存，不发第二个请求。</p>
+<p>几个容易想岔的点：</p>
+<ul>
+<li><strong>缓存的键是完整 URL</strong>。<code>preloadAssets()</code> 里写的是 <code>&#39;img/image&#39; + i + &#39;.jpg&#39;</code>，<code>createRandomTipWindow()</code> 里写的是<strong>一模一样</strong>的拼接（<a href="/birthday/script.js">script.js:750</a>），两处相对页面 <code>/birthday/</code> 解析成同一个绝对地址，所以能命中。只要有一处多写个 <code>./</code> 或换了域名，浏览器就当成两个资源重新下载，预加载白做；</li>
+<li><code>new Image()</code> 创建的对象没被存进数组，循环一结束就没了引用。这没问题：请求由浏览器发起后会继续跑到完成，资源进的是 HTTP 缓存，不依赖这个 JS 对象是否存活。真正要留住的不是对象，是<strong>那个 URL 的缓存条目</strong>；</li>
+<li>21 张一共 860K，和 655KB 的 three.js、199KB 的歌单加起来是首屏约 1.7MB。这三样在 <code>preloadAssets()</code> 里<strong>同时发起</strong>，互不等待：图片靠 <code>new Image()</code>、歌单靠 <code>fetch</code>、引擎靠 <code>import()</code>，浏览器并行下载。若写成串行 <code>await</code>，总耗时就是三者相加；</li>
+<li><code>import(&#39;./cake3d.js&#39;).catch(function(){})</code> 末尾那个空 catch 不能省：这只是预热，模块就算加载失败也不该影响主流程，而不带 catch 的动态 import 会抛一个未处理的 Promise rejection，控制台一片红。第十二节 <code>mountBackground()</code> 里那次才是真正使用，那里也有 catch，两处各管各的；</li>
+<li><code>TOTAL_IMAGES = 21</code> 和 <code>img/</code> 里的文件数是<strong>手工约定</strong>：加一张图不改这个常量，第 22 张永远不会被预加载也不会被抽到；改大不改文件，会有一张图 404，靠 <code>wishImage.onerror</code> 兜底成纯文字卡片。第十六节速查表里把这两项放在一起，就是提醒它们要成对改。</li>
+</ul>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/birthday/bd-06-cards-full.webp" alt="祝福卡片铺满心形轨迹，配图全部即时显示"></p>
+<hr>
+<h2 id="十五、其余小逻辑备忘"><a href="#十五、其余小逻辑备忘" class="headerlink" title="十五、其余小逻辑备忘"></a>十五、其余小逻辑备忘</h2><ul>
+<li><code>fadeInMainWindow()</code>：欢迎窗延迟 100ms 再显示，等浏览器完成首帧渲染，否则入场动画可能被吞。</li>
+<li><code>fadeOutAndStart()</code>：点开始后等 500ms（CSS 淡出动画的时长）再隐藏欢迎窗、起音乐、开卡片雨——动画时间和 JS 定时要对齐。</li>
+<li><code>restartWishes()</code>：重开时不刷新页面，靠”清空容器 + 重新调度”实现，所以再次 <code>import</code> three.js 走缓存，几乎瞬间。</li>
+<li><code>resize</code> 监听（<a href="/birthday/script.js">script.js:851</a>）：缩放值和心形点重算，已弹出的卡片按 <code>index % 新点数</code> 重新摆放——窗口拖大拖小，心形跟着变但不乱。</li>
+<li><code>applySeasonCopy()</code>：平时身份的文案改造（标题、问候语、按钮文字），和生日判断集中在一处，改文案只动这里和文案池。</li>
+</ul>
+<p>这五条看起来零散，其实都在处理同一类问题：<strong>浏览器和 JS 各自的时间线要对齐</strong>。</p>
+<ul>
+<li><code>fadeInMainWindow()</code> 的 100ms 是给浏览器「排完第一帧」留的。元素刚插入 DOM 时若同一帧里就加上 <code>visible</code> 类，浏览器会把初始态和最终态合并成一次样式计算，CSS transition 根本没有起点可补间，欢迎窗会直接闪现而不是淡入——第九节卡片要等 <code>requestAnimationFrame</code> 是同一个坑；</li>
+<li><code>fadeOutAndStart()</code> 的 500ms 必须等于 CSS 里 <code>.fading-out</code> 的动画时长。写短了欢迎窗还没淡完就被 <code>display:none</code> 掐掉，写长了会有一段「窗已淡没但还没藏」的空窗。这类数字最好在 CSS 和 JS 里各留一行注释互相指认，否则改样式的人不知道还有个 JS 常量跟着；</li>
+<li><code>restartWishes()</code> 不 <code>location.reload()</code>，是为了保住三样东西：已经缓存的 21 张图、已经求值过的 <code>cake3d.js</code> 模块、以及解锁过的 <code>&lt;audio&gt;</code>。刷新会把自动播放的用户手势凭据也清掉，音乐反而可能不响了；</li>
+<li><code>resize</code> 回调里 <code>generateHeartPositions(heartPositions.length)</code> 会<strong>重新随机选一种布局模式</strong>，所以拖窗口不只是缩放，心形的出现顺序也可能变。已弹出的卡片按 <code>wishElements.forEach(function(el, i){ ... i % heartPositions.length ... })</code> 重新摆位，保持索引不变，卡片不会跳到无关的位置；没弹出的那些定时器仍按旧 delays 触发，但建卡时读的是新的 <code>heartPositions</code>，所以整体仍然对齐；</li>
+<li><code>applySeasonCopy()</code> 用 <code>if (isBirthday) return</code> 开头：生日季保留 <code>index.html</code> 里写死的原始文案，平时才改写。把「默认值」放在 HTML 里、把「例外」放在 JS 里，比两处都靠 JS 写更省，也让不看 JS 的人打开 HTML 就知道生日版长什么样。</li>
+</ul>
+<p>三个状态标志也在这里收个尾：<code>isClosing</code> 管「别再建卡」（第十节）、<code>bgMounted</code> 管「别挂两次背景」（第十二节）、<code>audioUnlocked</code> 管「别重复播静音」（第十一节）。它们都是<strong>一次性开关</strong>：条件成立就再也不做第二次，而不是每次都要重新判断的开关。区分这两种布尔值，读别人的代码时会省很多力气。</p>
+<hr>
+<h2 id="十六、改参数速查"><a href="#十六、改参数速查" class="headerlink" title="十六、改参数速查"></a>十六、改参数速查</h2><table>
+<thead>
+<tr>
+<th>想改什么</th>
+<th>改哪里</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>心形更密&#x2F;更稀</td>
+<td><code>TIP_AREA</code>（调小更密）、<code>TIP_MIN</code>、<code>TIP_MAX</code></td>
+</tr>
+<tr>
+<td>卡片出现快慢</td>
+<td><code>TIP_INTERVAL</code></td>
+</tr>
+<tr>
+<td>卡片大小</td>
+<td><code>WISH_W</code>、<code>WISH_H_MIN</code>（记得 style.css 里的卡片样式同步改）</td>
+</tr>
+<tr>
+<td>加祝福语</td>
+<td>往 <code>BIRTHDAY_WISHES</code> &#x2F; <code>DAILY_WISHES</code> 数组里加字符串</td>
+</tr>
+<tr>
+<td>生日季日期</td>
+<td><code>BIRTHDAY_MONTH/DAY_START/DAY_END</code>（月份记得减 1）</td>
+</tr>
+<tr>
+<td>配图数量</td>
+<td><code>img/</code> 目录加图后，改 <code>TOTAL_IMAGES</code></td>
+</tr>
+<tr>
+<td>音乐</td>
+<td>换歌单：改 <code>METING_API</code> 里的网易云歌单 ID（生日页、连连看两处）</td>
+</tr>
+<tr>
+<td>3D 开场节奏</td>
+<td>cake3d.js 的 <code>CD0/SPN/HBHOLD/HBFADE/CAKEEF</code>（帧数，30 帧 &#x3D; 1 秒）</td>
+</tr>
+</tbody></table>
+<p><strong>改之前先想连锁影响</strong>：这张表里没有哪个参数是孤立的。</p>
+<table>
+<thead>
+<tr>
+<th>改了</th>
+<th>会连带影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>TIP_AREA</code> &#x2F; <code>TIP_MIN</code> &#x2F; <code>TIP_MAX</code></td>
+<td>心形采样步长 <code>2π/count</code>、卡片重叠程度、总铺完时长（数量 × 间隔）、<code>setTimeout</code> 个数</td>
+</tr>
+<tr>
+<td><code>TIP_INTERVAL</code></td>
+<td>所有 <code>delays = null</code> 模式的节奏；ripple &#x2F; heartbeat &#x2F; outline_fill 自带间隔，不受它影响</td>
+</tr>
+<tr>
+<td><code>WISH_W</code> &#x2F; <code>WISH_H_MIN</code></td>
+<td>第七节 <code>availableW/availableH</code> 的扣减、去重的 <code>minDist</code>、CSS 卡片尺寸、心形视觉大小</td>
+</tr>
+<tr>
+<td><code>TOTAL_IMAGES</code></td>
+<td>预加载请求数、随机配图范围；必须和 <code>img/</code> 里实际文件数一致</td>
+</tr>
+<tr>
+<td><code>BIRTHDAY_*</code> 日期</td>
+<td>文案池、3D 场景、欢迎窗文案三处分支</td>
+</tr>
+<tr>
+<td><code>CD0/SPN/HB*</code> 帧常量</td>
+<td>蛋糕开场的整条时间线；它们彼此是累加关系（<code>CDEND = CD0*SPN</code>），改一个要顺着看后面几个</td>
+</tr>
+</tbody></table>
+<p><strong>几个反复踩过的坑</strong>：月份从 0 数（8 月是 7）；<code>WISH_W</code> 改了 CSS 没改（卡片内容挤出边框）；<code>Birthday/</code> 独立单页版忘了同步（两份代码会慢慢分叉）；<code>npm run deploy</code> 是全量覆盖，线上手工加的文件会被删掉。</p>
+<p><strong>调试技巧</strong>：① 想反复看同一个布局，把第八节 <code>modes[Math.floor(Math.random()*modes.length)]</code> 临时换成固定字符串（如 <code>MODE_GROWTH</code>），不用碰任何其它代码；② 想快进蛋糕开场，把 <code>SPN</code> 从 12 临时改成 3，倒计时从 1.2 秒缩到 0.3 秒；③ 想固定 3D 画面，把 <code>mulberry(seed)</code> 的种子写死（第十三节），改一个参数就能看出前后差异；④ 调心形密度时把浏览器窗口拖到手机尺寸，才看得见 <code>TIP_MIN</code> 的效果——桌面大屏几乎永远撞在上限 64。这四招都是「把随机或时间临时换成常量」，和小游戏笔记里用固定种子复现牌局是同一个思路。</p>
+<p><strong>部署方式</strong>：<code>npm run deploy</code>（改动会全量覆盖线上，线上有而本地没有的文件会被删——所以别在 GitHub 网页端直接加文件）。</p>
+<hr>
+<h2 id="本篇新名词"><a href="#本篇新名词" class="headerlink" title="本篇新名词"></a>本篇新名词</h2><table>
+<thead>
+<tr>
+<th>名词</th>
+<th>一句话解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>IIFE</td>
+<td>定义完立刻执行的函数表达式，用来圈出一块私有作用域</td>
+</tr>
+<tr>
+<td>闭包</td>
+<td>内层函数记住外层变量，外层执行完变量还活着</td>
+</tr>
+<tr>
+<td>参数方程</td>
+<td>用一个参数 t 沿曲线走一圈，等分 t 就得到等分点</td>
+</tr>
+<tr>
+<td>谐波叠加</td>
+<td>几个不同频率的 cos 相加，把简单曲线捏出复杂形状</td>
+</tr>
+<tr>
+<td>clamp</td>
+<td>用 <code>max(下限, min(上限, 值))</code> 把数值夹在区间里</td>
+</tr>
+<tr>
+<td>设计稿缩放</td>
+<td>所有坐标按固定虚拟画布写，最后整体 <code>transform: scale()</code></td>
+</tr>
+<tr>
+<td>CSS 自定义属性</td>
+<td><code>--名字</code> 变量，JS 用 <code>setProperty</code> 写、样式用 <code>var()</code> 读</td>
+</tr>
+<tr>
+<td>Fisher-Yates</td>
+<td>从末尾往前交换的等概率洗牌，O(n)</td>
+</tr>
+<tr>
+<td>requestAnimationFrame</td>
+<td>下一帧绘制前执行的回调，用来保证动画有起始帧</td>
+</tr>
+<tr>
+<td>动态 import</td>
+<td>运行时才加载模块的 <code>import()</code>，返回 Promise</td>
+</tr>
+<tr>
+<td>ES 模块缓存</td>
+<td>同一 URL 的模块只下载、只求值一次，重复 import 直接命中</td>
+</tr>
+<tr>
+<td>Promise 缓存</td>
+<td>把「请求本身」存起来复用，让多个调用者等同一次结果</td>
+</tr>
+<tr>
+<td>自动播放策略</td>
+<td>浏览器要求 <code>play()</code> 发生在用户手势的同步调用栈里</td>
+</tr>
+<tr>
+<td>降级</td>
+<td>外部依赖失败时主流程照常跑，只是少一项装饰</td>
+</tr>
+<tr>
+<td>幂等</td>
+<td>同一个操作做一次和做多次，结果一样</td>
+</tr>
+<tr>
+<td>HTTP 缓存</td>
+<td>按完整 URL 存资源，相同 URL 不会发第二个请求</td>
+</tr>
+<tr>
+<td>点云 &#x2F; draw call</td>
+<td>几千个点合成一批绘制；一次提交给 GPU 叫一个 draw call</td>
+</tr>
+<tr>
+<td>BufferAttribute</td>
+<td>three.js 里装顶点数据的定长数组，改完标记 <code>needsUpdate</code></td>
+</tr>
+<tr>
+<td>mulberry32 &#x2F; 种子</td>
+<td>可设种子的伪随机数算法；同种子永远得到同一串数</td>
+</tr>
+<tr>
+<td>alphaTest</td>
+<td>丢弃 alpha 低于阈值的像素，省掉透明物体排序</td>
+</tr>
+<tr>
+<td>视锥剔除</td>
+<td>视野外的物体不画；包围盒不准时反而要关掉</td>
+</tr>
+<tr>
+<td>固定步长累加器</td>
+<td>攒够固定毫秒才推进一步逻辑，让动画速度与刷新率无关</td>
+</tr>
+<tr>
+<td>视差 &#x2F; 指数平滑</td>
+<td>移动相机而非场景；<code>当前 += (目标−当前)×系数</code> 的柔顺跟随</td>
+</tr>
+<tr>
+<td>缓动曲线</td>
+<td>让缩放&#x2F;位移先快后慢或先慢后快的函数，如 <code>1−(1−p)³</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="自测"><a href="#自测" class="headerlink" title="自测"></a>自测</h2><ol>
+<li>为什么整份 <code>script.js</code> 要包在 <code>(function(){...})()</code> 里，用 <code>&lt;script type=&quot;module&quot;&gt;</code> 不是更现代？<br>答：IIFE 在任何环境都能跑，包括用 <code>file://</code> 双击打开的独立单页版；模块脚本受 CORS 限制，本地直接打开会被拦。它把几十个状态变量圈成私有变量，避免和主题脚本的全局变量撞名。代价是只能写 ES5 语法，于是循环里还得再套一层 IIFE 固定 <code>idx</code>。</li>
+<li><code>BIRTHDAY_MONTH = 7</code> 是几月？判断为什么用两个 <code>&lt;=</code> &#x2F; <code>&gt;=</code>？<br>答：8 月，JS 的 <code>getMonth()</code> 从 0 数。闭区间让 20 号和 25 号都算进生日季，共 6 天；写成 <code>&lt; DAY_END</code> 会少一天。判断结果只在开局算一次存进 <code>isBirthday</code>，页面开着跨零点也不会中途变身。</li>
+<li>1280×800 的窗口会弹多少张卡？为什么不是按 <code>1024000/16000</code> 一直线性增长？<br>答：64 张，恰好撞上 <code>TIP_MAX</code>。1920×1080 算出 130 也被夹回 64；手机 390×844 算出 21 会被 <code>TIP_MIN</code> 抬到 30。上限同时是视觉上限：点数再多，270 宽的卡片会重叠成一团，看不出心形。</li>
+<li>心形为什么用参数方程，而不是把 30 多个点位写成常量表？<br>答：卡片数按屏幕面积在 30~64 之间变，写死的表一换数量就得重摆；参数方程把 t 等分成 count 份就得到 count 个点，一个数量参数决定整颗心。代价是 t 等分不等于弧长等分，尖端会略密——卡片有宽度且允许重叠，这点误差看不见。</li>
+<li><code>delays</code> 里存的到底是「间隔」还是「绝对时间」？把它当间隔用会怎样？<br>答：绝对时间，直接交给 <code>setTimeout</code>。各模式用 <code>delay += interval</code> 累加生成，所以数组递增；若当成「相对上一张的间隔」去嵌套定时器，每张都要多等一次，节奏会越走越慢。<code>delays = null</code> 时退化的 <code>idx * TIP_INTERVAL</code> 同样是绝对时间。</li>
+<li>卡片入场为什么非要等一次 <code>requestAnimationFrame</code>，直接加 <code>visible</code> 类不行吗？<br>答：同一帧里既设初始态又设最终态，浏览器会合并成一次样式计算，transition 没有起点可补间，动画会被吞掉。rainfall 模式要两层，是因为它得先渲染「上方起始位置」那一帧，再把 <code>top</code> 改成目标值让 CSS 补间出落体。</li>
+<li>已经 <code>clearTimeout</code> 了，为什么还要 <code>isClosing</code>？<br>答：<code>clearTimeout</code> 只能取消还没到点的定时器，取消不了「已到点、正排在事件队列里」的回调。<code>isClosing</code> 在调度回调和建卡函数开头各挡一次，和清空 <code>timeouts</code> 数组一起堵住竞态，避免收下全部后还冒出「幽灵卡片」。</li>
+<li>静音 wav 为什么必须放在点击的第一句，而不能等歌单加载完再一起播？<br>答：浏览器把「用户手势」当作 <code>play()</code> 的许可凭据，凭据只在手势的同步调用栈里有效；进了 <code>.then</code> 或 <code>setTimeout</code> 就过期。<code>unlockAudio()</code> 先在点击瞬间解锁播放器，之后在 Promise 里换 <code>src</code> 属于「已解锁播放器换内容」，不再受限制。</li>
+<li><code>preloadAssets()</code> 里已经 import 过 <code>cake3d.js</code>，<code>mountBackground()</code> 里为什么还 import 一次？<br>答：前一次是预热，只把模块和 655KB 的 three.js 拉进缓存，不调任何导出；后一次才真正调 <code>mount()</code>。ES 模块按 URL 缓存，同一 URL 只求值一次，所以第二次不产生网络请求，「重新开启」才能瞬时重挂。两处都带 <code>.catch</code>，因为 3D 是装饰层，失败不能影响主流程。</li>
+<li>3D 逻辑为什么按固定 30 帧走，而不是每次 <code>requestAnimationFrame</code> 都推进一帧？<br>答：不同刷新率的屏幕 rAF 次数不同，按渲染帧推进会让 144Hz 上的动画快一倍多。累加器攒够 33.3ms 才跑一次 <code>tick()</code>，保证每秒恰好 30 步；<code>Math.min(3, steps)</code> 防止切后台回来一次补跑几百步卡死，宁可动画慢一点也不跳帧穿帮。</li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io">61飞兔</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io/2026/08/24/%E7%94%9F%E6%97%A5%E9%A1%B5%E9%9D%A2%E9%80%BB%E8%BE%91%E7%AC%94%E8%AE%B0/">https://cyg0825.github.io/2026/08/24/%E7%94%9F%E6%97%A5%E9%A1%B5%E9%9D%A2%E9%80%BB%E8%BE%91%E7%AC%94%E8%AE%B0/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://cyg0825.github.io" target="_blank">学海拾茜</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/JavaScript/">JavaScript</a><a class="post-meta__tags" href="/tags/CSS/">CSS</a><a class="post-meta__tags" href="/tags/%E7%94%9F%E6%97%A5%E7%A5%9D%E7%A6%8F%E9%A1%B5/">生日祝福页</a><a class="post-meta__tags" href="/tags/three-js/">three.js</a></div><div class="post-share"><div class="social-share" data-image="/img/birthday/bd-05-cake3d.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="/assets/css/share.min.css" media="print" onload="this.media='all'"><script src="/assets/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/10/22/hexo-%E6%9C%AC%E5%9C%B0%E5%90%8E%E5%8F%B0/" title="Hexo 本地后台"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">Hexo 本地后台</div></div><div class="info-2"><div class="info-item-1">这是什么给 Hexo 源目录配一个只在本机跑的编辑后台，管到 source/ 的全部内容加上根目录的配置文件：文章、草稿、独立页面、主题自定义集合、source/_data/ 里的数据文件、scaffolds/ 里的模板、静态资源都能增删改；_config.yml 与主题配置铺成中文标签的表单。构建和部署仍在命令行做，后台不落 public/，也不执行任何 hexo 命令。 覆盖面靠目录约定自动发现：source/_posts/ 是文章，source/_drafts/ 是草稿，source/_&lt;名&gt;/ 是主题自定义的集合，其余 markdown 与 html 文件是页面，剩下的都归资源。后台不认识的 front-matter 键、读不懂的配置结构，一律降级成原文编辑而不是拒绝。将来站点加集合、加配置键，后台不用改代码，这是「通用」在这里的全部含义。 出发点是把「改一篇内容」的代价压到最低。命令行侧手工改一篇要同时盯住 front-matter 的键名与引号风格、分类要写成数组、嵌套缩进要对、配图要先算出站内相对路径，任何一处漏了都要等构建才发现。源目录不是 git 仓...</div></div></div></a><a class="pagination-related" href="/2026/03/04/linux%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="Linux学习笔记"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Linux学习笔记</div></div><div class="info-2"><div class="info-item-1">一、目录与导航 ⭐⭐⭐123456pwd                     # 显示当前所在目录的绝对路径cd 路径                 # 切换到指定目录（如 cd /var/log）cd ~                    # 回到当前用户的家目录（/home/用户名）cd ..                   # 返回上一级目录ls -la                  # 列出当前目录所有文件（含隐藏文件，含详细信息）ls 路径                 # 列出指定目录的文件（如 ls /var/log）  二、文件操作 ⭐⭐⭐12345678910touch 文件名            # 创建一个空文件，或更新已有文件的时间戳cp 原文件 目标文件      # 复制文件（如 cp test.txt test_backup.txt）cp -r 原目录 目标目录   # 复制目录（-r = 递归复制）mv 原文件 目标文件      # 移动文件，或重命名文件（如 mv A B 把A改名为B）mv 文件 路径/         ...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/" title="06-界面骨架与样式"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-08-dark.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-05</div><div class="info-item-2">06-界面骨架与样式</div></div><div class="info-2"><div class="info-item-1">Link/index.html 的骨架与 Link/style.css 的样式逐行：颜色令牌、深浅色、圆角动画与移动端安全区；三个游戏怎么共用同一副骨架。</div></div></div></a><a class="pagination-related" href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/" title="05-布局自适应"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-13-after-resize.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-05</div><div class="info-item-2">05-布局自适应</div></div><div class="info-2"><div class="info-item-1">格子边长在开局时怎么挑、行列怎么分解、窗口变化时怎么用同一段计算跟上；消消乐与翻牌为什么只要一套简单得多的算式。</div></div></div></a><a class="pagination-related" href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/" title="07-点击计分与存档"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-06-win.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-06</div><div class="info-item-2">07-点击计分与存档</div></div><div class="info-2"><div class="info-item-1">一次点击背后的状态机、计时与连击计分、写在本地的三份存档、三个游戏各自的胜负结算与背景音乐。</div></div></div></a><a class="pagination-related" href="/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/" title="01-结构与数据形状"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-01-home.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-01</div><div class="info-item-2">01-结构与数据形状</div></div><div class="info-2"><div class="info-item-1">一个页面装三个小游戏：页面由哪三个文件分工、三种游戏各自的棋盘长什么样、三张关卡表里的数字各控制什么、状态对象 S/G/M 各管什么。</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">61飞兔</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">66</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">30</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">24</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/cyg0825"><i class="fab fa-github"></i><span>关注我</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E8%BF%99%E4%B8%AA%E9%A1%B5%E9%9D%A2%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-number">1.</span> <span class="toc-text">一、这个页面是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%96%87%E4%BB%B6%E6%9E%84%E6%88%90"><span class="toc-number">2.</span> <span class="toc-text">二、文件构成</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BB%A3%E7%A0%81%E5%8C%85%E5%9C%A8-function-%E9%87%8C"><span class="toc-number">3.</span> <span class="toc-text">三、为什么代码包在 (function(){...})() 里</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E4%B8%A4%E5%A5%97%E7%A5%9D%E7%A6%8F%E8%AF%AD%E6%B1%A0-%E6%97%A5%E6%9C%9F%E5%88%A4%E6%96%AD"><span class="toc-number">4.</span> <span class="toc-text">四、两套祝福语池 + 日期判断</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%8D%A1%E7%89%87%E6%95%B0%E9%87%8F%E4%B8%8E%E5%B0%BA%E5%AF%B8%E5%B8%B8%E9%87%8F"><span class="toc-number">5.</span> <span class="toc-text">五、卡片数量与尺寸常量</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%EF%BC%88%E6%97%A7%E6%96%B9%E6%A1%88%EF%BC%8C%E5%B7%B2%E5%BA%9F%E5%BC%83%EF%BC%89%E5%9B%BA%E5%AE%9A%E8%AE%BE%E8%AE%A1%E7%A8%BF-2560%C3%971440-%E6%95%B4%E4%BD%93%E7%BC%A9%E6%94%BE"><span class="toc-number">6.</span> <span class="toc-text">六、（旧方案，已废弃）固定设计稿 2560×1440 + 整体缩放</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%BF%83%E5%BD%A2%E6%9B%B2%E7%BA%BF%E5%85%AC%E5%BC%8F%EF%BC%88%E6%95%B4%E4%B8%AA%E5%B8%83%E5%B1%80%E7%9A%84%E6%95%B0%E5%AD%A6%E6%A0%B8%E5%BF%83%EF%BC%89"><span class="toc-number">7.</span> <span class="toc-text">七、心形曲线公式（整个布局的数学核心）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%818-%E7%A7%8D%E5%BF%83%E5%BD%A2%E5%B8%83%E5%B1%80%E6%A8%A1%E5%BC%8F%EF%BC%9A%E6%AF%8F%E6%AC%A1%E6%89%93%E5%BC%80%E4%B8%8D%E9%87%8D%E6%A0%B7"><span class="toc-number">8.</span> <span class="toc-text">八、8 种心形布局模式：每次打开不重样</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E5%8D%A1%E7%89%87%E6%98%AF%E6%80%8E%E4%B9%88%E5%88%9B%E5%BB%BA%E7%9A%84"><span class="toc-number">9.</span> <span class="toc-text">九、卡片是怎么创建的</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E3%80%81%E6%80%BB%E8%B0%83%E5%BA%A6%EF%BC%9AstartTipWindows"><span class="toc-number">10.</span> <span class="toc-text">十、总调度：startTipWindows</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E4%B8%80%E3%80%81%E9%9F%B3%E4%B9%90%EF%BC%9A%E7%BD%91%E6%98%93%E4%BA%91%E5%9C%A8%E7%BA%BF%E6%AD%8C%E5%8D%95"><span class="toc-number">11.</span> <span class="toc-text">十一、音乐：网易云在线歌单</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E4%BA%8C%E3%80%813D-%E8%83%8C%E6%99%AF%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E7%94%A8%E2%80%9D%E5%8A%A8%E6%80%81-import%E2%80%9D"><span class="toc-number">12.</span> <span class="toc-text">十二、3D 背景：为什么用”动态 import”</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E4%B8%89%E3%80%813D-%E8%83%8C%E6%99%AF%E7%9A%84%E7%AE%97%E6%B3%95%EF%BC%88cake3d-js%EF%BC%89"><span class="toc-number">13.</span> <span class="toc-text">十三、3D 背景的算法（cake3d.js）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#13-1-%E4%B8%80%E5%88%87%E7%9A%86%E6%98%AF%E2%80%9D%E7%82%B9%E4%BA%91%E2%80%9D"><span class="toc-number">13.1.</span> <span class="toc-text">13.1 一切皆是”点云”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#13-2-%E5%8F%AF%E5%A4%8D%E7%8E%B0%E9%9A%8F%E6%9C%BA%E6%95%B0%EF%BC%9Amulberry32%EF%BC%88cake3d-js-59%EF%BC%89"><span class="toc-number">13.2.</span> <span class="toc-text">13.2 可复现随机数：mulberry32（cake3d.js:59）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#13-3-%E5%BD%A2%E7%8A%B6%E6%80%8E%E4%B9%88%E5%8F%98%E6%88%90%E7%82%B9%EF%BC%88%E9%87%87%E6%A0%B7%E7%AE%97%E6%B3%95%EF%BC%89"><span class="toc-number">13.3.</span> <span class="toc-text">13.3 形状怎么变成点（采样算法）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#13-4-%E7%B2%92%E5%AD%90%E7%B3%BB%E7%BB%9F%EF%BC%9A%E4%B8%80%E4%B8%AA%E5%A5%97%E8%B7%AF%E2%80%9D%E5%BE%AA%E7%8E%AF%E5%A4%8D%E7%94%A8%E2%80%9D"><span class="toc-number">13.4.</span> <span class="toc-text">13.4 粒子系统：一个套路”循环复用”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#13-5-%E6%97%B6%E9%97%B4%E7%BA%BF%E7%8A%B6%E6%80%81%E6%9C%BA%EF%BC%88%E8%9B%8B%E7%B3%95%E5%9C%BA%E6%99%AF%E7%9A%84%E5%BC%80%E5%9C%BA%E6%BC%94%E5%87%BA%EF%BC%89"><span class="toc-number">13.5.</span> <span class="toc-text">13.5 时间线状态机（蛋糕场景的开场演出）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#13-6-%E5%9B%BA%E5%AE%9A-30-%E5%B8%A7%E6%AD%A5%E8%BF%9B%EF%BC%9A%E5%8A%A8%E7%94%BB%E9%80%9F%E5%BA%A6%E5%92%8C%E6%98%BE%E7%A4%BA%E5%99%A8%E5%88%B7%E6%96%B0%E7%8E%87%E8%A7%A3%E8%80%A6"><span class="toc-number">13.6.</span> <span class="toc-text">13.6 固定 30 帧步进：动画速度和显示器刷新率解耦</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#13-7-%E9%BC%A0%E6%A0%87%E4%BA%A4%E4%BA%92%E7%9A%84%E4%B8%89%E4%B8%AA%E7%AE%97%E6%B3%95"><span class="toc-number">13.7.</span> <span class="toc-text">13.7 鼠标交互的三个算法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#13-8-%E6%80%A7%E8%83%BD%E6%89%8B%E6%AE%B5"><span class="toc-number">13.8.</span> <span class="toc-text">13.8 性能手段</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#13-9-star-%E5%9C%BA%E6%99%AF%EF%BC%88%E5%B9%B3%E6%97%B6%E8%BA%AB%E4%BB%BD%EF%BC%89"><span class="toc-number">13.9.</span> <span class="toc-text">13.9 star 场景（平时身份）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E5%9B%9B%E3%80%81%E5%9B%BE%E7%89%87%E9%A2%84%E5%8A%A0%E8%BD%BD"><span class="toc-number">14.</span> <span class="toc-text">十四、图片预加载</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E4%BA%94%E3%80%81%E5%85%B6%E4%BD%99%E5%B0%8F%E9%80%BB%E8%BE%91%E5%A4%87%E5%BF%98"><span class="toc-number">15.</span> <span class="toc-text">十五、其余小逻辑备忘</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E5%85%AD%E3%80%81%E6%94%B9%E5%8F%82%E6%95%B0%E9%80%9F%E6%9F%A5"><span class="toc-number">16.</span> <span class="toc-text">十六、改参数速查</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%AC%E7%AF%87%E6%96%B0%E5%90%8D%E8%AF%8D"><span class="toc-number">17.</span> <span class="toc-text">本篇新名词</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%87%AA%E6%B5%8B"><span class="toc-number">18.</span> <span class="toc-text">自测</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/" title="07-点击计分与存档"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-06-win.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07-点击计分与存档"/></a><div class="content"><a class="title" href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/" title="07-点击计分与存档">07-点击计分与存档</a><time datetime="2026-11-06T00:20:00.000Z" title="发表于 2026-11-06 08:20:00">2026-11-06</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/" title="06-界面骨架与样式"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-08-dark.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06-界面骨架与样式"/></a><div class="content"><a class="title" href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/" title="06-界面骨架与样式">06-界面骨架与样式</a><time datetime="2026-11-05T08:40:00.000Z" title="发表于 2026-11-05 16:40:00">2026-11-05</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/" title="05-布局自适应"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-13-after-resize.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05-布局自适应"/></a><div class="content"><a class="title" href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/" title="05-布局自适应">05-布局自适应</a><time datetime="2026-11-05T01:30:00.000Z" title="发表于 2026-11-05 09:30:00">2026-11-05</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/" title="04-死局与自动重排"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-04-hint.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04-死局与自动重排"/></a><div class="content"><a class="title" href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/" title="04-死局与自动重排">04-死局与自动重排</a><time datetime="2026-11-04T01:10:00.000Z" title="发表于 2026-11-04 09:10:00">2026-11-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/" title="03-连线判定"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-03b-one-turn.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03-连线判定"/></a><div class="content"><a class="title" href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/" title="03-连线判定">03-连线判定</a><time datetime="2026-11-03T01:20:00.000Z" title="发表于 2026-11-03 09:20:00">2026-11-03</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2024 - 2026 By 61飞兔</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.3</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.staticfile.org/vanilla-lazyload/19.1.3/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
+(function () {
+  var menus = document.getElementById('sidebar-menus')
+  var card = document.querySelector('#aside-content .card-info')
+  if (!menus || !card || menus.dataset.profileIn) return
+  var name = card.querySelector('.author-info-name')
+  var btn = card.querySelector('#card-info-btn')
+  if (name) {
+    var n = name.cloneNode(true)
+    n.className = 'sidebar-author-name'
+    menus.querySelector('.avatar-img').after(n)
+  }
+  if (btn) {
+    var b = btn.cloneNode(true)
+    b.removeAttribute('id')
+    b.className = 'sidebar-follow'
+    menus.querySelector('.site-data').after(b)
+  }
+  menus.dataset.profileIn = '1'
+})()
+</script><script>
+(function () {
+  if (window.scopeSelectBound) return
+  window.scopeSelectBound = 1
+  // 第一项命中即用第二项当选中范围：代码块要跳过行号那一列
+  var SCOPES = [['figure.highlight', 'td.code'], ['table', ''], ['pre', ''], ['blockquote', '']]
+  var block = null, clicked = null, hasClick = false
+  function scope(node) {
+    while (node && node.nodeType === 3) node = node.parentNode
+    if (!node || node.nodeType !== 1 || !node.closest || !node.closest('#article-container')) return null
+    var best = null
+    for (var i = 0; i < SCOPES.length; i++) {
+      var box = node.closest(SCOPES[i][0])
+      if (!box) continue
+      var target = box
+      if (SCOPES[i][1]) {
+        var inner = box.querySelector(SCOPES[i][1])
+        if (inner) target = inner
+      }
+      // 表格里套代码块时取更深的那一层，选中范围跟着光标最近的块走
+      if (!best || best.contains(target)) best = target
+    }
+    return best
+  }
+  document.addEventListener('mousedown', function (e) {
+    hasClick = true
+    clicked = scope(e.target)
+    block = null
+  })
+  document.addEventListener('keydown', function (e) {
+    if (e.keyCode !== 65 || !(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return
+    var el = document.activeElement
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return
+    var sel = window.getSelection()
+    // 点过就用点中的那一块，没点过（纯键盘操作）才看光标当前所在的块
+    var cur = hasClick ? clicked : (sel && sel.rangeCount && scope(sel.anchorNode))
+    if (!cur || cur === block) { block = null; return }
+    var r = document.createRange()
+    r.selectNodeContents(cur)
+    sel.removeAllRanges()
+    sel.addRange(r)
+    block = cur
+    e.preventDefault()
+  }, true)
+})()
+</script><div class="aplayer no-destroy" data-id="9086662585" data-server="netease" data-type="playlist" data-fixed="true" data-autoplay="false" data-order="random" data-mini="true" data-api="https://api.injahow.cn/meting/?server=:server&amp;type=:type&amp;id=:id&amp;r=:r">
+</div><link rel="stylesheet" href="/assets/css/APlayer.min.css" media="print" onload="this.media='all'"><script src="/assets/js/APlayer.min.js"></script><script src="/assets/js/Meting.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索文章" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>

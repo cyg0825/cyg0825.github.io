@@ -234,7 +234,7 @@ function renderHome(){
   $('tabM3').classList.toggle('on',mode==='m3');
   $('tabMem').classList.toggle('on',mode==='mem');
   $('lead').textContent=mode==='m3'
-    ?'点相邻两张图交换位置（手机上也可以直接朝相邻方向滑动），凑齐 3 张以上相同的图即可消除；步数用完前完成本关全部目标即过关。半透明冰块要消掉它下面的图案，木箱要消掉相邻的图案；掉落物是重物，消掉同一列的图案它就往下沉一格，落到最底行（金色边）才收集。'
+    ?'点相邻两张图交换位置（手机上也可以直接朝相邻方向滑动），凑齐 3 张以上相同的图即可消除；步数用完前完成本关全部目标即过关。半透明冰块要消掉它下面的图案，木箱要消掉相邻的图案；掉落物从顶部沿标出的出口列落下，消掉它所在列的图案才会逐格下沉，落到最底行（金色边）才收集。'
     :mode==='mem'
     ?'每关先亮牌若干秒记住位置，然后全部翻面；每次翻两张，同图即配对消掉得分，配齐全部对子即过关。第 5 关起有配对限时和允许犯错次数，超时或犯错超限即失败。'
     :'点两张相同的图，连线拐弯不超过两次即可消除。每关消完全部图块就算过。';
@@ -700,33 +700,32 @@ function m3DropOnBoard(){
   for(var r=0;r<G.rows;r++) for(var c=0;c<G.cols;c++) if(G.g[r][c]===M3_DROP) n++;
   return n;
 }
-/* 场上始终保留最多 3 个掉落物，且只从无障碍的出口列落入。
-   一律落在棋盘中部，留出看得见的下沉距离；最底行是唯一出口 */
+/* 掉落物不再随机撒：一律从棋盘顶行（r=0）沿出口列依次落入，
+   列按 nextDropCol 轮流，位置完全确定；开局发生器决定出口列，整局可复现。
+   一条出口列同时只放一个掉落物，最底行（金色边）是唯一出口 */
 function m3EnsureDrops(mode){
   if(!G.dropNeed) return;
-  var want=Math.min(3,G.dropNeed-G.dropGot)-m3DropOnBoard();
-  if(want<=0) return;
   var cols=G.exitCols||[],r,c,cand=[];
   if(!cols.length) return;
-  var top=Math.floor(G.rows/3), bot=G.rows-3;
-  /* 一条出口列同时只放一个掉落物，免得几个叠在同一列、到出口时一起淡出 */
-  var order=shuffled(cols.slice(),Math.random);
-  for(var ci=0;ci<order.length&&cand.length<want;ci++){
-    c=order[ci];
-    var free=[],used=false;
+  var want=Math.min(3,cols.length,G.dropNeed-G.dropGot)-m3DropOnBoard();
+  if(want<=0) return;
+  for(var ci=0;ci<cols.length&&cand.length<want;ci++){
+    c=cols[(G.nextDropCol+ci)%cols.length];
+    var used=false;
     for(r=0;r<G.rows;r++) if(G.g[r][c]===M3_DROP){ used=true; break; }
     if(used) continue;
-    for(r=top;r<=bot&&r<G.rows-1;r++)
-      if(G.g[r][c]>0&&G.ov[r][c]===0) free.push(r);
-    if(free.length) cand.push({r:free[Math.floor(Math.random()*free.length)],c:c});
+    /* 顶行被障碍占住时退到第 1 行，出口列本身不放障碍，正常都落在第 0 行 */
+    for(r=0;r<=Math.min(1,G.rows-2);r++)
+      if(G.g[r][c]>0&&G.ov[r][c]===0){ cand.push({r:r,c:c}); break; }
   }
   for(var i=0;i<cand.length;i++){
     var p=cand[i];
     G.g[p.r][p.c]=M3_DROP;
+    G.nextDropCol=(cols.indexOf(p.c)+1)%cols.length;
     if(mode==='dom'){
       var old=tileAt(p.r,p.c);
       var de=m3TileEl(p.r,p.c,M3_DROP,G.cell);
-      de.style.top=((p.r-2)*G.cell)+'px';
+      de.style.top=(-G.cell)+'px';
       $('tiles').appendChild(de);
       if(old) old.remove();
       (function(e,rr){ requestAnimationFrame(function(){ requestAnimationFrame(function(){ e.style.top=(rr*G.cell)+'px'; }); }); })(de,p.r);
@@ -750,7 +749,8 @@ function startM3(level){
   G={lv:lv,no:level,g:d.g,ov:d.ov,targets:d.targets,pool:d.pool,exitCols:d.exitCols,
      rows:lv.r,cols:lv.c,cell:cell,
      moves:lv.m,hint:lv.h,shuf:lv.s,shufUsed:0,score:0,sel:null,locked:false,over:false,
-     prog:lv.g.map(function(){return 0;}),dropNeed:m3DropNeed(lv),dropGot:0};
+     prog:lv.g.map(function(){return 0;}),dropNeed:m3DropNeed(lv),dropGot:0,
+     nextDropCol:0,clearedCols:{},sinkUsed:{}};
   combo=0; lastMatch=0;
   var board=$('board'), w=lv.c*cell, h=lv.r*cell;
   board.style.width=w+'px'; board.style.height=h+'px';
@@ -802,7 +802,8 @@ function m3Progress(){
 }
 function m3RenderGoals(){
   var box=$('goals'); if(!box) return;
-  var html='<div class="gh">第 '+G.no+' 关 · '+G.lv.type+(G.lv.sp?' · '+G.lv.sp:'')+'</div>';
+  var html='<div class="gh">第 '+G.no+' 关 · '+G.lv.type+(G.lv.sp?' · '+G.lv.sp:'')+
+    (G.dropNeed?' · 出口列 '+G.exitCols.slice().sort(function(a,b){return a-b;}).map(function(c){return c+1;}).join('/'):'')+'</div>';
   for(var i=0;i<G.lv.g.length;i++){
     var q=G.lv.g[i], cur=G.prog[i], done=cur>=q.n, icon='', name=M3_GOAL_NAME[q.k];
     if(q.k==='elem'){
@@ -815,7 +816,7 @@ function m3RenderGoals(){
     html+='<div class="goal'+(done?' done':'')+'">'+icon+'<span class="gn">'+name+'</span><b>'+cur+'/'+q.n+'</b>'+(done?'<em>✓</em>':'')+'</div>';
   }
   html+='<div class="gs">手动重排 '+G.shuf+'/'+G.lv.s+' 次 · 提示 '+G.hint+' 次'+
-    (G.dropNeed?' · 掉落物落到最底行（金色边）才收集':'')+'</div>';
+    (G.dropNeed?' · 消掉落物所在列的图案让它下沉，到最底行（金色边）才收集':'')+'</div>';
   box.innerHTML=html;
 }
 function syncM3Hud(){
@@ -836,7 +837,7 @@ function m3ClearSel(){
 function m3Tap(r,c){
   if(!G||G.locked||G.over) return;
   if(G.ov[r][c]===M3_CRATE){ toast('木箱不能交换，消除它旁边的图案即可打碎'); return; }
-  if(G.g[r][c]===M3_DROP){ toast('掉落物不能交换，消掉同列图案让它下沉，落到最底行才收集'); return; }
+  if(G.g[r][c]===M3_DROP){ toast('掉落物不能交换，消掉它所在列的图案让它逐格下沉，落到最底行才收集'); return; }
   if(!G.g[r][c]) return;
   if(G.sel&&G.sel.r===r&&G.sel.c===c){ m3ClearSel(); return; }
   if(!G.sel){ G.sel={r:r,c:c}; var e0=tileAt(r,c); if(e0) e0.classList.add('sel'); return; }
@@ -866,7 +867,10 @@ function m3AfterSwap(a,b){
     setTimeout(function(){ G.locked=false; },200);
     return;
   }
-  G.moves--; syncM3Hud();
+  G.moves--;
+  /* 一次有效交换（含后续连锁）统一结算：记下哪些列真的消过图案，每列最多推进掉落物 2 格 */
+  G.clearedCols={}; G.sinkUsed={};
+  syncM3Hud();
   m3Resolve(groups,1);
 }
 function m3Resolve(groups,depth){
@@ -882,6 +886,7 @@ function m3Resolve(groups,depth){
     if(v<=0||G.ov[p.r][p.c]===M3_CRATE) continue;
     G.g[p.r][p.c]=0;
     cleared.push({r:p.r,c:p.c,v:v});
+    G.clearedCols[p.c]=(G.clearedCols[p.c]||0)+1;
     var e=tileAt(p.r,p.c);
     if(e){ e.classList.add('gone'); (function(el){ setTimeout(function(){ el.remove(); },200); })(e); }
     m3Add('elem',1,v);
@@ -932,9 +937,9 @@ function m3AfterClear(depth){
     G.locked=false;
   });
 }
-/* 掉落物是"重物"：本列消掉 k 个图案就空出 k 格，掉落物优先往下占一格，
+/* 掉落物是"重物"：只有它所在的出口列本轮真的消掉了图案，才往下占一格，
    下方图案依次上浮一格（等价于重者下沉、空位上浮）。
-   step 取本列空位数且每轮最多 1 格：本列没消除就不下沉，玩家能看着它逐格落向出口 */
+   一次有效交换（含连锁）里每列最多推进 2 格，下沉原因和节奏都可预期 */
 function m3SinkDrops(c,top,bottom,step){
   if(step<=0) return;
   for(var r=bottom-1;r>=top;r--){
@@ -974,13 +979,20 @@ function m3Fall(done){
             write--;
           }
         }
-        if(!guard) m3SinkDrops(c,top,bottom,Math.min(1,write-top+1));
+        /* 本列本次交换确有消除、有空位、且本轮推进没超过 2 格，才让掉落物沉 1 格 */
+        if(!guard&&(G.sinkUsed[c]||0)<2&&(G.clearedCols[c]||0)>0&&write-top+1>0){
+          G.sinkUsed[c]=(G.sinkUsed[c]||0)+1;
+          m3SinkDrops(c,top,bottom,1);
+        }
         /* 出口只在最底行：压实后检查一次，收集后再压实，让同列上方的图案继续补位 */
         if(bottom===R-1&&G.g[R-1][c]===M3_DROP){
           G.g[R-1][c]=0;
           var de=tileAt(R-1,c);
+          /* 数据已到出口却找不到图块时补一个，保证"在最后一行淡出"这一步一定看得见 */
+          if(!de){ de=m3TileEl(R-1,c,M3_DROP,G.cell); $('tiles').appendChild(de); }
           /* gone 立即打上（后续压实不再碰它），淡出由 CSS 延迟，先看清它落到最后一行 */
-          if(de){ de.classList.add('gone'); (function(e){ setTimeout(function(){ e.remove(); },420); })(de); }
+          de.classList.add('gone');
+          (function(e){ setTimeout(function(){ e.remove(); },420); })(de);
           if(G.dropGot<G.dropNeed){ G.dropGot++; m3Add('drop',1); }
           if(guard++<R) continue;
         }

@@ -8,11 +8,13 @@ body {
     font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
     background: radial-gradient(125% 100% at 50% 0%, #1B2A55 0%, #101A3A 48%, #070C1E 100%);
     overflow: hidden;
-    width: 100vw;
+    width: 100%;
     height: 100vh;
+    height: 100dvh;   /* 手机浏览器地址栏伸缩时跟着变，避免底部被裁 */
     display: flex;
     justify-content: center;
     align-items: center;
+    -webkit-tap-highlight-color: transparent;
 }
 
 :root {
@@ -24,18 +26,48 @@ body {
     --ink: #F2ECFF;
     --ink-soft: rgba(226, 214, 246, 0.85);
     --ink-shadow: 0 1px 4px rgba(6, 10, 26, 0.75);
+
+    /* 全局比例系数：script.js 的 updateViewport() 按屏幕短边实时写入。
+       所有窗口/卡片/字号/按钮/间距都由它派生，手机与桌面共用一条连续曲线，
+       不会出现"卡片小了但按钮还是巨大"这类不协调 */
+    --s: 0.75;
+    --tap: 35px;
+    --corner: max(10px, calc(30px * var(--s)));
+    --tool: max(48px, calc(135px * var(--s)));
+    --music: max(40px, calc(96px * var(--s)));
+
+    /* 卡片各部件由 JS 按 --s 算好后写进来，这里是桌面默认值 */
+    --card-w: 203px;
+    --card-pad: 13px;
+    --card-font: 15px;
+    --card-img-h: 61px;
+    --card-gap: 10px;
 }
 
 .background-container {
     position: relative;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
     user-select: none;
+    -webkit-user-select: none;
+}
+
+.background-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
 }
 
 .overlay-layer {
     position: absolute;
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
     transform-origin: top left;
     pointer-events: none;
 }
@@ -44,22 +76,28 @@ body {
     pointer-events: auto;
 }
 
+button {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
 .main-window {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 520px;
+    width: min(calc(520px * var(--s)), calc(100% - 24px));
+    max-height: calc(100% - 24px);
     background: var(--glass-bg);
     border: 1px solid var(--glass-line);
-    border-radius: 12px;
+    border-radius: max(8px, calc(12px * var(--s)));
     box-shadow: var(--glass-glow);
     -webkit-backdrop-filter: var(--glass-blur);
     backdrop-filter: var(--glass-blur);
     opacity: 0;
     transition: opacity 0.5s ease;
     z-index: 10;
-    overflow: hidden;
+    overflow: hidden auto;
 }
 
 .main-window.visible {
@@ -75,13 +113,13 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 18px;
+    padding: max(8px, calc(12px * var(--s))) max(12px, calc(18px * var(--s)));
     background: var(--glass-band);
     border-bottom: 1px solid var(--glass-line);
 }
 
 .title-text {
-    font-size: 22px;
+    font-size: max(16px, calc(22px * var(--s)));
     font-weight: bold;
     color: var(--ink);
     text-shadow: var(--ink-shadow);
@@ -91,10 +129,12 @@ body {
     background: rgba(28, 40, 78, 0.4);
     border: 1px solid var(--glass-line);
     color: var(--ink);
-    font-size: 24px;
+    font-size: max(18px, calc(24px * var(--s)));
     font-weight: bold;
     cursor: pointer;
-    padding: 4px 12px;
+    padding: 0 max(6px, calc(10px * var(--s)));
+    min-width: var(--tap);
+    min-height: var(--tap);
     border-radius: 6px;
     transition: background 0.2s;
 }
@@ -104,37 +144,41 @@ body {
 }
 
 .content-area {
-    padding: 30px;
+    padding: max(16px, calc(30px * var(--s)));
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 30px;
+    gap: max(14px, calc(30px * var(--s)));
 }
 
 .greeting-text {
     text-align: center;
     color: #E4D6FF;
-    font-size: 26px;
+    font-size: max(16px, calc(26px * var(--s)));
     font-weight: bold;
-    line-height: 1.6;
-    padding: 30px;
+    line-height: 1.55;
+    padding: max(14px, calc(30px * var(--s)));
     background: rgba(28, 40, 78, 0.4);
     text-shadow: var(--ink-shadow);
     border: 1px solid var(--glass-line);
-    border-radius: 10px;
+    border-radius: max(7px, calc(10px * var(--s)));
     width: 100%;
+    overflow-wrap: anywhere;
 }
 
 .button-group {
     display: flex;
-    gap: 30px;
+    gap: max(10px, calc(30px * var(--s)));
     justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
 }
 
 .btn {
     font-family: "Microsoft YaHei", sans-serif;
-    font-size: 22px;
-    padding: 12px 22px;
+    font-size: max(14px, calc(22px * var(--s)));
+    padding: max(6px, calc(12px * var(--s))) max(14px, calc(22px * var(--s)));
+    min-height: var(--tap);
     border: 1px solid var(--glass-line);
     border-radius: 6px;
     cursor: pointer;
@@ -181,19 +225,19 @@ body {
 
 .wish-popup {
     position: absolute;
-    width: 270px;
-    max-width: 270px;
+    width: var(--card-w, 203px);
+    max-width: var(--card-w, 203px);
     background: var(--card-tint, var(--glass-bg));
     border: 1px solid var(--glass-line);
-    border-radius: 10px;
-    padding: 18px;
+    border-radius: max(6px, calc(10px * var(--s)));
+    padding: var(--card-pad, 13px);
     box-shadow: var(--glass-glow);
     -webkit-backdrop-filter: var(--glass-blur);
     backdrop-filter: var(--glass-blur);
     opacity: 0;
     transform: scale(0.8);
     transition: opacity 0.3s ease, transform 0.3s ease;
-    pointer-events: auto;
+    pointer-events: none;   /* 纯展示卡片，点击穿透，不挡背景和工具栏 */
     overflow: hidden;
     z-index: 5;
     will-change: top, opacity, transform;
@@ -207,48 +251,30 @@ body {
 .wish-popup .wish-text {
     color: var(--ink);
     text-shadow: var(--ink-shadow);
-    font-size: 20px;
+    font-size: var(--card-font, 15px);
     font-weight: bold;
     text-align: center;
     line-height: 1.4;
-    margin-bottom: 15px;
-    word-break: break-all;
-}
-
-.wish-popup .wish-btn {
-    display: block;
-    margin: 0 auto;
-    background: rgba(122, 92, 176, 0.5);
-    color: var(--ink);
-    text-shadow: var(--ink-shadow);
-    border: 1px solid var(--glass-line);
-    padding: 6px 20px;
-    border-radius: 6px;
-    font-size: 18px;
-    font-family: "Microsoft YaHei", sans-serif;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.wish-popup .wish-btn:hover {
-    background: rgba(150, 120, 205, 0.65);
+    /* 去掉"收下"按钮后高度随文字自适应，只给两行下限避免短文案的卡片太扁 */
+    min-height: calc(var(--card-font, 15px) * 2.8);
+    overflow-wrap: anywhere;
 }
 
 .wish-popup .wish-image {
     width: 100%;
-    height: 90px;
+    height: var(--card-img-h, 67px);
     object-fit: cover;
     border-radius: 6px;
     border: 1px solid rgba(199, 168, 232, 0.35);
-    margin-bottom: 12px;
+    margin-bottom: var(--card-gap, 10px);
 }
 
 .music-btn {
     position: absolute;
-    top: 30px;
-    left: 30px;
-    width: 96px;
-    height: 96px;
+    top: calc(var(--corner) + env(safe-area-inset-top));
+    left: calc(var(--corner) + env(safe-area-inset-left));
+    width: var(--music);
+    height: var(--music);
     padding: 0;
     border: none;
     background: transparent;
@@ -270,8 +296,8 @@ body {
 
 .music-icon {
     display: block;
-    width: 96px;
-    height: 96px;
+    width: var(--music);
+    height: var(--music);
 }
 
 .m-head,
@@ -309,9 +335,9 @@ body {
 
 .music-no {
     position: absolute;
-    right: 8px;
+    right: 0;
     bottom: 0;
-    font-size: 34px;
+    font-size: max(16px, calc(34px * var(--s)));
     line-height: 1;
     font-weight: 700;
     color: #FFFFFF;
@@ -322,57 +348,20 @@ body {
     opacity: 0.4;
 }
 
-.close-all-btn {
-    position: absolute;
-    top: 30px;
-    right: 30px;
-    width: 135px;
-    height: 135px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    z-index: 20;
-    opacity: 0;
-    transition: opacity 0.5s, transform 0.2s;
-    pointer-events: none;
-}
-
-.close-all-btn.visible {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.close-all-btn:hover {
-    transform: scale(1.1);
-}
-
-.heart-icon {
-    width: 135px;
-    height: 135px;
-}
-
-.close-all-text {
-    position: absolute;
-    color: var(--ink);
-    text-shadow: var(--ink-shadow);
-    font-size: 22px;
-    font-weight: bold;
-    text-align: center;
-    line-height: 1.2;
-}
-
+.close-all-btn,
 .restart-btn {
     position: absolute;
-    top: 30px;
-    right: 30px;
-    width: 135px;
-    height: 135px;
+    top: calc(var(--corner) + env(safe-area-inset-top));
+    right: calc(var(--corner) + env(safe-area-inset-right));
+    width: var(--tool);
+    height: var(--tool);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    border-radius: 50%;
+    background: rgba(28, 40, 78, 0.28);
+    border: 1px solid rgba(199, 168, 232, 0.25);
     cursor: pointer;
     z-index: 20;
     opacity: 0;
@@ -380,53 +369,64 @@ body {
     pointer-events: none;
 }
 
+.close-all-btn.visible,
 .restart-btn.visible {
     opacity: 1;
     pointer-events: auto;
 }
 
+.close-all-btn:hover,
 .restart-btn:hover {
     transform: scale(1.1);
 }
 
+.heart-icon,
 .restart-icon {
-    width: 135px;
-    height: 135px;
+    width: var(--tool);
+    height: var(--tool);
 }
 
+.close-all-text,
 .restart-text {
     position: absolute;
+    width: calc(var(--tool) * 0.82);
     color: var(--ink);
     text-shadow: var(--ink-shadow);
-    font-size: 22px;
+    font-size: max(11px, calc(22px * var(--s)));
     font-weight: bold;
     text-align: center;
-    line-height: 1.2;
+    line-height: 1.15;
+    white-space: normal;
 }
 
 .footer-notice {
     position: absolute;
-    bottom: 15px;
+    bottom: calc(max(8px, calc(15px * var(--s))) + env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
+    width: calc(100% - 24px);
+    text-align: center;
     z-index: 30;
     pointer-events: none;
 }
 
 .footer-notice span {
     display: inline-block;
-    font-size: 18px;
+    max-width: 100%;
+    font-size: max(11px, calc(18px * var(--s)));
     color: var(--ink);
     text-shadow: var(--ink-shadow);
     background: var(--glass-band);
-    padding: 7px 20px;
+    padding: max(5px, calc(7px * var(--s))) max(10px, calc(20px * var(--s)));
     border-radius: 20px;
     border: 1px solid var(--glass-line);
     box-shadow: 0 0 14px rgba(126, 96, 196, 0.28);
-    white-space: nowrap;
+    white-space: normal;
+    line-height: 1.4;
     -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
 }
+
 .cake-stage {
     position: absolute;
     top: 0;
@@ -447,4 +447,38 @@ body {
     display: block;
     width: 100%;
     height: 100%;
+}
+
+/* ---------- 触屏与小屏细则 ---------- */
+/* 触屏没有 hover：去掉放大和粘滞的背景变化 */
+@media (hover: none) {
+    .btn:hover,
+    .close-all-btn:hover,
+    .restart-btn:hover,
+    .music-btn:hover {
+        transform: none;
+    }
+
+    .btn-primary:hover { background: rgba(122, 92, 176, 0.5); }
+    .btn-secondary:hover { background: rgba(206, 147, 216, 0.4); }
+    .close-btn:hover { background: rgba(28, 40, 78, 0.4); }
+
+    /* 十几张玻璃卡片同时做背景模糊很吃手机 GPU，去掉模糊保留底色 */
+    .wish-popup,
+    .main-window {
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        box-shadow: 0 4px 18px rgba(6, 10, 26, 0.45);
+    }
+}
+
+/* 极窄屏放不下并排按钮时改成上下排列 */
+@media (max-width: 360px) {
+    .button-group {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+    }
 }

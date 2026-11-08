@@ -8,6 +8,19 @@ Hexo + Butterfly 静态博客，构建产物整站推送到 GitHub Pages。
 | 主题 | Butterfly 5.5.3（`themes/butterfly`） |
 | Node | v24 系列，包管理用 pnpm 或 npm 均可 |
 
+## 源码备份
+
+完整源码（文章、主题配置、脚本、图片）在 https://github.com/cyg0825/hexo-blog 的 `main` 分支；`cyg0825.github.io` 仓库只存构建产物。换机器时：
+
+```bash
+git clone git@github.com:cyg0825/hexo-blog.git
+cd hexo-blog
+npm install                  # 或 pnpm install
+npx hexo server -p 4000      # 本地预览
+```
+
+`node_modules/`、`public/`、`db.json`、`.deploy_git/` 和本地临时备份目录都不入库，clone 后靠 `npm install` 与 `hexo generate` 重建。
+
 ## 常用命令
 
 ```bash

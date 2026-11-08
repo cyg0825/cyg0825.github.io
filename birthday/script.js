@@ -216,12 +216,16 @@
         'rgba(26, 42, 66, 0.72)'
     ];
 
-    var TIP_AREA = 16000;
+    var TIP_AREA = 16000;          // 桌面：每 16000px² 约一张卡
+    var TIP_AREA_COMPACT = 26000;  // 小屏卡片小，数量也要收一点，重叠太多字会看不清
     var TIP_MIN = 30;
     var TIP_MAX = 64;
+    var TIP_MIN_COMPACT = 10;
+    var TIP_MAX_COMPACT = 14;
     var TIP_INTERVAL = 300;
+    // 卡片尺寸不再写死：updateViewport() 按屏幕短边算出来，CSS 用 --card-* 变量同步渲染
     var WISH_W = 270;
-    var WISH_H_MIN = 120;
+    var WISH_H_MIN = 240;
     var TOTAL_IMAGES = 21;
     // 音乐用网易云在线歌单（与博客左下角播放器同一歌单），通过 Meting 中转取流，本地不存音频
     var METING_API = 'https://api.injahow.cn/meting/?server=netease&type=playlist&id=9086662585';
@@ -256,6 +260,9 @@
 
     var naturalW = 0;
     var naturalH = 0;
+    var isCompact = false;
+    var currentMode = null;
+    var resizeTimer = 0;
     var isClosing = false;
     var timeouts = [];
     var wishElements = [];
@@ -272,34 +279,67 @@
     var audioUnlocked = false;
     var trackRetries = 0;
 
-    var DESIGN_W = 2560;
-    var DESIGN_H = 1440;
+    function clamp(v, lo, hi) {
+        return Math.max(lo, Math.min(hi, v));
+    }
 
-    function updateScale() {
-        var vw = window.innerWidth;
-        var vh = window.innerHeight;
-        if (!vw || !vh) return;
+    function viewportSize() {
+        var w = window.innerWidth || document.documentElement.clientWidth;
+        var h = window.innerHeight || document.documentElement.clientHeight;
+        return { w: Math.max(1, Math.round(w)), h: Math.max(1, Math.round(h)) };
+    }
 
-        naturalW = DESIGN_W;
-        naturalH = DESIGN_H;
+    // 布局直接用真实视口像素，不再用 2560×1440 固定画布整体缩放：
+    // 那种做法在手机上缩放比只有 0.15，整页会被压成一小条，文字也缩到看不清
+    function updateViewport() {
+        var vp = viewportSize();
+        naturalW = vp.w;
+        naturalH = vp.h;
+        isCompact = Math.min(vp.w, vp.h) < 760 || vp.w < 900;
 
-        var scale = Math.min(vw / DESIGN_W, vh / DESIGN_H);
+        // 全局一个比例系数 --s，卡片/窗口/按钮/间距全部由它派生，比例才协调。
+        // 1920×1080 桌面 → 0.60（卡片约 162px），手机 → 0.40（约 108px），
+        // 短边越小缩得越明显，中间尺寸连续过渡；文字另有 px 下限保证看得清
+        var shortSide = Math.min(naturalW, naturalH);
+        var s = clamp(0.60 * Math.pow(shortSide / 1080, 0.55), 0.40, 0.72);
+        WISH_W = Math.round(270 * s);
+        var pad = Math.round(clamp(WISH_W * 0.066, 6, 18));
+        var font = Math.round(clamp(WISH_W * 0.074, 12, 20));
+        var imgH = Math.round(clamp(WISH_W * 0.30, 34, 90));
+        var gap = Math.round(clamp(WISH_W * 0.05, 6, 12));
+        // 卡片只有图片和文字，这里按"约三行文字"估一个平均高度作为心形点位的定位基准；
+        // 实际高度随文案变化，创建卡片时再用实测高度校正中心
+        WISH_H_MIN = Math.round(pad * 2 + imgH + gap + font * 1.4 * 3 + 4);
 
-        bgContainer.style.width = Math.round(DESIGN_W * scale) + 'px';
-        bgContainer.style.height = Math.round(DESIGN_H * scale) + 'px';
+        var root = document.documentElement.style;
+        root.setProperty('--s', s.toFixed(3));
+        root.setProperty('--tap', (isCompact ? 44 : Math.round(46 * s)) + 'px');
+        root.setProperty('--card-w', WISH_W + 'px');
+        root.setProperty('--card-pad', pad + 'px');
+        root.setProperty('--card-font', font + 'px');
+        root.setProperty('--card-img-h', imgH + 'px');
+        root.setProperty('--card-gap', gap + 'px');
+
+        bgContainer.style.width = '100%';
+        bgContainer.style.height = '100%';
         overlayLayer.style.width = naturalW + 'px';
         overlayLayer.style.height = naturalH + 'px';
-        overlayLayer.style.transform = 'scale(' + scale + ')';
+        overlayLayer.style.transform = 'none';
     }
 
     function tipCount() {
-        var n = Math.round(window.innerWidth * window.innerHeight / TIP_AREA);
-        return Math.max(TIP_MIN, Math.min(TIP_MAX, n));
+        var n = Math.round(naturalW * naturalH / (isCompact ? TIP_AREA_COMPACT : TIP_AREA));
+        if (naturalH < 520) n = Math.round(n * 0.6);   // 横屏手机高度小，少放几张才不糊成一团
+        return clamp(n, isCompact ? TIP_MIN_COMPACT : TIP_MIN, isCompact ? TIP_MAX_COMPACT : TIP_MAX);
     }
 
-    function generateHeartPositions(count) {
+    function generateHeartPositions(count, forcedMode) {
         var modes = [MODE_GROWTH, MODE_RANDOM, MODE_CURVE_CW, MODE_CURVE_CCW, MODE_RIPPLE, MODE_HEARTBEAT, MODE_OUTLINE_FILL, MODE_RAINFALL];
-        var mode = modes[Math.floor(Math.random() * modes.length)];
+        // 旋转屏幕/拖动窗口时沿用当前模式，避免每帧重排都换个动画
+        var mode = forcedMode && modes.indexOf(forcedMode) >= 0
+            ? forcedMode
+            : modes[Math.floor(Math.random() * modes.length)];
+        currentMode = mode;
 
         if (mode === MODE_GROWTH) {
             return { positions: generateGrowthPositions(count), delays: null };
@@ -320,17 +360,37 @@
         }
     }
 
+    // 心形公式坐标 → 屏幕坐标。x/y 分开缩放：竖屏时若强行等比，宽度受限会把整颗心压成一小条
+    function heartLayout() {
+        updateViewport();
+        var padding = isCompact ? 12 : 20;
+        var topReserve = isCompact ? 68 : 0;      // 手机顶部工具栏
+        var bottomReserve = isCompact ? 40 : 0;   // 手机底部提示
+        var usableW = Math.max(60, naturalW - padding * 2 - WISH_W);
+        var usableH = Math.max(60, naturalH - topReserve - bottomReserve - padding * 2 - WISH_H_MIN);
+        // 横屏保持心形原本的比例；竖屏只做轻度纵向拉伸（1.4 倍封顶），
+        // 拉过头会变成瘦长的"水滴"，看起来不协调
+        var equal = Math.min(usableW / 32, usableH / 32);
+        var sx = equal;
+        var sy = naturalH > naturalW ? Math.min(equal * 1.6, usableH / 32) : equal;
+        return {
+            cx: naturalW / 2,
+            cy: naturalH / 2 + (topReserve - bottomReserve) / 2 - naturalH * (isCompact ? 0.04 : 0.15),
+            sx: sx,
+            sy: sy,
+            padding: padding
+        };
+    }
+
+    function toScreen(rawX, rawY, L) {
+        return {
+            x: clamp(L.cx + rawX * L.sx - WISH_W / 2, L.padding, Math.max(L.padding, naturalW - WISH_W - L.padding)),
+            y: clamp(L.cy + rawY * L.sy - WISH_H_MIN / 2, L.padding, Math.max(L.padding, naturalH - WISH_H_MIN - L.padding))
+        };
+    }
+
     function sampleHeartPoints(count, dedup) {
-        updateScale();
-
-        var centerX = naturalW / 2;
-        var centerY = naturalH / 2;
-        var offsetY = -naturalH * 0.15;
-        var padding = 20;
-        var availableW = naturalW - padding * 2 - WISH_W;
-        var availableH = naturalH - padding * 2 - WISH_H_MIN;
-        var heartScale = Math.min(availableW / 32, availableH / 32);
-
+        var L = heartLayout();
         var rawPositions = [];
         var step = (2 * Math.PI) / count;
 
@@ -339,14 +399,9 @@
             var rawX = 16 * Math.pow(Math.sin(t), 3);
             var rawY = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
 
-            var x = centerX + rawX * heartScale - WISH_W / 2;
-            var y = centerY + offsetY + rawY * heartScale - WISH_H_MIN / 2;
-
-            rawPositions.push({
-                x: Math.max(5, x),
-                y: Math.max(5, y),
-                dist: Math.sqrt(Math.pow(rawX, 2) + Math.pow(rawY, 2))
-            });
+            var pos = toScreen(rawX, rawY, L);
+            pos.dist = Math.sqrt(rawX * rawX + rawY * rawY);
+            rawPositions.push(pos);
         }
 
         if (dedup === false) {
@@ -397,16 +452,7 @@
     }
 
     function generateCurveCwPositions(count) {
-        updateScale();
-
-        var centerX = naturalW / 2;
-        var centerY = naturalH / 2;
-        var offsetY = -naturalH * 0.15;
-        var padding = 20;
-        var availableW = naturalW - padding * 2 - WISH_W;
-        var availableH = naturalH - padding * 2 - WISH_H_MIN;
-        var heartScale = Math.min(availableW / 32, availableH / 32);
-
+        var L = heartLayout();
         var positions = [];
         var step = (2 * Math.PI) / count;
 
@@ -414,30 +460,14 @@
             var t = i * step;
             var rawX = 16 * Math.pow(Math.sin(t), 3);
             var rawY = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-
-            var x = centerX + rawX * heartScale - WISH_W / 2;
-            var y = centerY + offsetY + rawY * heartScale - WISH_H_MIN / 2;
-
-            positions.push({
-                x: Math.max(5, x),
-                y: Math.max(5, y)
-            });
+            positions.push(toScreen(rawX, rawY, L));
         }
 
         return positions;
     }
 
     function generateCurveCcwPositions(count) {
-        updateScale();
-
-        var centerX = naturalW / 2;
-        var centerY = naturalH / 2;
-        var offsetY = -naturalH * 0.15;
-        var padding = 20;
-        var availableW = naturalW - padding * 2 - WISH_W;
-        var availableH = naturalH - padding * 2 - WISH_H_MIN;
-        var heartScale = Math.min(availableW / 32, availableH / 32);
-
+        var L = heartLayout();
         var positions = [];
         var step = (2 * Math.PI) / count;
 
@@ -445,14 +475,7 @@
             var t = (2 * Math.PI) - i * step;
             var rawX = 16 * Math.pow(Math.sin(t), 3);
             var rawY = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-
-            var x = centerX + rawX * heartScale - WISH_W / 2;
-            var y = centerY + offsetY + rawY * heartScale - WISH_H_MIN / 2;
-
-            positions.push({
-                x: Math.max(5, x),
-                y: Math.max(5, y)
-            });
+            positions.push(toScreen(rawX, rawY, L));
         }
 
         return positions;
@@ -460,9 +483,10 @@
 
     function generateRipplePositions(count) {
         var positions = sampleHeartPoints(count, false);
+        var L = heartLayout();
 
-        var centerX = naturalW / 2;
-        var centerY = naturalH / 2 - naturalH * 0.15;
+        var centerX = L.cx;
+        var centerY = L.cy;
 
         var withDist = positions.map(function(p) {
             return {
@@ -530,15 +554,7 @@
     }
 
     function generateOutlineFillPositions(count) {
-        updateScale();
-
-        var centerX = naturalW / 2;
-        var centerY = naturalH / 2;
-        var offsetY = -naturalH * 0.15;
-        var padding = 20;
-        var availableW = naturalW - padding * 2 - WISH_W;
-        var availableH = naturalH - padding * 2 - WISH_H_MIN;
-        var heartScale = Math.min(availableW / 32, availableH / 32);
+        var L = heartLayout();
 
         var outlineCount = Math.floor(count * 0.4);
         var fillCount = count - outlineCount;
@@ -549,25 +565,16 @@
             var t = i * step;
             var rawX = 16 * Math.pow(Math.sin(t), 3);
             var rawY = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-            outlinePositions.push({
-                x: Math.max(5, centerX + rawX * heartScale - WISH_W / 2),
-                y: Math.max(5, centerY + offsetY + rawY * heartScale - WISH_H_MIN / 2)
-            });
+            outlinePositions.push(toScreen(rawX, rawY, L));
         }
 
         var fillPositions = [];
-        var centerRawX = 0;
-        var centerRawY = 0;
         for (var f = 0; f < fillCount; f++) {
             var frac = Math.random() * 0.85;
             var angle = Math.random() * 2 * Math.PI;
-            var rawX = centerRawX + Math.cos(angle) * 16 * frac;
-            var rawY = centerRawY + Math.sin(angle) * 13 * frac * (0.7 + 0.3 * Math.random());
+            var fillX = Math.cos(angle) * 16 * frac;
             var heartY = -(13 * Math.cos(angle) - 5 * Math.cos(2 * angle) - 2 * Math.cos(3 * angle) - Math.cos(4 * angle)) * frac;
-            fillPositions.push({
-                x: Math.max(5, centerX + rawX * heartScale - WISH_W / 2),
-                y: Math.max(5, centerY + offsetY + heartY * heartScale - WISH_H_MIN / 2)
-            });
+            fillPositions.push(toScreen(fillX, heartY, L));
         }
 
         var positions = outlinePositions.concat(fillPositions);
@@ -594,7 +601,7 @@
             positions[r] = tmp;
         }
 
-        var fallDistance = Math.max(naturalH * 0.3, 200);
+        var fallDistance = Math.round(clamp(naturalH * 0.3, 120, 260));
 
         var delays = [];
         for (var j = 0; j < positions.length; j++) {
@@ -616,10 +623,11 @@
     }
 
     function syncMusicBtn() {
+        if (!musicBtn) return;
         var playing = !bgAudio.paused;
         var label = curTrack ? '第' + curTrack + '首' : '';
         musicBtn.classList.toggle('muted', !playing);
-        musicNo.textContent = curTrack ? String(curTrack) : '';
+        if (musicNo) musicNo.textContent = curTrack ? String(curTrack) : '';
         musicBtn.title = (playing ? '暂停音乐' : '播放音乐') + (label ? '·' + label : '');
         musicBtn.setAttribute('aria-label', musicBtn.title);
     }
@@ -715,7 +723,7 @@
 
         stopMusic();
         closeAllBtn.classList.remove('visible');
-        musicBtn.classList.remove('visible');
+        if (musicBtn) musicBtn.classList.remove('visible');
         restartBtn.classList.add('visible');
     }
 
@@ -740,6 +748,14 @@
         });
     }
 
+    // 卡片高度随文字变化：用实测高度把卡片中心重新对齐到心形点位
+    // （点位是按 WISH_H_MIN 这个"平均高度"算出的左上角），并夹在视口内不越界
+    function wishTop(el, baseTop) {
+        var h = el.offsetHeight || WISH_H_MIN;
+        var edge = isCompact ? 12 : 20;
+        return clamp(baseTop + (WISH_H_MIN - h) / 2, edge, Math.max(edge, naturalH - h - edge));
+    }
+
     function createRandomTipWindow(index) {
         if (isClosing) return;
         if (!naturalW || naturalW === 0) return;
@@ -751,7 +767,11 @@
 
         var wishPopup = document.createElement('div');
         wishPopup.className = 'wish-popup';
-        wishPopup.style.setProperty('--card-tint', bgColor);
+        // 卡片只展示图片和文字；手机端没有背景模糊，底色调实一点，
+        // 避免下层卡片的文字透上来糊成一片
+        wishPopup.style.setProperty('--card-tint', isCompact
+            ? bgColor.replace(/0\.7\d+\)$/, '0.94)')
+            : bgColor);
 
         var wishImage = document.createElement('img');
         wishImage.className = 'wish-image';
@@ -765,41 +785,30 @@
         wishTextEl.className = 'wish-text';
         wishTextEl.textContent = wishText;
 
-        var wishBtn = document.createElement('button');
-        wishBtn.className = 'wish-btn';
-        wishBtn.textContent = '收下';
-        wishBtn.addEventListener('click', function() {
-            wishPopup.style.opacity = '0';
-            wishPopup.style.transform = 'scale(0.8)';
-            setTimeout(function() {
-                wishPopup.remove();
-                wishElements = wishElements.filter(function(el) { return el !== wishPopup; });
-            }, 300);
-        });
-
         wishPopup.appendChild(wishImage);
         wishPopup.appendChild(wishTextEl);
-        wishPopup.appendChild(wishBtn);
 
         var pos = heartPositions[index % heartPositions.length];
-        if (pos) {
-            if (heartRainfall) {
-                wishPopup.style.left = pos.x + 'px';
-                wishPopup.style.top = (pos.y - heartRainfallDistance) + 'px';
-                wishPopup.style.transition = 'top 0.6s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.3s ease, transform 0.3s ease';
-            } else {
-                wishPopup.style.left = pos.x + 'px';
-                wishPopup.style.top = pos.y + 'px';
-            }
+        var targetTop = pos ? pos.y : 0;
+        if (pos) wishPopup.style.left = pos.x + 'px';
+        if (heartRainfall) {
+            wishPopup.style.top = (targetTop - heartRainfallDistance) + 'px';
+            wishPopup.style.transition = 'top 0.6s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.3s ease, transform 0.3s ease';
+        } else {
+            wishPopup.style.top = targetTop + 'px';
         }
 
         wishesContainer.appendChild(wishPopup);
         wishElements.push(wishPopup);
 
+        // 插入 DOM 后才能量到真实高度；按实际高度校正中心，文字多寡都不会让心形跑偏
+        targetTop = wishTop(wishPopup, targetTop);
+        if (!heartRainfall) wishPopup.style.top = targetTop + 'px';
+
         requestAnimationFrame(function() {
             if (heartRainfall) {
                 requestAnimationFrame(function() {
-                    wishPopup.style.top = pos.y + 'px';
+                    wishPopup.style.top = targetTop + 'px';
                     wishPopup.classList.add('visible');
                 });
             } else {
@@ -809,9 +818,9 @@
     }
 
     function startTipWindows() {
-        updateScale();
+        updateViewport();
         closeAllBtn.classList.add('visible');
-        musicBtn.classList.add('visible');
+        if (musicBtn) musicBtn.classList.add('visible');
         syncMusicBtn();
         mountBackground();
         var count = tipCount();
@@ -839,7 +848,7 @@
     mainCloseBtn.addEventListener('click', closeAllWindows);
     closeAllBtn.addEventListener('click', closeAllWindows);
     restartBtn.addEventListener('click', restartWishes);
-    musicBtn.addEventListener('click', toggleMusic);
+    if (musicBtn) musicBtn.addEventListener('click', toggleMusic);
     bgAudio.addEventListener('play', syncMusicBtn);
     bgAudio.addEventListener('pause', syncMusicBtn);
     bgAudio.addEventListener('error', function() {
@@ -848,24 +857,34 @@
         playRandomMusic();
     });
 
-    window.addEventListener('resize', function() {
-        updateScale();
+    // 旋转屏幕、手机地址栏收起、桌面拖窗口都会重排；防抖避免连续 resize 时卡片乱跳
+    function onViewportChange() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            updateViewport();
+            if (heartPositions.length === 0) return;
 
-        if (heartPositions.length > 0) {
-            var result = generateHeartPositions(heartPositions.length);
+            var result = generateHeartPositions(heartPositions.length, currentMode);
             heartPositions = result.positions;
             heartDelays = result.delays || null;
             heartRainfall = result.rainfall || false;
             heartRainfallDistance = result.rainfallFallDistance || 0;
             wishElements.forEach(function(el, i) {
                 var pos = heartPositions[i % heartPositions.length];
-                if (pos) {
-                    el.style.left = pos.x + 'px';
-                    el.style.top = heartRainfall ? (pos.y - heartRainfallDistance) + 'px' : pos.y + 'px';
-                }
+                if (!pos) return;
+                el.style.transition = 'none';
+                el.style.left = pos.x + 'px';
+                el.style.top = wishTop(el, pos.y) + 'px';
+                requestAnimationFrame(function() { el.style.transition = ''; });
             });
-        }
-    });
+        }, 120);
+    }
+
+    window.addEventListener('resize', onViewportChange);
+    window.addEventListener('orientationchange', onViewportChange);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', onViewportChange);
+    }
 
     function applySeasonCopy() {
         if (isBirthday) return;
@@ -891,7 +910,7 @@
 
     applySeasonCopy();
 
-    updateScale();
+    updateViewport();
     preloadAssets();
     fadeInMainWindow();
 })();

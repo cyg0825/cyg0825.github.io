@@ -39,6 +39,10 @@ var PX_TO_WORLD = 0.011;
 
 function px(v) { return v * PX_TO_WORLD; }
 
+function compactViewport() {
+    return Math.min(window.innerWidth, window.innerHeight) < 760;
+}
+
 function makeResize(stage, renderer, camera, pr) {
     return function () {
         var box = stage.getBoundingClientRect();
@@ -51,6 +55,9 @@ function makeResize(stage, renderer, camera, pr) {
         if (renderer.domElement.width !== pw || renderer.domElement.height !== ph) {
             renderer.setSize(w * ratio, h * ratio, false);
             camera.aspect = w / h;
+            // 相机按横屏设计，竖屏 aspect < 1 时水平视野太窄会把蛋糕/文字左右裁掉，
+            // 放宽纵向 fov 把内容收进画面（上限 82° 避免透视畸变）
+            camera.fov = camera.aspect < 1 ? Math.min(82, 50 / Math.max(0.62, camera.aspect)) : 50;
             camera.updateProjectionMatrix();
         }
     };
@@ -375,8 +382,9 @@ function build(stage, opts) {
     var sprite = sphereTexture();
     var glow = softSprite();
 
-    var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    var pr = Math.min(window.devicePixelRatio || 1, 2);
+    // 手机 GPU 上关掉抗锯齿、把像素比压到 1.5，点云动画才不会掉帧
+    var renderer = new THREE.WebGLRenderer({ antialias: !compactViewport(), alpha: true });
+    var pr = Math.min(window.devicePixelRatio || 1, compactViewport() ? 1.5 : 2);
     renderer.setPixelRatio(pr);
     renderer.domElement.className = 'cake-canvas';
     stage.appendChild(renderer.domElement);
@@ -1080,8 +1088,9 @@ function buildStar(stage, opts) {
     var rnd = mulberry(randSeed());
     var sprite = sphereTexture();
 
-    var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    var pr = Math.min(window.devicePixelRatio || 1, 2);
+    // 手机 GPU 上关掉抗锯齿、把像素比压到 1.5，点云动画才不会掉帧
+    var renderer = new THREE.WebGLRenderer({ antialias: !compactViewport(), alpha: true });
+    var pr = Math.min(window.devicePixelRatio || 1, compactViewport() ? 1.5 : 2);
     renderer.setPixelRatio(pr);
     renderer.domElement.className = 'cake-canvas';
     stage.appendChild(renderer.domElement);
