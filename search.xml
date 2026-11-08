@@ -4441,7 +4441,7 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 </tbody></table>
 <p>先记住这张表，读源码时就不容易在十几个函数之间迷路：所有入口都在 <code>script.js</code> 末尾那几行 <code>addEventListener</code> 里，往下追一层就是对应的实现。</p>
 <p><strong>用户看到的流程</strong>：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">打开页面 → 中央欢迎窗（收下祝福 / 悄悄溜走）</span><br><span class="line">  → 点开始：随机音乐响起</span><br><span class="line">  → 祝福卡片按心形轨迹逐张弹出（共 30~64 张）</span><br><span class="line">  → 点单张&quot;收下&quot;，或右上角爱心&quot;收下全部&quot;</span><br><span class="line">  → 可点&quot;重新开启&quot;再来一遍</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">打开页面 → 中央欢迎窗（收下祝福 / 悄悄溜走）</span><br><span class="line">  → 点开始：随机音乐响起</span><br><span class="line">  → 祝福卡片按心形轨迹逐张弹出（共 30~48 张）</span><br><span class="line">  → 点单张&quot;收下&quot;，或右上角爱心&quot;收下全部&quot;</span><br><span class="line">  → 可点&quot;重新开启&quot;再来一遍</span><br></pre></td></tr></table></figure>
 
 <hr>
 <h2 id="二、文件构成"><a href="#二、文件构成" class="headerlink" title="二、文件构成"></a>二、文件构成</h2><table>
@@ -4567,15 +4567,15 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 </ul>
 <p><code>var isBirthday = isBirthdaySeason();</code> 在<strong>模块初始化时只算一次</strong>。这意味着页面开着跨过午夜 12 点，身份也不会中途跳变——欢迎窗是生日版、卡片却是平日版这种撕裂状态不会出现。想让它实时响应，得挂定时器每分钟重算并同步改文案池和 3D 场景，收益极小、复杂度陡增，不值得。</p>
 <p><code>ACTIVE_WISHES</code> 拿到的是其中一个数组的<strong>引用</strong>，不是复制一份。两个文案池加起来不到两百条字符串，复制也不贵，但引用更直接：后面 <code>randomFrom(ACTIVE_WISHES)</code> 每抽一张卡都读它，读写都走同一个入口。</p>
-<p><strong>为什么用数组 + 随机，而不是按顺序轮播</strong>：顺序轮播意味着每次打开都是同一句开场白，第三次访问就腻了；随机抽取让 124 条（或 64 条）文案在 30<del>64 张卡片里组合出几乎不重样的排布。代价是同一屏里偶尔会抽到重复的两句——池子比卡片数大 2</del>4 倍，重复概率不高，且祝福语重复并不刺眼，属于可以接受的取舍。真要彻底不重复，得先洗牌再按序取（第八节那套 Fisher-Yates 就能复用），多维护一个索引而已。</p>
+<p><strong>为什么用数组 + 随机，而不是按顺序轮播</strong>：顺序轮播意味着每次打开都是同一句开场白，第三次访问就腻了；随机抽取让 124 条（或 64 条）文案在 30<del>48 张卡片里组合出几乎不重样的排布。代价是同一屏里偶尔会抽到重复的两句——池子比卡片数大 2</del>4 倍，重复概率不高，且祝福语重复并不刺眼，属于可以接受的取舍。真要彻底不重复，得先洗牌再按序取（第八节那套 Fisher-Yates 就能复用），多维护一个索引而已。</p>
 <hr>
 <h2 id="五、卡片数量与尺寸常量"><a href="#五、卡片数量与尺寸常量" class="headerlink" title="五、卡片数量与尺寸常量"></a>五、卡片数量与尺寸常量</h2><p><a href="/birthday/script.js">script.js:219-226</a></p>
-<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> <span class="variable constant_">TIP_AREA</span> = <span class="number">16000</span>;   <span class="comment">// 每 16000 平方像素屏幕面积 ≈ 1 张卡片</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">TIP_MIN</span> = <span class="number">30</span>;       <span class="comment">// 最少 30 张，保证小窗口心形也够密</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">TIP_MAX</span> = <span class="number">64</span>;       <span class="comment">// 最多 64 张，防止超大屏幕一次弹太多卡顿</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">TIP_INTERVAL</span> = <span class="number">300</span>; <span class="comment">// 卡片逐张出现的间隔（毫秒）</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">WISH_W</span> = <span class="number">270</span>;       <span class="comment">// 卡片宽度（设计稿单位，见下节）</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">WISH_H_MIN</span> = <span class="number">120</span>;   <span class="comment">// 卡片最小高度</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> <span class="variable constant_">TIP_AREA</span> = <span class="number">16000</span>;   <span class="comment">// 每 16000 平方像素屏幕面积 ≈ 1 张卡片</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">TIP_MIN</span> = <span class="number">30</span>;       <span class="comment">// 最少 30 张，保证小窗口心形也够密</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">TIP_MAX</span> = <span class="number">48</span>;       <span class="comment">// 最多 48 张，防止超大屏幕一次弹太多、心形被塞太满重叠成团</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">TIP_INTERVAL</span> = <span class="number">300</span>; <span class="comment">// 卡片逐张出现的间隔（毫秒）</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">WISH_W</span> = <span class="number">270</span>;       <span class="comment">// 卡片宽度（设计稿单位，见下节）</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">WISH_H_MIN</span> = <span class="number">120</span>;   <span class="comment">// 卡片最小高度</span></span><br></pre></td></tr></table></figure>
 
 <p>数量计算在 <code>tipCount()</code>（<a href="/birthday/script.js">script.js:295</a>）：<code>屏幕宽 × 高 ÷ 16000</code>，再被 min&#x2F;max 夹住。</p>
 <ul>
 <li>为什么按面积算：屏幕大就多放、屏幕小就少放，心形的”密度感”在任何设备上接近。</li>
-<li>为什么有下限：之前下限是 14，小窗口打开时心形稀稀拉拉（你反馈的”距离太大、数量少”就是这个），2026-11-07 调成 30&#x2F;64，实测小窗也饱满。</li>
+<li>为什么有下限：之前下限是 14，小窗口打开时心形稀稀拉拉（你反馈的”距离太大、数量少”就是这个），2026-11-07 调成 30&#x2F;64，2026-11-08 又因”心形被塞太满、重叠成团看不出形状”把上限收到 48。</li>
 </ul>
 <p>把计算摊开：</p>
 <figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">tipCount</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> n = <span class="title class_">Math</span>.<span class="title function_">round</span>(<span class="variable language_">window</span>.<span class="property">innerWidth</span> * <span class="variable language_">window</span>.<span class="property">innerHeight</span> / <span class="variable constant_">TIP_AREA</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="title class_">Math</span>.<span class="title function_">max</span>(<span class="variable constant_">TIP_MIN</span>, <span class="title class_">Math</span>.<span class="title function_">min</span>(<span class="variable constant_">TIP_MAX</span>, n));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -4583,9 +4583,9 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 <ul>
 <li><code>Math.round</code> 先取整，卡片数必须是整数；用 <code>floor</code> 也行，只是同尺寸下少一张，视觉无差别；</li>
 <li><code>Math.min(TIP_MAX, n)</code> 先压上限，再 <code>Math.max(TIP_MIN, …)</code> 抬下限。两个夹子合起来就是常见的 clamp 写法；先夹哪一头在这里结果相同，但「先夹上界再夹下界」的写法在改常量时更不容易踩坑；</li>
-<li>代几个真实尺寸：1280×800 → <code>1024000/16000 = 64</code>，正好卡在上限；1920×1080 → <code>129.6 → 130 → 64</code>；手机 390×844 → <code>20.6 → 21 → 30</code>，被下限抬到 30。也就是说<strong>绝大多数桌面屏拿满 64 张，绝大多数手机拿 30 张</strong>，中间段（约 640×750 到 1280×800）才真正体现「按面积算」。</li>
+<li>代几个真实尺寸：1280×800 → <code>1024000/16000 = 64 → 48</code>；1920×1080 → <code>129.6 → 130 → 48</code>；手机 390×844 → <code>20.6 → 21 → 30</code>，被下限抬到 30。也就是说<strong>绝大多数桌面屏拿满 48 张，绝大多数手机拿 30 张</strong>，中间段（约 640×750 到 1280×800）才真正体现「按面积算」。</li>
 </ul>
-<p>上限 64 不只是怕 DOM 多、动画卡：心形采样是 <code>t = i × 2π/count</code>，点数越多相邻两点越近，卡片宽 270（设计稿单位）会大面积重叠成一坨，反而看不出心形。所以 <code>TIP_MAX</code> 同时也是<strong>视觉上限</strong>。</p>
+<p>上限 48 不只是怕 DOM 多、动画卡：心形采样是 <code>t = i × 2π/count</code>，点数越多相邻两点越近，卡片会大面积重叠成一坨，反而看不出心形。所以 <code>TIP_MAX</code> 同时也是<strong>视觉上限</strong>。</p>
 <p>这些常量集中写在文件顶部一段（<a href="/birthday/script.js">script.js:219-226</a>），是刻意安排的：调密度只改 <code>TIP_AREA</code>，调节奏只改 <code>TIP_INTERVAL</code>，调大小只改 <code>WISH_W</code> &#x2F; <code>WISH_H_MIN</code>，不用翻到算法里找魔数。第十六节的速查表就是这段常量的「人类可读版」。改 <code>WISH_W</code> 时，心形采样的 <code>availableW</code> 会自动跟着减（第七节），但 <code>style.css</code> 里卡片的 CSS 宽度要手动同步，这是全文最容易漏改的一处。</p>
 <hr>
 <h2 id="六、（旧方案，已废弃）固定设计稿-2560×1440-整体缩放"><a href="#六、（旧方案，已废弃）固定设计稿-2560×1440-整体缩放" class="headerlink" title="六、（旧方案，已废弃）固定设计稿 2560×1440 + 整体缩放"></a>六、（旧方案，已废弃）固定设计稿 2560×1440 + 整体缩放</h2><blockquote>
@@ -4626,9 +4626,10 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">屏幕x = 画布中心x + rawX × heartScale − 卡片宽/2</span><br><span class="line">屏幕y = 画布中心y + offsetY + rawY × heartScale − 卡片高/2</span><br></pre></td></tr></table></figure>
 
 <ol>
-<li><code>heartScale = min(可用宽÷32, 可用高÷32)</code>（<a href="/birthday/script.js">script.js:332</a>）：公式宽 32，除以 32 就把心形刚好缩放进可用区域；宽高各算一次取<strong>小的</strong>，保证两个方向都不出界。可用区域 &#x3D; 画布 − 左右各 20px 留白 − 卡片自身尺寸（先把卡片占的地方扣掉）。高度方向实际只需除 29，统一除 32 是”宁可略小、绝不越界”的简化，视觉无差别。</li>
+<li><code>base = min(可用宽÷32, 可用高÷32)</code>（<a href="/birthday/script.js">script.js:332</a>）：公式宽 32，除以 32 就把心形刚好缩放进可用区域；宽高各算一次取<strong>小的</strong>，保证两个方向都不出界。可用区域 &#x3D; 画布 − 左右各 20px 留白 − 卡片自身尺寸（先把卡片占的地方扣掉）。高度方向实际只需除 29，统一除 32 是”宁可略小、绝不越界”的简化，视觉无差别。</li>
 <li><code>− 卡片宽/2 / − 卡片高/2</code>：算出来的点当卡片<strong>中心</strong>用，减半张卡片换算成左上角——CSS 的 left&#x2F;top 定位基准是左上角。</li>
-<li><code>offsetY = −画布高 × 15%</code>：心形公式天生”下重上轻”（下尖 −17、上瓣 +12），正中放会显得偏下，整体上移 15% 视觉才居中。</li>
+<li><strong>横屏&#x2F;桌面再横向放宽</strong>：<code>sx = min(可用宽÷32, base × 1.3)</code>、<code>sy = base</code>。宽屏上只按高度缩放会让心被压在中间、两侧空一大片（显得很小很不协调），所以横向最多放宽到 1.3 倍把多余宽度用起来，心更大更饱满；竖屏则保持 <code>sx = base</code>、<code>sy = min(base × 1.6, 可用高÷32)</code> 纵向拉伸。</li>
+<li><strong>不再整体下移</strong>：<code>cy = 画布高 ÷ 2 + (顶预留 − 底预留) ÷ 2</code>，直接以视口中线为基准。旧版有 <code>−画布高 × 15%</code> 的偏移，本意是视觉居中，实际会把心形顶部挤出安全区、被 <code>toScreen()</code> 裁切压平，反而看不出心形——这是 2026-11-08 修掉的主要 bug。手机端靠 topReserve（顶部工具栏 68px）的预留把心下移一点，避开工具栏。</li>
 <li><code>Math.max(5, …)</code>：最后兜底，任何卡片离屏幕边缘至少 5px。</li>
 </ol>
 <p><strong>去重逻辑（目前关着，故意的）</strong>：dedup 开启时先按”离形状中心的距离”排序，再两两比对，距离小于 <code>min(270,120) × 35% = 42</code>（设计稿像素）的丢弃（<a href="/birthday/script.js">script.js:360-381</a>）。这是 O(n²) 的朴素算法——最多 64 个点，平方也才 4096 次比较，不值得上更聪明的数据结构。目前 8 个模式全部传 <code>dedup=false</code>：卡片适度重叠才有”堆满一屏”的密度感，完全不让重叠反而显得稀疏（踩过的坑）。</p>
@@ -4914,7 +4915,7 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 <li><code>fadeOutAndStart()</code>：点开始后等 500ms（CSS 淡出动画的时长）再隐藏欢迎窗、起音乐、开卡片雨——动画时间和 JS 定时要对齐。</li>
 <li><code>restartWishes()</code>：重开时不刷新页面，靠”清空容器 + 重新调度”实现，所以再次 <code>import</code> three.js 走缓存，几乎瞬间。</li>
 <li><code>resize</code> 监听（<a href="/birthday/script.js">script.js:851</a>）：缩放值和心形点重算，已弹出的卡片按 <code>index % 新点数</code> 重新摆放——窗口拖大拖小，心形跟着变但不乱。</li>
-<li><code>applySeasonCopy()</code>：平时身份的文案改造（标题、问候语、按钮文字），和生日判断集中在一处，改文案只动这里和文案池。</li>
+<li><code>applySeasonCopy()</code>：平时身份的文案改造（标题、问候语、按钮文字），和生日判断集中在一处，改文案只动这里和文案池。问候语现在是<strong>两行</strong>——第一行 <code>今天的小幸运已送达 🌿</code>、第二行随机祝福 + <code> ✨</code>；🌿 和 ✨ 各自用 <code>white-space: nowrap</code> 的 <code>&lt;span&gt;</code> 包住，保证表情不会落单成行，但两行之间允许正常换行。</li>
 </ul>
 <p>这五条看起来零散，其实都在处理同一类问题：<strong>浏览器和 JS 各自的时间线要对齐</strong>。</p>
 <ul>
@@ -4976,7 +4977,7 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 </thead>
 <tbody><tr>
 <td><code>TIP_AREA</code> &#x2F; <code>TIP_MIN</code> &#x2F; <code>TIP_MAX</code></td>
-<td>心形采样步长 <code>2π/count</code>、卡片重叠程度、总铺完时长（数量 × 间隔）、<code>setTimeout</code> 个数</td>
+<td>心形采样步长 <code>2π/count</code>、卡片重叠程度、总铺完时长（数量 × 间隔）、<code>setTimeout</code> 个数；<code>TIP_MAX</code> 还是视觉上限（2026-11-08 由 64 收到 48，太多会重叠成团看不出心形）</td>
 </tr>
 <tr>
 <td><code>TIP_INTERVAL</code></td>
@@ -4999,7 +5000,7 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 <td>蛋糕开场的整条时间线；它们彼此是累加关系（<code>CDEND = CD0*SPN</code>），改一个要顺着看后面几个</td>
 </tr>
 </tbody></table>
-<p><strong>几个反复踩过的坑</strong>：月份从 0 数（8 月是 7）；<code>WISH_W</code> 改了 CSS 没改（卡片内容挤出边框）；<code>Birthday/</code> 独立单页版忘了同步（两份代码会慢慢分叉）；<code>npm run deploy</code> 是全量覆盖，线上手工加的文件会被删掉。</p>
+<p><strong>几个反复踩过的坑</strong>：月份从 0 数（8 月是 7）；<code>WISH_W</code> 改了 CSS 没改（卡片内容挤出边框）；<code>Birthday/</code> 独立单页版忘了同步（两份代码会慢慢分叉）；<code>npm run deploy</code> 是全量覆盖，线上手工加的文件会被删掉；心形整体下移 15% 的偏移会把顶部挤出安全区被裁切压平（2026-11-08 已去掉，直接以视口中线为基准）。</p>
 <p><strong>调试技巧</strong>：① 想反复看同一个布局，把第八节 <code>modes[Math.floor(Math.random()*modes.length)]</code> 临时换成固定字符串（如 <code>MODE_GROWTH</code>），不用碰任何其它代码；② 想快进蛋糕开场，把 <code>SPN</code> 从 12 临时改成 3，倒计时从 1.2 秒缩到 0.3 秒；③ 想固定 3D 画面，把 <code>mulberry(seed)</code> 的种子写死（第十三节），改一个参数就能看出前后差异；④ 调心形密度时把浏览器窗口拖到手机尺寸，才看得见 <code>TIP_MIN</code> 的效果——桌面大屏几乎永远撞在上限 64。这四招都是「把随机或时间临时换成常量」，和小游戏笔记里用固定种子复现牌局是同一个思路。</p>
 <p><strong>部署方式</strong>：<code>npm run deploy</code>（改动会全量覆盖线上，线上有而本地没有的文件会被删——所以别在 GitHub 网页端直接加文件）。</p>
 <hr>
@@ -5111,8 +5112,8 @@ git commit -m &quot;增加了22222222222&quot;   &quot;&quot;里面内容要改�
 <h2 id="自测"><a href="#自测" class="headerlink" title="自测"></a>自测</h2><ol>
 <li>为什么整份 <code>script.js</code> 要包在 <code>(function(){...})()</code> 里，用 <code>&lt;script type=&quot;module&quot;&gt;</code> 不是更现代？<br>答：IIFE 在任何环境都能跑，包括用 <code>file://</code> 双击打开的独立单页版；模块脚本受 CORS 限制，本地直接打开会被拦。它把几十个状态变量圈成私有变量，避免和主题脚本的全局变量撞名。代价是只能写 ES5 语法，于是循环里还得再套一层 IIFE 固定 <code>idx</code>。</li>
 <li><code>BIRTHDAY_MONTH = 7</code> 是几月？判断为什么用两个 <code>&lt;=</code> &#x2F; <code>&gt;=</code>？<br>答：8 月，JS 的 <code>getMonth()</code> 从 0 数。闭区间让 20 号和 25 号都算进生日季，共 6 天；写成 <code>&lt; DAY_END</code> 会少一天。判断结果只在开局算一次存进 <code>isBirthday</code>，页面开着跨零点也不会中途变身。</li>
-<li>1280×800 的窗口会弹多少张卡？为什么不是按 <code>1024000/16000</code> 一直线性增长？<br>答：64 张，恰好撞上 <code>TIP_MAX</code>。1920×1080 算出 130 也被夹回 64；手机 390×844 算出 21 会被 <code>TIP_MIN</code> 抬到 30。上限同时是视觉上限：点数再多，270 宽的卡片会重叠成一团，看不出心形。</li>
-<li>心形为什么用参数方程，而不是把 30 多个点位写成常量表？<br>答：卡片数按屏幕面积在 30~64 之间变，写死的表一换数量就得重摆；参数方程把 t 等分成 count 份就得到 count 个点，一个数量参数决定整颗心。代价是 t 等分不等于弧长等分，尖端会略密——卡片有宽度且允许重叠，这点误差看不见。</li>
+<li>1280×800 的窗口会弹多少张卡？为什么不是按 <code>1024000/16000</code> 一直线性增长？<br>答：48 张，恰好撞上 <code>TIP_MAX</code>。1920×1080 算出 130 也被夹回 48；手机 390×844 算出 21 会被 <code>TIP_MIN</code> 抬到 30。上限同时是视觉上限：点数再多，270 宽的卡片会重叠成一团，看不出心形。</li>
+<li>心形为什么用参数方程，而不是把 30 多个点位写成常量表？<br>答：卡片数按屏幕面积在 30~48 之间变，写死的表一换数量就得重摆；参数方程把 t 等分成 count 份就得到 count 个点，一个数量参数决定整颗心。代价是 t 等分不等于弧长等分，尖端会略密——卡片有宽度且允许重叠，这点误差看不见。</li>
 <li><code>delays</code> 里存的到底是「间隔」还是「绝对时间」？把它当间隔用会怎样？<br>答：绝对时间，直接交给 <code>setTimeout</code>。各模式用 <code>delay += interval</code> 累加生成，所以数组递增；若当成「相对上一张的间隔」去嵌套定时器，每张都要多等一次，节奏会越走越慢。<code>delays = null</code> 时退化的 <code>idx * TIP_INTERVAL</code> 同样是绝对时间。</li>
 <li>卡片入场为什么非要等一次 <code>requestAnimationFrame</code>，直接加 <code>visible</code> 类不行吗？<br>答：同一帧里既设初始态又设最终态，浏览器会合并成一次样式计算，transition 没有起点可补间，动画会被吞掉。rainfall 模式要两层，是因为它得先渲染「上方起始位置」那一帧，再把 <code>top</code> 改成目标值让 CSS 补间出落体。</li>
 <li>已经 <code>clearTimeout</code> 了，为什么还要 <code>isClosing</code>？<br>答：<code>clearTimeout</code> 只能取消还没到点的定时器，取消不了「已到点、正排在事件队列里」的回调。<code>isClosing</code> 在调度回调和建卡函数开头各挡一次，和清空 <code>timeouts</code> 数组一起堵住竞态，避免收下全部后还冒出「幽灵卡片」。</li>

@@ -219,7 +219,7 @@
     var TIP_AREA = 16000;          // 桌面：每 16000px² 约一张卡
     var TIP_AREA_COMPACT = 26000;  // 小屏卡片小，数量也要收一点，重叠太多字会看不清
     var TIP_MIN = 30;
-    var TIP_MAX = 64;
+    var TIP_MAX = 48;
     var TIP_MIN_COMPACT = 10;
     var TIP_MAX_COMPACT = 14;
     var TIP_INTERVAL = 300;
@@ -368,14 +368,24 @@
         var bottomReserve = isCompact ? 40 : 0;   // 手机底部提示
         var usableW = Math.max(60, naturalW - padding * 2 - WISH_W);
         var usableH = Math.max(60, naturalH - topReserve - bottomReserve - padding * 2 - WISH_H_MIN);
-        // 横屏保持心形原本的比例；竖屏只做轻度纵向拉伸（1.4 倍封顶），
-        // 拉过头会变成瘦长的"水滴"，看起来不协调
-        var equal = Math.min(usableW / 32, usableH / 32);
-        var sx = equal;
-        var sy = naturalH > naturalW ? Math.min(equal * 1.6, usableH / 32) : equal;
+        // 心形整体等比缩放铺满安全区；桌面/横屏再横向放宽一点，把多余宽度用起来，
+        // 否则宽屏上心会被压在中间、两侧空一大片，显得很小很不协调
+        var base = Math.min(usableW / 32, usableH / 32);
+        var sx, sy;
+        if (naturalH > naturalW) {
+            // 竖屏：纵向拉伸把高度用起来（1.6 倍封顶，免得变成瘦长水滴）
+            sx = base;
+            sy = Math.min(base * 1.6, usableH / 32);
+        } else {
+            // 横屏/桌面：横向放宽，心更大更饱满
+            sx = Math.min(usableW / 32, base * 1.3);
+            sy = base;
+        }
         return {
             cx: naturalW / 2,
-            cy: naturalH / 2 + (topReserve - bottomReserve) / 2 - naturalH * (isCompact ? 0.04 : 0.15),
+            // 心形重心在原点偏下，直接以视口中线为基准即可，不要再整体下移，
+            // 否则顶部会被裁切压平、看不出心形
+            cy: naturalH / 2 + (topReserve - bottomReserve) / 2,
             sx: sx,
             sy: sy,
             padding: padding
@@ -892,9 +902,20 @@
         if (titleText) titleText.textContent = '今日祝福';
         if (greetingText) {
             greetingText.textContent = '';
-            greetingText.appendChild(document.createTextNode('今天的小幸运已送达 🌿'));
+            // 第一行：今天的小幸运已送达 🌿（整段不换行，表情不会单独成行）
+            var line1 = document.createElement('span');
+            line1.style.whiteSpace = 'nowrap';
+            line1.textContent = '今天的小幸运已送达 🌿';
+            // 第二行：随机祝福 + ✨（✨ 与前面的字绑在一起，不会落单成行）
+            var line2 = document.createElement('span');
+            line2.appendChild(document.createTextNode(randomFrom(DAILY_WISHES)));
+            var spark = document.createElement('span');
+            spark.style.whiteSpace = 'nowrap';
+            spark.textContent = ' ✨';
+            line2.appendChild(spark);
+            greetingText.appendChild(line1);
             greetingText.appendChild(document.createElement('br'));
-            greetingText.appendChild(document.createTextNode(randomFrom(DAILY_WISHES) + ' ✨'));
+            greetingText.appendChild(line2);
         }
         startBtn.textContent = '收下祝福';
     }
