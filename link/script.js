@@ -1525,3 +1525,23 @@ var m3OvLayer=document.createElement('div'); m3OvLayer.id='ov'; $('board').appen
 $('hLvMax').textContent=LEVELS.length; $('sMaxAll').textContent=LEVELS.length;
 syncMusic();
 renderHome();
+
+/* 图案先备好再进关卡：首屏登记给全站加载页，进关卡时再确认一次，避免一堆空图块 */
+(function () {
+  var loader = window.SiteLoading;
+  if (!loader) return;
+  var urls = [];
+  for (var i = 0; i < NFACE; i++) urls.push('img/image' + i + '.jpg');
+  loader.track(loader.preloadImages(urls));
+  ['start', 'startM3', 'startMem'].forEach(function (name) {
+    var origin = window[name];
+    if (typeof origin !== 'function') return;
+    window[name] = function (level) {
+      var release = loader.busy('正在准备图片…', '马上就可以开始啦');
+      loader.preloadImages(urls, function (p) { loader.progress(p); }, 2500).then(function () {
+        release();
+        origin(level);
+      });
+    };
+  });
+})();

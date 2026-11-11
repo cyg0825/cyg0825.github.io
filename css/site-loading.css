@@ -1,0 +1,68 @@
+/* 全站加载页样式：主题页面由 scripts/loading-screen.js 注入引用，
+   birthday / link 两个独立页面在自己的 index.html 里直接引用。 */
+#site-loading {
+  position: fixed; inset: 0; z-index: 99999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; padding: 24px; text-align: center;
+  background: linear-gradient(160deg, #f5faff 0%, #e6f2fc 55%, #dceaf8 100%);
+  color: #2b4a63;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  transition: opacity .45s ease, visibility .45s ease;
+  /* 脚本万一没加载成功，也要自动让路，绝不把页面永久盖住 */
+  animation: sl-failsafe .6s ease 12s forwards;
+}
+#site-loading.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+#site-loading .sl-ring {
+  width: 56px; height: 56px; border-radius: 50%;
+  border: 4px solid rgba(73, 177, 245, .18);
+  border-top-color: #49b1f5; border-right-color: #78d3c8;
+  animation: sl-spin .9s linear infinite;
+}
+#site-loading .sl-title { font-size: 17px; font-weight: 600; letter-spacing: 2px; }
+#site-loading .sl-sub { font-size: 13px; opacity: .65; letter-spacing: 1px; }
+#site-loading .sl-track {
+  width: min(240px, 60vw); height: 6px; border-radius: 99px;
+  background: rgba(73, 177, 245, .16); overflow: hidden;
+}
+#site-loading .sl-bar {
+  width: 6%; height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, #49b1f5, #78d3c8);
+  transition: width .25s ease;
+}
+#site-loading .sl-pct { font-size: 12px; font-variant-numeric: tabular-nums; opacity: .7; margin-top: -8px; }
+
+@keyframes sl-spin { to { transform: rotate(360deg); } }
+@keyframes sl-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@keyframes sl-failsafe { to { opacity: 0; visibility: hidden; pointer-events: none; } }
+
+html.site-loading-active, html.site-loading-active body { overflow: hidden !important; }
+
+/* 图片没真正加载出来之前显示柔和占位，不露空白框和破图图标 */
+html.site-img-guard img[src]:not([src=""]):not(.site-img-ready) {
+  color: transparent; font-size: 0;
+  background: linear-gradient(100deg, #e9f1f8 20%, #f8fbff 40%, #e9f1f8 60%);
+  background-size: 200% 100%;
+  animation: sl-shimmer 1.6s linear infinite;
+}
+html.site-img-guard img.site-img-failed { visibility: hidden; animation: none; }
+
+html[data-theme="dark"] #site-loading {
+  background: linear-gradient(160deg, #101a2e, #16233b 55%, #1b2b44); color: #e2ecf7;
+}
+html[data-theme="dark"].site-img-guard img[src]:not(.site-img-ready) {
+  background: linear-gradient(100deg, #22304a 20%, #31425f 40%, #22304a 60%);
+  background-size: 200% 100%;
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) #site-loading {
+    background: linear-gradient(160deg, #101a2e, #16233b 55%, #1b2b44); color: #e2ecf7;
+  }
+  html:not([data-theme="light"]).site-img-guard img[src]:not(.site-img-ready) {
+    background: linear-gradient(100deg, #22304a 20%, #31425f 40%, #22304a 60%);
+    background-size: 200% 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #site-loading .sl-ring { animation-duration: 2s; }
+  html.site-img-guard img[src]:not(.site-img-ready) { animation: none; }
+}

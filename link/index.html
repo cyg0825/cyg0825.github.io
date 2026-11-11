@@ -6,8 +6,18 @@
 <link rel="shortcut icon" href="/img/333.png">
 <title>小游戏</title>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="/css/site-loading.css">
 </head>
 <body>
+<!-- 全站加载层：与主题页面共用 /css/site-loading.css 和 /js/site-loading.js -->
+<div id="site-loading" role="status" aria-live="polite" aria-label="页面加载中">
+  <div class="sl-ring" aria-hidden="true"></div>
+  <div class="sl-title">正在加载，请稍候…</div>
+  <div class="sl-track" aria-hidden="true"><div class="sl-bar"></div></div>
+  <div class="sl-pct">0%</div>
+  <div class="sl-sub">页面与图片准备中</div>
+</div>
+<script src="/js/site-loading.js"></script>
 <header>
   <div class="brand" id="brand">小游戏</div>
   <div id="tools">

@@ -69,6 +69,7 @@ tools/wp-import.py           一次性导入脚本，日常构建不依赖
 | 个人信息卡搬进抽屉、音乐播放器 | `inject.bottom` |
 | 第三方资源走本地 | `CDN.option`（1135 行），被覆盖的键指向本地文件 |
 | 分享按钮 | `share`（511 行），列表里仍写 `twitter`，是旧配置残留 |
+| 加载中的遮罩、进度条、图片占位 | `source/css/site-loading.css` 与 `source/js/site-loading.js`；主题页由 `scripts/loading-screen.js` 注入，`birthday` / `link` 这两个 `layout: false` 页面在各自 `index.html` 里引用同一组文件 |
 
 `_config.butterfly.yml` 与主题官方默认的逐项差异、以及本站关着或留空的项，都整理在文章 `source/_posts/butterfly.md` 里，那份文件同时是配置说明书。
 
@@ -117,6 +118,7 @@ grep -r '<figure class="highlight' public --include=*.html | wc -l
 | 现象 | 原因与处理 |
 | --- | --- |
 | 改了 `scripts/` 没反应 | server 不监听该目录，重启 `npx hexo server` |
+| 加载遮罩不出现 / 一直不消失 | 主题页看 `scripts/loading-screen.js` 是否注入，独立页看 `index.html` 是否引用 `/css/site-loading.css` 和 `/js/site-loading.js`；脚本最多等 12 秒会自动放行，不会永久盖住页面 |
 | 代码块是纯文本、没角标没复制按钮 | 该块的类名不是 `wp-block-code`，或 `scripts/wp-code-highlight.js` 没被加载 |
 | 代码块颜色全黑 | `inject.head` 里的 hljs 11 补丁被删，或 `code_blocks.theme` 被改成 `false` |
 | 搜索框搜不到内容 | 根配置缺 `search` 段（102 行），主题侧只会拿到空索引 |

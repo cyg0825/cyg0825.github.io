@@ -970,9 +970,18 @@
     }
 
     function preloadAssets() {
+        var urls = [];
         for (var i = 0; i < TOTAL_IMAGES; i++) {
-            var im = new Image();
-            im.src = 'img/image' + i + '.jpg';
+            urls.push('img/image' + i + '.jpg');
+        }
+        if (window.SiteLoading) {
+            // 全站加载页等这组祝福图片就绪后再淡出，避免露出空的图片框
+            window.SiteLoading.track(window.SiteLoading.preloadImages(urls));
+        } else {
+            for (var j = 0; j < urls.length; j++) {
+                var im = new Image();
+                im.src = urls[j];
+            }
         }
         loadPlaylist();
         import('./cake3d.js').catch(function() {});
