@@ -1,0 +1,1296 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><style>html.site-loading-active,html.site-loading-active body{overflow:hidden!important}#site-loading{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center;background:#eaf4fc;color:#2b4a63;animation:sl-failsafe .6s ease 12s forwards}#site-loading.is-hidden{opacity:0;visibility:hidden;pointer-events:none}@keyframes sl-failsafe{to{opacity:0;visibility:hidden;pointer-events:none}}</style><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>01-结构与数据形状 | 学海拾茜</title><meta name="author" content="61飞兔"><meta name="copyright" content="61飞兔"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="一个页面装三个小游戏：页面由哪三个文件分工、三种游戏各自的棋盘长什么样、三张关卡表里的数字各控制什么、状态对象 S&#x2F;G&#x2F;M 各管什么。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="01-结构与数据形状">
+<meta property="og:url" content="https://cyg0825.github.io/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/index.html">
+<meta property="og:site_name" content="学海拾茜">
+<meta property="og:description" content="一个页面装三个小游戏：页面由哪三个文件分工、三种游戏各自的棋盘长什么样、三张关卡表里的数字各控制什么、状态对象 S&#x2F;G&#x2F;M 各管什么。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cyg0825.github.io/img/link/lk-01-home.png">
+<meta property="article:published_time" content="2026-11-01T01:40:00.000Z">
+<meta property="article:modified_time" content="2026-11-24T12:26:19.878Z">
+<meta property="article:author" content="61飞兔">
+<meta property="article:tag" content="JavaScript">
+<meta property="article:tag" content="美图消消乐">
+<meta property="article:tag" content="记忆翻牌">
+<meta property="article:tag" content="连连看">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cyg0825.github.io/img/link/lk-01-home.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "01-结构与数据形状",
+  "url": "https://cyg0825.github.io/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/",
+  "image": "https://cyg0825.github.io/img/link/lk-01-home.png",
+  "datePublished": "2026-11-01T01:40:00.000Z",
+  "dateModified": "2026-11-24T12:26:19.878Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "61飞兔",
+      "url": "https://cyg0825.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/333.png"><link rel="canonical" href="https://cyg0825.github.io/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/index.html"><link rel="preconnect" href="https://cdn.staticfile.org"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/css/fontawesome/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.staticfile.org/egjs-infinitegrid/4.12.0/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '01-结构与数据形状',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><style>
+/* 手机端复用右侧收起按钮，整块侧栏（个人信息等卡片）可收起 */
+@media (max-width: 900px) {
+  #rightside #hide-aside-btn { display: block !important; }
+  html.hide-aside .layout > #aside-content { display: none; }
+  /* 个人信息卡折叠进抽屉，页面里不再单独占一块 */
+  #aside-content > .card-info { display: none; }
+}
+#sidebar-menus .sidebar-author-name { margin: 6px 0 0; font-size: 1.3em; font-weight: 700; text-align: center; }
+#sidebar-menus .sidebar-follow { display: block; margin: 14px 20px 0; padding: 9px 0; border-radius: 8px; background: var(--btn-bg); color: var(--btn-color); text-align: center; }
+#sidebar-menus .sidebar-follow i { margin-right: 6px; }
+/* 沿用线上站点：页脚透明，让背景色直接透出 */
+#footer { background: transparent !important; }
+#footer::before { background: transparent !important; }
+[data-theme="dark"] #footer::before { background: transparent !important; }
+/* 头图蒙版改成毛玻璃：轻微模糊 + 极淡压色，做出朦胧感但不挡画面 */
+#page-header:not(.not-top-img)::before {
+  background: linear-gradient(180deg, rgba(238,242,252,.16), rgba(214,222,242,.07) 55%, rgba(196,206,232,.20)) !important;
+  -webkit-backdrop-filter: blur(6px) brightness(.94) saturate(1.02);
+  backdrop-filter: blur(6px) brightness(.94) saturate(1.02);
+}
+[data-theme="dark"] #page-header:not(.not-top-img)::before {
+  background: linear-gradient(180deg, rgba(16,18,26,.20), rgba(16,18,26,.09) 55%, rgba(8,10,16,.26)) !important;
+  -webkit-backdrop-filter: blur(6px) brightness(.88);
+  backdrop-filter: blur(6px) brightness(.88);
+}
+/* 播放器遇到不可播曲目的自动跳过提示不显示 */
+.aplayer .aplayer-notice { display: none !important; }
+/* 主题只写了旧版高亮类名，补上 highlight.js 11 的这批 token，配色沿用主题的 light 色板 */
+#article-container figure.highlight pre .selector-tag,
+#article-container figure.highlight pre .selector-class,
+#article-container figure.highlight pre .selector-id,
+#article-container figure.highlight pre .selector-pseudo,
+#article-container figure.highlight pre .selector-attr,
+#article-container figure.highlight pre .property { color: #e53935; }
+#article-container figure.highlight pre .function_ { color: #6182b8; }
+#article-container figure.highlight pre .class_ { color: #ffb62c; }
+#article-container figure.highlight pre .constant_ { color: #f76d47; }
+#article-container figure.highlight pre .type { color: #6182b8; }
+#article-container figure.highlight pre .invoke__,
+#article-container figure.highlight pre .subst { color: #f76d47; }
+#article-container figure.highlight pre .language_,
+#article-container figure.highlight pre .bullet { color: #7c4dff; }
+/* 菜单图标位是原样落到 <i class="fa-fw …"> 的类名；不用 fontawesome 时把它变成一张图，
+   宽度沿用 .fa-fw 的 1.25em 以对齐同级菜单项，只补上空白 <i> 需要的高度和基线 */
+i.fa-fw.img-notelume {
+  background: url(/img/notelume.png) center / contain no-repeat;
+  height: 1em; display: inline-block; vertical-align: -.15em;
+}
+i.fa-fw.img-tcm {
+  background: url(/img/tcm-yinyang.png) center / contain no-repeat;
+  height: 1em; display: inline-block; vertical-align: -.15em;
+}
+/* 太极的黑半边在深色导航（#121212）上会一起沉掉，只剩白色半边；
+   drop-shadow 跟的是图片自身的 alpha 轮廓，补一圈细白边把整个圆找回来 */
+html[data-theme='dark'] i.fa-fw.img-tcm {
+  filter: drop-shadow(0 0 .5px rgba(255, 255, 255, .85)) drop-shadow(0 0 .5px rgba(255, 255, 255, .85));
+}
+</style><meta name="generator" content="Hexo 8.1.2"><link rel="stylesheet" href="/css/site-loading.css"></head><body><div id="site-loading" role="status" aria-live="polite" aria-label="页面加载中">
+<div class="sl-ring" aria-hidden="true"></div>
+<div class="sl-title">正在加载，请稍候…</div>
+<div class="sl-track" aria-hidden="true"><div class="sl-bar"></div></div>
+<div class="sl-pct">0%</div>
+<div class="sl-sub">页面与图片准备中</div>
+</div>
+<script src="/js/site-loading.js"></script><div class="bg-animation" id="web_bg" style="background-color: #bbdefb;"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">66</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">30</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">24</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-code"></i><span> 项目</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/"><i class="fa-fw fas fa-book"></i><span> 学生选课系统</span></a></li><li><a class="site-page child" target="_blank" rel="noopener" href="https://hackersnail.github.io/NoteLume/"><i class="fa-fw img-notelume"></i><span> NoteLume</span></a></li><li><a class="site-page child" href="/birthday/"><i class="fa-fw fas fa-heart"></i><span> 祝福</span></a></li><li><a class="site-page child" href="/link/"><i class="fa-fw fas fa-puzzle-piece"></i><span> 小游戏</span></a></li><li><a class="site-page child" target="_blank" rel="noopener" href="https://tcm.61lyf.top/#/"><i class="fa-fw img-tcm"></i><span> 中医知识库</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-file-alt"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/tags/%E8%AF%B4%E8%AF%B4/"><i class="fa-fw fas fa-comment-dots"></i><span> 说说</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/img/link/lk-01-home.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/333.png" alt="Logo"><span class="site-name">学海拾茜</span></a><a class="nav-page-title" href="/"><span class="site-name">01-结构与数据形状</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-code"></i><span> 项目</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E5%AD%A6%E7%94%9F%E9%80%89%E8%AF%BE%E7%B3%BB%E7%BB%9F/"><i class="fa-fw fas fa-book"></i><span> 学生选课系统</span></a></li><li><a class="site-page child" target="_blank" rel="noopener" href="https://hackersnail.github.io/NoteLume/"><i class="fa-fw img-notelume"></i><span> NoteLume</span></a></li><li><a class="site-page child" href="/birthday/"><i class="fa-fw fas fa-heart"></i><span> 祝福</span></a></li><li><a class="site-page child" href="/link/"><i class="fa-fw fas fa-puzzle-piece"></i><span> 小游戏</span></a></li><li><a class="site-page child" target="_blank" rel="noopener" href="https://tcm.61lyf.top/#/"><i class="fa-fw img-tcm"></i><span> 中医知识库</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-file-alt"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/tags/%E8%AF%B4%E8%AF%B4/"><i class="fa-fw fas fa-comment-dots"></i><span> 说说</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user-circle"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">01-结构与数据形状</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-11-01T01:40:00.000Z" title="发表于 2026-11-01 09:40:00">2026-11-01</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-11-24T12:26:19.878Z" title="更新于 2026-11-24 20:26:19">2026-11-24</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AD%A6%E4%B9%A0/">学习</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AD%A6%E4%B9%A0/%E5%B0%8F%E6%B8%B8%E6%88%8F/">小游戏</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h2 id="一个页面装三个小游戏"><a href="#一个页面装三个小游戏" class="headerlink" title="一个页面装三个小游戏"></a>一个页面装三个小游戏</h2><p>这一个小游戏页面（<code>/link/</code>）里装了三种玩法，共用同一套界面和同一批图片素材：</p>
+<table>
+<thead>
+<tr>
+<th>游戏</th>
+<th>玩法一句话</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>连连看</td>
+<td>点两张相同的图，用一条拐弯不超过两次的折线连起来就消掉</td>
+</tr>
+<tr>
+<td>美图消消乐</td>
+<td>点相邻两张交换位置，凑齐横或竖 3 张以上相同的图就消除得分</td>
+</tr>
+<tr>
+<td>记忆翻牌</td>
+<td>牌全背面朝上，每次翻两张，同图配对消掉，不同翻回去</td>
+</tr>
+</tbody></table>
+<p>整页由三个文件组成，浏览器直接执行。</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>管什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Link/index.html</code></td>
+<td>页面骨架：有哪些块、块之间的层级</td>
+</tr>
+<tr>
+<td><code>Link/style.css</code></td>
+<td>外观：颜色、圆角、动画、深浅色</td>
+</tr>
+<tr>
+<td><code>Link/script.js</code></td>
+<td>逻辑与算法：发牌、判定、计分、存档、三种游戏的切换</td>
+</tr>
+</tbody></table>
+<p>这一篇定最底层的东西：三个游戏怎么在同一个页面里切换、各自的棋盘在代码里是什么形状、三张关卡表里的数字各控制什么。后面的每篇都同时讲三个游戏在这一件事上各自的写法。</p>
+<h2 id="首页与一盘棋"><a href="#首页与一盘棋" class="headerlink" title="首页与一盘棋"></a>首页与一盘棋</h2><p>首页顶部是三个页签按钮，点谁就显示谁的关卡列表。每个按钮上写着这一关的参数：连连看是行×列、图案种类、限时（带聚拢规则的关还会标出方向）；美图消消乐是棋盘大小、同屏元素数、目标类型与目标量、步数以及特殊机制；记忆翻牌是棋盘大小、总牌数、对数、亮牌秒数、配对限时与允许犯错次数。有过成绩还会带上最高分。三张表分别是 20 关（连连看）、30 关（消消乐）、20 关（翻牌），<code>sMaxAll</code> 与 <code>hLvMax</code> 按当前页签显示对应总数。</p>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-20-home.png" alt="首页的三个页签与关卡按钮"></p>
+<p>点进任何一关，页面上都是同样三样东西：状态（关卡、剩余、分数、第四格）、棋盘、三个按钮。左上角的品牌字和浏览器标签页的标题会跟着换：进连连看显示「连连看」，进美图消消乐显示「美图消消乐」，回到首页显示「小游戏」。手机上是棋盘在上、状态贴着棋盘顶、按钮压在棋盘下面；电脑屏幕宽到一定程度，状态和按钮并成右边一栏，棋盘独占左边一大块。同一份 HTML，位置由样式分配，细节在第六篇。</p>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-02-board.png" alt="第 1 关开局后的棋盘"></p>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-21-m3-mem.png" alt="美图消消乐与记忆翻牌的棋盘（当前 30 关 &#x2F; 20 关版本）"></p>
+<h2 id="三个游戏怎么在一份代码里切换"><a href="#三个游戏怎么在一份代码里切换" class="headerlink" title="三个游戏怎么在一份代码里切换"></a>三个游戏怎么在一份代码里切换</h2><p>切换的答案是一个全局变量 <code>MODE</code>，取值 <code>&#39;link&#39;</code>、<code>&#39;m3&#39;</code>、<code>&#39;mem&#39;</code> 三选一。每个游戏有自己的开局函数，谁被调用谁就先把 <code>MODE</code> 改成自己，再把状态对象换成自己的。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// source/link/script.js</span></span><br><span class="line"><span class="keyword">var</span> S=<span class="literal">null</span>, timer=<span class="number">0</span>, lastMatch=<span class="number">0</span>, combo=<span class="number">0</span>, runBase=<span class="number">0</span>;</span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">MODE</span>=<span class="literal">null</span>, G=<span class="literal">null</span>, M=<span class="literal">null</span>;</span><br></pre></td></tr></table></figure>
+
+<p><code>S</code>、<code>G</code>、<code>M</code> 分别是三个游戏的状态对象（后面单讲），<code>MODE</code> 记录当前是哪一个。开局函数的前几行都长一个样，以连连看为例：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// source/link/script.js</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">start</span>(<span class="params">level</span>)&#123;</span><br><span class="line">  <span class="variable constant_">MODE</span>=<span class="string">&#x27;link&#x27;</span>; G=<span class="literal">null</span>; M=<span class="literal">null</span>;</span><br><span class="line">  <span class="title function_">setBrand</span>(<span class="string">&#x27;连连看&#x27;</span>);</span><br><span class="line">  save.<span class="property">game</span>=<span class="string">&#x27;link&#x27;</span>; <span class="title function_">storeSave</span>();</span><br></pre></td></tr></table></figure>
+
+<p>逐行看：</p>
+<ul>
+<li><code>MODE=&#39;link&#39;; G=null; M=null;</code>：进入连连看的同时把另外两个的状态对象清成 <code>null</code>。同一时刻只存在一局游戏，旧局的对象直接整个丢掉，下次进那个游戏会重新开局。好处是不用写「退出时清理」的代码——反正开局就是全新的。</li>
+<li><code>setBrand(&#39;连连看&#39;)</code>：把左上角的品牌字和 <code>document.title</code>（浏览器标签页上的标题）一起换掉。这个函数只有两行：</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// source/link/script.js</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">setBrand</span>(<span class="params">name</span>)&#123;</span><br><span class="line">  $(<span class="string">&#x27;brand&#x27;</span>).<span class="property">textContent</span>=name;</span><br><span class="line">  <span class="variable language_">document</span>.<span class="property">title</span>=name;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>save.game=&#39;link&#39;; storeSave();</code>：把「上次玩的是哪个」记进本地存档。下次打开页面，首页直接停在最后一次玩的那个页签上。三个页签的点击处理就是三行同样的套路：</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// source/link/script.js</span></span><br><span class="line">$(<span class="string">&#x27;tabLink&#x27;</span>).<span class="property">onclick</span>=<span class="keyword">function</span>(<span class="params"></span>)&#123; save.<span class="property">game</span>=<span class="string">&#x27;link&#x27;</span>; <span class="title function_">storeSave</span>(); <span class="title function_">renderHome</span>(); &#125;;</span><br><span class="line">$(<span class="string">&#x27;tabM3&#x27;</span>).<span class="property">onclick</span>=<span class="keyword">function</span>(<span class="params"></span>)&#123; save.<span class="property">game</span>=<span class="string">&#x27;m3&#x27;</span>; <span class="title function_">storeSave</span>(); <span class="title function_">renderHome</span>(); &#125;;</span><br><span class="line">$(<span class="string">&#x27;tabMem&#x27;</span>).<span class="property">onclick</span>=<span class="keyword">function</span>(<span class="params"></span>)&#123; save.<span class="property">game</span>=<span class="string">&#x27;mem&#x27;</span>; <span class="title function_">storeSave</span>(); <span class="title function_">renderHome</span>(); &#125;;</span><br></pre></td></tr></table></figure>
+
+<p>点击棋盘上的图块时，也是按 <code>MODE</code> 分发到各自的处理函数：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// source/link/script.js</span></span><br><span class="line">$(<span class="string">&#x27;tiles&#x27;</span>).<span class="title function_">addEventListener</span>(<span class="string">&#x27;click&#x27;</span>,<span class="keyword">function</span>(<span class="params">e</span>)&#123;</span><br><span class="line">  <span class="keyword">var</span> t=e.<span class="property">target</span>.<span class="title function_">closest</span>(<span class="string">&#x27;.tile&#x27;</span>); <span class="keyword">if</span>(!t) <span class="keyword">return</span>;</span><br><span class="line">  <span class="keyword">if</span>(<span class="variable constant_">MODE</span>===<span class="string">&#x27;mem&#x27;</span>) <span class="title function_">memTap</span>(+t.<span class="property">dataset</span>.<span class="property">r</span>,+t.<span class="property">dataset</span>.<span class="property">c</span>);</span><br><span class="line">  <span class="keyword">else</span> <span class="keyword">if</span>(<span class="variable constant_">MODE</span>===<span class="string">&#x27;m3&#x27;</span>) <span class="title function_">m3Tap</span>(+t.<span class="property">dataset</span>.<span class="property">r</span>,+t.<span class="property">dataset</span>.<span class="property">c</span>);</span><br><span class="line">  <span class="keyword">else</span> <span class="title function_">tap</span>(+t.<span class="property">dataset</span>.<span class="property">r</span>,+t.<span class="property">dataset</span>.<span class="property">c</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>一个监听器挂在图块容器上，先算出点中的是哪一格，再按 <code>MODE</code> 转给 <code>memTap</code>、<code>m3Tap</code> 或 <code>tap</code>。这样写的好处是三个游戏各写各的点击函数，互不掺和，谁出问题修谁的；如果合成一个大函数，里面会挤满「如果是连连看就……否则如果是消消乐就……」的分支，改一个游戏要通读全部。</p>
+<p><code>===</code> 是「全等」：两边不但值一样，类型也得一样，<code>&#39;1&#39;===1</code> 是 false。写判断时用它不容易踩到类型转换的坑。</p>
+<h2 id="连连看的棋盘：一张比棋盘大一圈的表"><a href="#连连看的棋盘：一张比棋盘大一圈的表" class="headerlink" title="连连看的棋盘：一张比棋盘大一圈的表"></a>连连看的棋盘：一张比棋盘大一圈的表</h2><p>页面上看到的是一张 <code>列数 × 行数</code> 的格子图，代码里存的不是这张图，而是一张横竖各多两行两列的表。多出来的那一圈永远留空，专门给连线绕路用。</p>
+<p>以 <code>4 列 3 行</code> 为例，<code>#</code> 是有图的格子，<code>.</code> 是那圈空格：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">. . . . . .</span><br><span class="line">. # # # # .</span><br><span class="line">. # # # # .</span><br><span class="line">. # # # # .</span><br><span class="line">. . . . . .</span><br></pre></td></tr></table></figure>
+
+<p>代码里这张表的行号是 <code>0..4</code>、列号是 <code>0..5</code>，真正的图只放在行 <code>1..3</code>、列 <code>1..4</code> 里面。</p>
+<p>这圈空格不是摆设。连连看的连线允许从棋盘外面绕过去，最常见的例子是第一行左右两端各有一张相同的图：中间所有直线和折线都堵住了也没用，连线可以往上抬到棋盘外那一行，横着走一段再下来，两个拐弯，照样算连上。</p>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-03-two-turns.png" alt="连线抬到棋盘外那一行再下来"></p>
+<p>少了这圈空格，边界上的图就少了一整条绕行路线，很多实际能连的组合会被判成连不上。</p>
+<p>建这张表的代码在发牌函数里：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// source/link/script.js</span></span><br><span class="line">  <span class="keyword">var</span> C=cols+<span class="number">2</span>, R=rows+<span class="number">2</span>;</span><br><span class="line">  <span class="keyword">var</span> g=[];</span><br><span class="line">  <span class="keyword">for</span>(<span class="keyword">var</span> r=<span class="number">0</span>;r&lt;R;r++)&#123; <span class="keyword">var</span> row=[]; <span class="keyword">for</span>(<span class="keyword">var</span> c=<span class="number">0</span>;c&lt;C;c++) row.<span class="title function_">push</span>(<span class="number">0</span>); g.<span class="title function_">push</span>(row); &#125;</span><br><span class="line">  <span class="keyword">var</span> k=<span class="number">0</span>;</span><br><span class="line">  <span class="keyword">for</span>(<span class="keyword">var</span> r1=<span class="number">1</span>;r1&lt;=rows;r1++) <span class="keyword">for</span>(<span class="keyword">var</span> c1=<span class="number">1</span>;c1&lt;=cols;c1++) g[r1][c1]=deck[k++];</span><br></pre></td></tr></table></figure>
+
+<p>逐行看：</p>
+<ul>
+<li><code>var C=cols+2, R=rows+2;</code>：<code>var</code> 是声明一个变量，一行里用逗号可以连着声明多个。<code>C</code> 是这张表的列数，<code>R</code> 是行数，各比棋盘多 2，就是左右各一圈、上下各一圈。用大写是因为下面几行里 <code>c</code>、<code>r</code> 已经被拿去当小写循环变量了，同一个名字不能两用。</li>
+<li><code>var g=[];</code>：<code>g</code> 是这张表本身，<code>[]</code> 是一个空数组。数组就是一排格子，按顺序编号，编号从 <code>0</code> 开始。</li>
+<li>第三行是两层循环，外层 <code>r</code> 从 <code>0</code> 走到 <code>R-1</code>，每一轮里层 <code>c</code> 从 <code>0</code> 走到 <code>C-1</code>，<code>row.push(0)</code> 往一行的末尾塞一个 <code>0</code>，<code>g.push(row)</code> 把这一行接到表的末尾。循环跑完，<code>g</code> 是一个 <code>R</code> 项的数组，每一项又是一个 <code>C</code> 项的数组，这就是二维数组：数组的元素还是数组。取值写 <code>g[r][c]</code>，读第 <code>r</code> 行的第 <code>c</code> 个。</li>
+<li>这里的 <code>0</code> 是「空格子」的意思，见下一节。</li>
+<li>最后两行填图。<code>deck</code> 是一副洗好的牌（第二篇讲怎么洗），<code>k</code> 是发到哪张的计数。<code>r1</code> 从 <code>1</code> 到 <code>rows</code>、<code>c1</code> 从 <code>1</code> 到 <code>cols</code>，正好是那圈空格围起来的内部区域。<code>g[r1][c1]=deck[k++]</code> 里的 <code>k++</code> 是「先用当前值、再自增」，等价于取 <code>deck[k]</code> 然后 <code>k=k+1</code>，于是一行一行地把牌填满内部区域。</li>
+</ul>
+<p>外圈那一圈格子从来不会被写入任何图，也从来不用清空，这就是「绕外圈」能成立的物理原因。</p>
+<h2 id="另两个游戏的棋盘：不要外圈的普通表"><a href="#另两个游戏的棋盘：不要外圈的普通表" class="headerlink" title="另两个游戏的棋盘：不要外圈的普通表"></a>另两个游戏的棋盘：不要外圈的普通表</h2><p>美图消消乐和记忆翻牌的棋盘就是一张 <code>行数 × 列数</code> 的普通二维数组，没有外圈，行号列号从 0 开始。</p>
+<p>这不是偷懒，是玩法不需要。外圈是为「连线绕到棋盘外面」服务的，只有连连看有这种规则。美图消消乐的消除只看横竖方向上紧挨着的几张图，紧挨着这件事只发生在棋盘内部；记忆翻牌更简单，翻牌配对只比较两张图编号是否相同，跟位置毫无关系。给它们也加一圈，等于修一条谁都不走的路，白占屏幕还得多留神别把边界条件写错。</p>
+<p>美图消消乐的棋盘在开局时整张随机填图：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// source/link/script.js</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">m3Deal</span>(<span class="params">lv,no,rnd</span>)&#123;</span><br><span class="line">  <span class="keyword">var</span> R=lv.<span class="property">r</span>,C=lv.<span class="property">c</span>,r,c,k,i,counts=<span class="title function_">m3ObstacleCounts</span>(lv),g=[],ov=[],tries=<span class="number">0</span>;</span><br><span class="line">  <span class="keyword">var</span> targets=<span class="title function_">m3Targets</span>(lv,no), pool=<span class="title function_">m3FacePool</span>(lv,targets);</span><br><span class="line">  <span class="comment">/* 有掉落物目标时由开局种子定下连续 4 条无障碍出口列，并挑 3 种滑道图案 */</span></span><br><span class="line">  <span class="keyword">var</span> exitCols=[], chute=[];</span><br><span class="line">  <span class="keyword">if</span>(<span class="title function_">m3DropNeed</span>(lv))&#123;</span><br><span class="line">    <span class="keyword">var</span> band=<span class="title class_">Math</span>.<span class="title function_">min</span>(<span class="number">4</span>,C), start=<span class="title class_">Math</span>.<span class="title function_">floor</span>(<span class="title function_">rnd</span>()*(C-band+<span class="number">1</span>));</span><br><span class="line">    <span class="keyword">for</span>(i=<span class="number">0</span>;i&lt;band;i++) exitCols.<span class="title function_">push</span>(start+i);</span><br><span class="line">    <span class="keyword">var</span> uniq=[];</span><br><span class="line">    <span class="keyword">for</span>(i=<span class="number">1</span>;i&lt;=lv.<span class="property">f</span>;i++) uniq.<span class="title function_">push</span>(i);</span><br><span class="line">    uniq=<span class="title function_">shuffled</span>(uniq,rnd);</span><br><span class="line">    chute=uniq.<span class="title function_">slice</span>(<span class="number">0</span>,<span class="title class_">Math</span>.<span class="title function_">min</span>(<span class="number">3</span>,uniq.<span class="property">length</span>));</span><br><span class="line">    <span class="keyword">for</span>(i=<span class="number">0</span>;i&lt;lv.<span class="property">g</span>.<span class="property">length</span>;i++) <span class="keyword">if</span>(lv.<span class="property">g</span>[i].<span class="property">k</span>===<span class="string">&#x27;elem&#x27;</span>)&#123;</span><br><span class="line">      <span class="keyword">var</span> tf=targets[lv.<span class="property">g</span>[i].<span class="property">t</span>||<span class="number">0</span>];</span><br><span class="line">      <span class="keyword">if</span>(chute.<span class="title function_">indexOf</span>(tf)&lt;<span class="number">0</span>) chute[chute.<span class="property">length</span>-<span class="number">1</span>]=tf;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">while</span>(<span class="literal">true</span>)&#123;</span><br><span class="line">    g=[]; ov=[];</span><br><span class="line">    <span class="keyword">for</span>(r=<span class="number">0</span>;r&lt;R;r++)&#123;</span><br><span class="line">      <span class="keyword">var</span> gr=[], orow=[];</span><br><span class="line">      <span class="keyword">for</span>(c=<span class="number">0</span>;c&lt;C;c++)&#123; gr.<span class="title function_">push</span>(<span class="title function_">m3Face</span>(pool,rnd)); orow.<span class="title function_">push</span>(<span class="number">0</span>); &#125;</span><br><span class="line">      g.<span class="title function_">push</span>(gr); ov.<span class="title function_">push</span>(orow);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="title function_">m3PlaceObstacles</span>(ov,counts,rnd,exitCols);</span><br><span class="line">    <span class="keyword">for</span>(i=<span class="number">0</span>;i&lt;exitCols.<span class="property">length</span>;i++)</span><br><span class="line">      <span class="keyword">for</span>(r=<span class="number">0</span>;r&lt;R;r++)</span><br><span class="line">        <span class="keyword">if</span>(ov[r][exitCols[i]]!==<span class="variable constant_">M3_CRATE</span>) g[r][exitCols[i]]=chute[<span class="title class_">Math</span>.<span class="title function_">floor</span>(<span class="title function_">rnd</span>()*chute.<span class="property">length</span>)];</span><br><span class="line">    <span class="keyword">for</span>(c=<span class="number">0</span>;c&lt;C&amp;&amp;chute.<span class="property">length</span>;c++)</span><br><span class="line">      <span class="keyword">if</span>(ov[R-<span class="number">1</span>][c]!==<span class="variable constant_">M3_CRATE</span>&amp;&amp;g[R-<span class="number">1</span>][c]&gt;<span class="number">0</span>)</span><br><span class="line">        g[R-<span class="number">1</span>][c]=chute[<span class="title class_">Math</span>.<span class="title function_">floor</span>(<span class="title function_">rnd</span>()*<span class="title class_">Math</span>.<span class="title function_">min</span>(<span class="number">2</span>,chute.<span class="property">length</span>))];</span><br><span class="line">    <span class="title function_">m3Clean</span>(g,ov,pool,rnd,chute,exitCols);</span><br><span class="line">    <span class="keyword">if</span>(<span class="title function_">m3HasMove</span>(g,ov)||tries++&gt;<span class="number">60</span>) <span class="keyword">break</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span>(!<span class="title function_">m3HasMove</span>(g,ov))&#123;</span><br><span class="line">    <span class="keyword">for</span>(k=<span class="number">0</span>;k&lt;<span class="number">300</span>&amp;&amp;!<span class="title function_">m3HasMove</span>(g,ov);k++)&#123;</span><br><span class="line">      <span class="keyword">for</span>(r=<span class="number">0</span>;r&lt;R;r++) <span class="keyword">for</span>(c=<span class="number">0</span>;c&lt;C;c++)</span><br><span class="line">        <span class="keyword">if</span>(g[r][c]&gt;<span class="number">0</span>&amp;&amp;ov[r][c]!==<span class="variable constant_">M3_CRATE</span>)</span><br><span class="line">          g[r][c]=(chute.<span class="property">length</span>&amp;&amp;(exitCols.<span class="title function_">indexOf</span>(c)&gt;=<span class="number">0</span>||r===R-<span class="number">1</span>))?chute[<span class="title class_">Math</span>.<span class="title function_">floor</span>(<span class="title function_">rnd</span>()*chute.<span class="property">length</span>)]:<span class="title function_">m3Face</span>(pool,rnd);</span><br><span class="line">      <span class="title function_">m3Clean</span>(g,ov,pool,rnd,chute,exitCols);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> &#123;<span class="attr">g</span>:g,<span class="attr">ov</span>:ov,<span class="attr">targets</span>:targets,<span class="attr">pool</span>:pool,<span class="attr">exitCols</span>:exitCols,<span class="attr">chute</span>:chute&#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意签名里多了个 <code>no</code>：它交给 <code>m3Targets(lv,no)</code> 决定本关的「指定元素」，再由 <code>m3FacePool</code> 造出加权发牌池，所以逐格填的是 <code>m3Face(pool,rnd)</code>，不是 <code>1+Math.floor(rnd()*lv.f)</code>（第二篇细讲）。每填一格同时造一层 <code>ov</code> 障碍层；有掉落物目标的关卡会由开局发生器定下连续 4 条「出口列」（同一颗种子结果相同）<code>exitCols</code>，作为第 4 个参数传给 <code>m3PlaceObstacles</code>：木箱整列不放（会切断重力），冰块只覆盖图案、不挡下落，可以压在出口列上。出口列只用 3 种「滑道图案」<code>chute</code> 填（混合关会把本关要消的目标图案塞进去），最底行整行也用同色系、且只留 2 种，让掉到倒数第二行的星标正下方那格更容易被横向连排消掉。布完障碍才用 <code>m3Clean(g,ov,pool,rnd,chute,exitCols)</code> 抹掉开局自带的三连（上限 400 轮），再验 <code>m3HasMove(g,ov)</code> 有没有可交换的一步；没有就整盘重发，最多 60 次，仍不行还有 300 轮逐格重填兜底。返回的是 <code>{g,ov,targets,pool,exitCols,chute}</code> 六项，供 <code>startM3</code> 组装这一局。这些函数的内部机制在第二、三、四篇讲。</p>
+<p>记忆翻牌的棋盘则和连连看一样是成对发牌、洗匀、逐格填入，只是没有外圈也不挑行列：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// source/link/script.js</span></span><br><span class="line">  <span class="keyword">var</span> rnd=<span class="title function_">rngOf</span>(<span class="title class_">Date</span>.<span class="title function_">now</span>()&amp;<span class="number">0x7fffffff</span>);</span><br><span class="line">  <span class="keyword">var</span> pairs=lv.<span class="property">c</span>*lv.<span class="property">r</span>/<span class="number">2</span>, deck=[];</span><br><span class="line">  <span class="keyword">for</span>(<span class="keyword">var</span> i=<span class="number">0</span>;i&lt;pairs;i++)&#123; deck.<span class="title function_">push</span>(<span class="number">1</span>+i%lv.<span class="property">f</span>); deck.<span class="title function_">push</span>(<span class="number">1</span>+i%lv.<span class="property">f</span>); &#125;</span><br><span class="line">  deck=<span class="title function_">shuffled</span>(deck,rnd);</span><br><span class="line">  <span class="keyword">var</span> g=[], k=<span class="number">0</span>;</span><br><span class="line">  <span class="keyword">for</span>(<span class="keyword">var</span> r=<span class="number">0</span>;r&lt;lv.<span class="property">r</span>;r++)&#123; <span class="keyword">var</span> row=[]; <span class="keyword">for</span>(<span class="keyword">var</span> c=<span class="number">0</span>;c&lt;lv.<span class="property">c</span>;c++) row.<span class="title function_">push</span>(deck[k++]); g.<span class="title function_">push</span>(row); &#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>pairs</code> 是对数，每对往 <code>deck</code> 里放两张同编号的牌，洗匀后逐格填。发牌与洗牌的细节同样是第二篇的内容。</p>
+<h2 id="表里存的值：0-是空，正整数是图案编号"><a href="#表里存的值：0-是空，正整数是图案编号" class="headerlink" title="表里存的值：0 是空，正整数是图案编号"></a>表里存的值：0 是空，正整数是图案编号</h2><p>三个游戏的 <code>g[r][c]</code> 都遵守同一套约定：</p>
+<table>
+<thead>
+<tr>
+<th>值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>0</code></td>
+<td>空格。连连看的外圈与已消格、消消乐已消格都是 0</td>
+</tr>
+<tr>
+<td><code>1</code> 到 <code>30</code></td>
+<td>这张格子的图是哪一种。连连看与记忆翻牌里同编号成对出现</td>
+</tr>
+<tr>
+<td><code>-1</code></td>
+<td>消消乐的掉落物（<code>M3_DROP</code>）：重物，从顶行沿出口列严格重力下落（正下方同列图案被消才下移），不参与匹配与交换，落到最底行金线才被收集</td>
+</tr>
+</tbody></table>
+<p>判定「两张是不是同一张图」，三个游戏都是第一步比编号：连连看比两张的编号是否相等（第三篇），记忆翻牌在 <code>memTap</code> 里比 <code>M.g[a.r][a.c]===M.g[r][c]</code>，美图消消乐找同号连排。都不用去比像素、也不用管图片文件叫什么名字。</p>
+<p>编号与图片文件的对应关系写在生成图块元素的那行：编号 <code>f</code> 对应 <code>img/image</code> + <code>(f-1)</code> + <code>.jpg</code>，也就是编号 1 用 <code>image0.jpg</code>，编号 30 用 <code>image29.jpg</code>。之所以不是编号直接当文件名，是因为图片是从 0 开始编号的一批素材，而代码里 <code>0</code> 已经用来表示空格，编号必须从 1 起，两套编号差了一个 1。</p>
+<p>素材总数记在一个常量里，与方向表放在一起：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// source/link/script.js</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">NFACE</span>=<span class="number">30</span>;</span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">DIRS</span>=[[-<span class="number">1</span>,<span class="number">0</span>],[<span class="number">1</span>,<span class="number">0</span>],[<span class="number">0</span>,-<span class="number">1</span>],[<span class="number">0</span>,<span class="number">1</span>]];</span><br></pre></td></tr></table></figure>
+
+<p><code>DIRS</code> 下一节单说。<code>NFACE</code> 是「素材一共准备了 30 种」这条事实的记号，写在代码里备查，发牌并不读它：每关用前几种由关卡表里的 <code>f</code> 决定，编号越界的图不会发出来。<code>img/</code> 目录里如果缺某一张，图块会在生成时退化成占位的数字，见第五篇。</p>
+<h2 id="四个方向-DIRS"><a href="#四个方向-DIRS" class="headerlink" title="四个方向 DIRS"></a>四个方向 DIRS</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// source/link/script.js</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">DIRS</span>=[[-<span class="number">1</span>,<span class="number">0</span>],[<span class="number">1</span>,<span class="number">0</span>],[<span class="number">0</span>,-<span class="number">1</span>],[<span class="number">0</span>,<span class="number">1</span>]];</span><br></pre></td></tr></table></figure>
+
+<p>每一项是一对数字 <code>[行变化, 列变化]</code>，把当前位置加上一对就得到相邻格子：</p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>[-1,0]</code></td>
+<td>行减 1，往上一格</td>
+</tr>
+<tr>
+<td><code>[1,0]</code></td>
+<td>行加 1，往下一格</td>
+</tr>
+<tr>
+<td><code>[0,-1]</code></td>
+<td>列减 1，往左一格</td>
+</tr>
+<tr>
+<td><code>[0,1]</code></td>
+<td>列加 1，往右一格</td>
+</tr>
+</tbody></table>
+<p>只有四个，线段只有横着走和竖着走两种形态。判定连线时反复用到这四个，用法是 <code>cur.r+DIRS[d][0]</code> 与 <code>cur.c+DIRS[d][1]</code>，见第三篇。</p>
+<p>另两个游戏没有这张方向表。美图消消乐找「横着或竖着连排」用的是直接沿行、沿列扫描（第三篇的 <code>m3FindGroups</code>），不需要「从某格向四个方向试探」这个动作；记忆翻牌压根不看位置。方向表是连线玩法的专用工具，玩法不同，数据结构跟着不同——这也是三个游戏各自一套函数的原因之一。</p>
+<h2 id="关卡表-LEVELS"><a href="#关卡表-LEVELS" class="headerlink" title="关卡表 LEVELS"></a>关卡表 LEVELS</h2><p>二十行，一行一关：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// source/link/script.js</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">LEVELS</span>=[</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">6</span>,<span class="attr">r</span>:<span class="number">4</span>,<span class="attr">f</span>:<span class="number">6</span>,<span class="attr">t</span>:<span class="number">150</span>,<span class="attr">h</span>:<span class="number">5</span>,<span class="attr">s</span>:<span class="number">3</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">8</span>,<span class="attr">r</span>:<span class="number">4</span>,<span class="attr">f</span>:<span class="number">8</span>,<span class="attr">t</span>:<span class="number">180</span>,<span class="attr">h</span>:<span class="number">5</span>,<span class="attr">s</span>:<span class="number">3</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">6</span>,<span class="attr">r</span>:<span class="number">6</span>,<span class="attr">f</span>:<span class="number">6</span>,<span class="attr">t</span>:<span class="number">200</span>,<span class="attr">h</span>:<span class="number">4</span>,<span class="attr">s</span>:<span class="number">3</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">8</span>,<span class="attr">r</span>:<span class="number">6</span>,<span class="attr">f</span>:<span class="number">8</span>,<span class="attr">t</span>:<span class="number">260</span>,<span class="attr">h</span>:<span class="number">4</span>,<span class="attr">s</span>:<span class="number">3</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">8</span>,<span class="attr">r</span>:<span class="number">6</span>,<span class="attr">f</span>:<span class="number">12</span>,<span class="attr">t</span>:<span class="number">280</span>,<span class="attr">h</span>:<span class="number">4</span>,<span class="attr">s</span>:<span class="number">2</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">10</span>,<span class="attr">r</span>:<span class="number">6</span>,<span class="attr">f</span>:<span class="number">10</span>,<span class="attr">t</span>:<span class="number">300</span>,<span class="attr">h</span>:<span class="number">3</span>,<span class="attr">s</span>:<span class="number">2</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">8</span>,<span class="attr">r</span>:<span class="number">8</span>,<span class="attr">f</span>:<span class="number">8</span>,<span class="attr">t</span>:<span class="number">300</span>,<span class="attr">h</span>:<span class="number">3</span>,<span class="attr">s</span>:<span class="number">2</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">10</span>,<span class="attr">r</span>:<span class="number">8</span>,<span class="attr">f</span>:<span class="number">10</span>,<span class="attr">t</span>:<span class="number">360</span>,<span class="attr">h</span>:<span class="number">3</span>,<span class="attr">s</span>:<span class="number">2</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">10</span>,<span class="attr">r</span>:<span class="number">8</span>,<span class="attr">f</span>:<span class="number">16</span>,<span class="attr">t</span>:<span class="number">380</span>,<span class="attr">h</span>:<span class="number">2</span>,<span class="attr">s</span>:<span class="number">2</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">10</span>,<span class="attr">r</span>:<span class="number">8</span>,<span class="attr">f</span>:<span class="number">20</span>,<span class="attr">t</span>:<span class="number">400</span>,<span class="attr">h</span>:<span class="number">2</span>,<span class="attr">s</span>:<span class="number">2</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">12</span>,<span class="attr">r</span>:<span class="number">8</span>,<span class="attr">f</span>:<span class="number">12</span>,<span class="attr">t</span>:<span class="number">340</span>,<span class="attr">h</span>:<span class="number">2</span>,<span class="attr">s</span>:<span class="number">1</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">10</span>,<span class="attr">r</span>:<span class="number">10</span>,<span class="attr">f</span>:<span class="number">10</span>,<span class="attr">t</span>:<span class="number">350</span>,<span class="attr">h</span>:<span class="number">2</span>,<span class="attr">s</span>:<span class="number">1</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">10</span>,<span class="attr">r</span>:<span class="number">10</span>,<span class="attr">f</span>:<span class="number">20</span>,<span class="attr">t</span>:<span class="number">370</span>,<span class="attr">h</span>:<span class="number">2</span>,<span class="attr">s</span>:<span class="number">1</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">12</span>,<span class="attr">r</span>:<span class="number">10</span>,<span class="attr">f</span>:<span class="number">12</span>,<span class="attr">t</span>:<span class="number">400</span>,<span class="attr">h</span>:<span class="number">1</span>,<span class="attr">s</span>:<span class="number">1</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">12</span>,<span class="attr">r</span>:<span class="number">10</span>,<span class="attr">f</span>:<span class="number">20</span>,<span class="attr">t</span>:<span class="number">440</span>,<span class="attr">h</span>:<span class="number">1</span>,<span class="attr">s</span>:<span class="number">1</span>,<span class="attr">grav</span>:<span class="string">&#x27;left&#x27;</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">12</span>,<span class="attr">r</span>:<span class="number">10</span>,<span class="attr">f</span>:<span class="number">24</span>,<span class="attr">t</span>:<span class="number">420</span>,<span class="attr">h</span>:<span class="number">1</span>,<span class="attr">s</span>:<span class="number">1</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">14</span>,<span class="attr">r</span>:<span class="number">10</span>,<span class="attr">f</span>:<span class="number">14</span>,<span class="attr">t</span>:<span class="number">460</span>,<span class="attr">h</span>:<span class="number">1</span>,<span class="attr">s</span>:<span class="number">1</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">12</span>,<span class="attr">r</span>:<span class="number">12</span>,<span class="attr">f</span>:<span class="number">24</span>,<span class="attr">t</span>:<span class="number">500</span>,<span class="attr">h</span>:<span class="number">1</span>,<span class="attr">s</span>:<span class="number">0</span>,<span class="attr">grav</span>:<span class="string">&#x27;center&#x27;</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">14</span>,<span class="attr">r</span>:<span class="number">12</span>,<span class="attr">f</span>:<span class="number">28</span>,<span class="attr">t</span>:<span class="number">560</span>,<span class="attr">h</span>:<span class="number">1</span>,<span class="attr">s</span>:<span class="number">0</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">15</span>,<span class="attr">r</span>:<span class="number">12</span>,<span class="attr">f</span>:<span class="number">30</span>,<span class="attr">t</span>:<span class="number">640</span>,<span class="attr">h</span>:<span class="number">1</span>,<span class="attr">s</span>:<span class="number">2</span>,<span class="attr">grav</span>:<span class="string">&#x27;random&#x27;</span>&#125;</span><br><span class="line">];</span><br></pre></td></tr></table></figure>
+
+<p><code>{c:6,r:4,...}</code> 是一个对象。对象是一堆有名字的值，靠 <code>名字: 值</code> 成对写，用点号取值：<code>level.c</code> 拿到 6，<code>level.t</code> 拿到 150。数组里放对象，就是「一关一条记录」。</p>
+<table>
+<thead>
+<tr>
+<th>键</th>
+<th>含义</th>
+<th>用在哪</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>c</code></td>
+<td>棋盘列数</td>
+<td>发牌、首页那行说明文字</td>
+</tr>
+<tr>
+<td><code>r</code></td>
+<td>棋盘行数</td>
+<td>同上</td>
+</tr>
+<tr>
+<td><code>f</code></td>
+<td>这一关用前几种图案</td>
+<td>发牌时决定图案编号的循环上限</td>
+</tr>
+<tr>
+<td><code>t</code></td>
+<td>限时，单位秒</td>
+<td>倒计时起始值、首页文字、剩余时间的奖励</td>
+</tr>
+<tr>
+<td><code>h</code></td>
+<td>提示次数</td>
+<td>提示按钮的次数与禁用条件</td>
+</tr>
+<tr>
+<td><code>s</code></td>
+<td>重排次数</td>
+<td>重排按钮的次数与禁用条件</td>
+</tr>
+<tr>
+<td><code>grav</code></td>
+<td>聚拢方向，可选</td>
+<td>只有第 15、18、20 关有，消除后图块往这个方向靠，见第四篇</td>
+</tr>
+</tbody></table>
+<p>几个从这张表里能读出来的取舍：</p>
+<ul>
+<li><code>c</code> 与 <code>r</code> 的乘积一定是偶数。牌要成对发，总数必须是偶数，所以这张表里每一关的行列数都凑成了偶数张。乘积一旦是奇数，最后一张会落单，永远消不掉。</li>
+<li><code>c</code> 与 <code>r</code> 是设计目标，不是最终行列数。发牌时会在「乘积等于这个牌数」的所有因数分解里，挑一个在当前窗口下放得最大、又最接近设计列数的组合，挑法见第五篇。牌数始终不变，变的只是横竖怎么分配。</li>
+<li>行列上限压在 15 列 12 行（最后一关 <code>c:15,r:12</code>，180 张）。手机竖屏太窄，列数一大每格就被挤得过小，所以封顶之后不再加格子。限时跟着牌数一起放宽（第一关 150 秒、最后一关 640 秒），牌越多给的时间越长，难度靠图种和提示&#x2F;重排次数去压，而不是靠把格子挤小。</li>
+<li>从第一关到最后一关，牌数（<code>c*r</code>）和图案种类（<code>f</code>）一起涨。图多、花样也多，难度自然上去了，但真正卡人的是后两项：<code>h</code> 从 5 一路降到 1（第 14 关起就只剩 1 次提示），<code>s</code> 从 3 降到 0。第 18、19 关 <code>s:0</code> 意味着没有重排次数，排成死局只能重玩；最后一关反而给回 <code>s:2</code>，因为它的随机聚拢更容易把牌推成死局，留两次重排兜底。</li>
+<li>第 15、18、20 关多了一个 <code>grav</code> 键：消除之后剩下的图块会往指定方向聚拢（左、中、随机），等于每消一对棋盘就重新挤一次，连线路线随之改变。这是后期关卡的特殊规则，机制与代码在第四篇细讲。</li>
+<li>关卡表里没有图的名字，只有编号。换一批素材只要把 <code>img/</code> 目录里的图片换成同样编号的文件，这张表不用动。</li>
+</ul>
+<p>首页那一排关卡按钮上的文字就是按这张表拼出来的：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// source/link/script.js</span></span><br><span class="line">      b.<span class="property">innerHTML</span>=<span class="string">&#x27;&lt;div class=&quot;t&quot;&gt;第 &#x27;</span>+n+<span class="string">&#x27; 关&lt;/div&gt;&lt;div class=&quot;d&quot;&gt;&#x27;</span>+lv.<span class="property">r</span>+<span class="string">&#x27;×&#x27;</span>+lv.<span class="property">c</span>+<span class="string">&#x27; · &#x27;</span>+lv.<span class="property">f</span>+<span class="string">&#x27; 种图 · &#x27;</span>+<span class="title function_">fmt</span>(lv.<span class="property">t</span>)+(lv.<span class="property">grav</span>?<span class="string">&#x27; · &#x27;</span>+<span class="variable constant_">GRAV_TXT</span>[lv.<span class="property">grav</span>]:<span class="string">&#x27;&#x27;</span>)+</span><br><span class="line">        (best?<span class="string">&#x27; · 最高 &#x27;</span>+<span class="attr">best</span>:<span class="string">&#x27;&#x27;</span>)+(unlocked?<span class="string">&#x27;&#x27;</span>:<span class="string">&#x27; · 未解锁&#x27;</span>)+<span class="string">&#x27;&lt;/div&gt;&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p><code>&#39;文字&#39; + 变量</code> 是字符串拼接，把数字和文字接成一整句。<code>lv.r+&#39;×&#39;+lv.c</code> 得出 <code>4×6</code> 这种「行×列」的形状（第一关 4 行 6 列），<code>fmt(lv.t)</code> 把 150 秒换算成 <code>02:30</code> 的写法（换算函数在第七篇）。<code>(lv.grav?&#39; · &#39;+GRAV_TXT[lv.grav]:&#39;&#39;)</code> 的意思是「这一关有聚拢规则才追加那半句」，<code>GRAV_TXT</code> 是一张把方向代码换成中文的小表：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// source/link/script.js</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">GRAV_TXT</span>=&#123;<span class="attr">left</span>:<span class="string">&#x27;聚拢·左&#x27;</span>,<span class="attr">center</span>:<span class="string">&#x27;聚拢·中&#x27;</span>,<span class="attr">random</span>:<span class="string">&#x27;聚拢·随机&#x27;</span>&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><code>(best?&#39; · 最高 &#39;+best:&#39;&#39;)</code> 也是三元表达式，形如 <code>条件 ? A : B</code>，条件成立取 A 否则取 B，这里的意思是「这一关有过最高分才追加那半句」。</p>
+<h2 id="另两张关卡表：M3-LEVELS-与-MEM-LEVELS"><a href="#另两张关卡表：M3-LEVELS-与-MEM-LEVELS" class="headerlink" title="另两张关卡表：M3_LEVELS 与 MEM_LEVELS"></a>另两张关卡表：M3_LEVELS 与 MEM_LEVELS</h2><p>美图消消乐和记忆翻牌各有自己的关卡表，都是「数组里放对象」，但三张表的字段并不通用：消消乐 30 关，一关写「棋盘、同屏元素数、步数、目标类型与目标量、特殊机制」；翻牌 20 关，一关写「棋盘、图种、总牌数、展示时间、配对限时、允许犯错次数」；连连看的 <code>LEVELS</code> 是 20 关的限时表。读代码时最容易在「同一个键名含义不同」这里栽跟头。</p>
+<h3 id="美图消消乐：M3-LEVELS（30-关）"><a href="#美图消消乐：M3-LEVELS（30-关）" class="headerlink" title="美图消消乐：M3_LEVELS（30 关）"></a>美图消消乐：M3_LEVELS（30 关）</h3><p>一条记录长这样（首尾各举一例）：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// source/link/script.js</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">M3_LEVELS</span>=[</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">7</span>,<span class="attr">r</span>:<span class="number">7</span>,<span class="attr">f</span>:<span class="number">5</span>,<span class="attr">m</span>:<span class="number">20</span>,<span class="attr">h</span>:<span class="number">3</span>,<span class="attr">s</span>:<span class="number">3</span>,<span class="attr">type</span>:<span class="string">&#x27;消除指定元素&#x27;</span>,<span class="attr">gt</span>:<span class="string">&#x27;15&#x27;</span>,<span class="attr">sp</span>:<span class="string">&#x27;&#x27;</span>,<span class="attr">g</span>:[&#123;<span class="attr">k</span>:<span class="string">&#x27;elem&#x27;</span>,<span class="attr">n</span>:<span class="number">15</span>,<span class="attr">t</span>:<span class="number">0</span>&#125;]&#125;,</span><br><span class="line">  ...</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">9</span>,<span class="attr">r</span>:<span class="number">9</span>,<span class="attr">f</span>:<span class="number">8</span>,<span class="attr">m</span>:<span class="number">44</span>,<span class="attr">h</span>:<span class="number">2</span>,<span class="attr">s</span>:<span class="number">2</span>,<span class="attr">type</span>:<span class="string">&#x27;终极综合&#x27;</span>,<span class="attr">gt</span>:<span class="string">&#x27;元素50+掉落2+障碍15&#x27;</span>,</span><br><span class="line">   <span class="attr">sp</span>:<span class="string">&#x27;冰块+木箱+滑道+限洗牌2次&#x27;</span>,<span class="attr">g</span>:[&#123;<span class="attr">k</span>:<span class="string">&#x27;elem&#x27;</span>,<span class="attr">n</span>:<span class="number">50</span>,<span class="attr">t</span>:<span class="number">0</span>&#125;,&#123;<span class="attr">k</span>:<span class="string">&#x27;drop&#x27;</span>,<span class="attr">n</span>:<span class="number">2</span>&#125;,&#123;<span class="attr">k</span>:<span class="string">&#x27;obs&#x27;</span>,<span class="attr">n</span>:<span class="number">15</span>&#125;]&#125;</span><br><span class="line">];</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>键</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>c</code> &#x2F; <code>r</code></td>
+<td>棋盘列数 &#x2F; 行数，7×7、8×8、9×9 三档，开局就是最终形状</td>
+</tr>
+<tr>
+<td><code>f</code></td>
+<td>同屏元素数，5 到 8 种；<code>m3FacePool</code> 会把本关的「指定元素」在发牌池里多放几份，种类数仍是 <code>f</code></td>
+</tr>
+<tr>
+<td><code>m</code></td>
+<td>步数，一次有效交换减 1</td>
+</tr>
+<tr>
+<td><code>type</code> &#x2F; <code>gt</code></td>
+<td>表格里的目标类型与目标量原文，只用于首页说明和 HUD 标题</td>
+</tr>
+<tr>
+<td><code>g</code></td>
+<td>真正驱动判定的目标数组，见下表</td>
+</tr>
+<tr>
+<td><code>sp</code></td>
+<td>特殊机制原文（冰块 &#x2F; 木箱 &#x2F; 木箱阻挡 &#x2F; 冰块+木箱 &#x2F; 限洗牌2次）</td>
+</tr>
+<tr>
+<td><code>h</code> &#x2F; <code>s</code></td>
+<td>提示次数 &#x2F; 手动洗牌次数；第 30 关 <code>s:2</code> 就是「限洗牌 2 次」</td>
+</tr>
+</tbody></table>
+<p><code>g</code> 里每条是 <code>{k, n, t}</code>：<code>n</code> 是目标量，<code>t</code> 是指定元素在 <code>G.targets</code> 里的下标，只有 <code>elem</code> 用得上。</p>
+<table>
+<thead>
+<tr>
+<th><code>k</code></th>
+<th>判定方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>elem</code></td>
+<td>消掉指定编号的图案累计 <code>n</code> 张；「消除两种元素 各N」写成两条 <code>elem</code>，分别指向两个不同编号</td>
+</tr>
+<tr>
+<td><code>drop</code></td>
+<td>收集掉落物 <code>n</code> 个：金色星块从顶行沿出口列严格重力下落，只随正下方同列图案被消而下移；到最底行（整行金色收集区）才被收走。底排任意连排会「打开金色出口」，让停在倒数第二行的星标直接滑进出口，避免卡在最后一格</td>
+</tr>
+<tr>
+<td><code>ice</code></td>
+<td>打碎 <code>n</code> 块冰：半透明冰块所在格被消除时打碎</td>
+</tr>
+<tr>
+<td><code>crate</code></td>
+<td>打碎 <code>n</code> 个木箱：相邻格被消除时打碎</td>
+</tr>
+<tr>
+<td><code>obs</code></td>
+<td>冰块 + 木箱合计打碎 <code>n</code> 个，用于综合目标里的障碍项</td>
+</tr>
+</tbody></table>
+<p>多条目标要<strong>全部</strong>达标才过关。<code>G.prog</code> 与 <code>g</code> 一一对应记录进度，<code>m3GoalsDone()</code> 逐条检查；混合目标、综合挑战、终极综合都只是把上面几种拼进同一个数组。</p>
+<p>30 关一览（页签里的卡片就是这张表拼出来的；掉落物关按严格重力+滑道重新配平，掉落目标压到 1<del>3 个、步数放宽到 24</del>44）：</p>
+<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-22-m3-levels.png" alt="美图消消乐页签的 30 关卡片"></p>
+<table>
+<thead>
+<tr>
+<th>关</th>
+<th>棋盘</th>
+<th>同屏元素</th>
+<th>目标类型</th>
+<th>目标量</th>
+<th>步数</th>
+<th>特殊机制</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>7×7</td>
+<td>5</td>
+<td>消除指定元素</td>
+<td>15</td>
+<td>20</td>
+<td>无</td>
+</tr>
+<tr>
+<td>2</td>
+<td>7×7</td>
+<td>5</td>
+<td>消除指定元素</td>
+<td>20</td>
+<td>20</td>
+<td>无</td>
+</tr>
+<tr>
+<td>3</td>
+<td>7×7</td>
+<td>5</td>
+<td>消除两种元素</td>
+<td>各10</td>
+<td>22</td>
+<td>无</td>
+</tr>
+<tr>
+<td>4</td>
+<td>8×8</td>
+<td>5</td>
+<td>消除两种元素</td>
+<td>各12</td>
+<td>22</td>
+<td>无</td>
+</tr>
+<tr>
+<td>5</td>
+<td>8×8</td>
+<td>5</td>
+<td>收集掉落物</td>
+<td>1</td>
+<td>24</td>
+<td>无</td>
+</tr>
+<tr>
+<td>6</td>
+<td>8×8</td>
+<td>6</td>
+<td>收集掉落物</td>
+<td>2</td>
+<td>28</td>
+<td>无</td>
+</tr>
+<tr>
+<td>7</td>
+<td>8×8</td>
+<td>6</td>
+<td>消除指定元素</td>
+<td>30</td>
+<td>20</td>
+<td>无</td>
+</tr>
+<tr>
+<td>8</td>
+<td>8×8</td>
+<td>6</td>
+<td>消除两种元素</td>
+<td>各15</td>
+<td>22</td>
+<td>无</td>
+</tr>
+<tr>
+<td>9</td>
+<td>8×8</td>
+<td>6</td>
+<td>收集掉落物</td>
+<td>2</td>
+<td>30</td>
+<td>无</td>
+</tr>
+<tr>
+<td>10</td>
+<td>8×8</td>
+<td>6</td>
+<td>混合目标</td>
+<td>元素20+掉落1</td>
+<td>28</td>
+<td>无</td>
+</tr>
+<tr>
+<td>11</td>
+<td>8×8</td>
+<td>6</td>
+<td>消除障碍</td>
+<td>冰块10</td>
+<td>22</td>
+<td>冰块</td>
+</tr>
+<tr>
+<td>12</td>
+<td>8×8</td>
+<td>7</td>
+<td>消除障碍</td>
+<td>冰块12</td>
+<td>22</td>
+<td>冰块</td>
+</tr>
+<tr>
+<td>13</td>
+<td>9×9</td>
+<td>7</td>
+<td>收集掉落物</td>
+<td>2</td>
+<td>32</td>
+<td>无</td>
+</tr>
+<tr>
+<td>14</td>
+<td>9×9</td>
+<td>7</td>
+<td>混合目标</td>
+<td>元素25+掉落1</td>
+<td>30</td>
+<td>无</td>
+</tr>
+<tr>
+<td>15</td>
+<td>9×9</td>
+<td>7</td>
+<td>消除障碍</td>
+<td>冰块15</td>
+<td>24</td>
+<td>冰块</td>
+</tr>
+<tr>
+<td>16</td>
+<td>9×9</td>
+<td>7</td>
+<td>消除障碍</td>
+<td>木箱8</td>
+<td>24</td>
+<td>木箱</td>
+</tr>
+<tr>
+<td>17</td>
+<td>9×9</td>
+<td>8</td>
+<td>混合目标</td>
+<td>元素30+冰块10</td>
+<td>26</td>
+<td>冰块</td>
+</tr>
+<tr>
+<td>18</td>
+<td>9×9</td>
+<td>8</td>
+<td>收集掉落物</td>
+<td>2</td>
+<td>32</td>
+<td>木箱阻挡</td>
+</tr>
+<tr>
+<td>19</td>
+<td>9×9</td>
+<td>8</td>
+<td>混合目标</td>
+<td>元素30+木箱8</td>
+<td>26</td>
+<td>木箱</td>
+</tr>
+<tr>
+<td>20</td>
+<td>9×9</td>
+<td>8</td>
+<td>综合挑战</td>
+<td>元素40+掉落2+障碍10</td>
+<td>42</td>
+<td>冰块+木箱</td>
+</tr>
+<tr>
+<td>21</td>
+<td>9×9</td>
+<td>8</td>
+<td>消除指定元素</td>
+<td>45</td>
+<td>28</td>
+<td>无</td>
+</tr>
+<tr>
+<td>22</td>
+<td>9×9</td>
+<td>8</td>
+<td>消除两种元素</td>
+<td>各25</td>
+<td>28</td>
+<td>无</td>
+</tr>
+<tr>
+<td>23</td>
+<td>9×9</td>
+<td>8</td>
+<td>收集掉落物</td>
+<td>2</td>
+<td>32</td>
+<td>冰块</td>
+</tr>
+<tr>
+<td>24</td>
+<td>9×9</td>
+<td>8</td>
+<td>消除障碍</td>
+<td>木箱12</td>
+<td>28</td>
+<td>木箱</td>
+</tr>
+<tr>
+<td>25</td>
+<td>9×9</td>
+<td>8</td>
+<td>混合目标</td>
+<td>元素35+冰块12</td>
+<td>28</td>
+<td>冰块</td>
+</tr>
+<tr>
+<td>26</td>
+<td>9×9</td>
+<td>8</td>
+<td>混合目标</td>
+<td>元素35+木箱10</td>
+<td>28</td>
+<td>木箱</td>
+</tr>
+<tr>
+<td>27</td>
+<td>9×9</td>
+<td>8</td>
+<td>收集掉落物</td>
+<td>3</td>
+<td>40</td>
+<td>木箱阻挡</td>
+</tr>
+<tr>
+<td>28</td>
+<td>9×9</td>
+<td>8</td>
+<td>混合目标</td>
+<td>元素40+掉落1</td>
+<td>36</td>
+<td>无</td>
+</tr>
+<tr>
+<td>29</td>
+<td>9×9</td>
+<td>8</td>
+<td>综合目标</td>
+<td>元素40+冰块12+木箱8</td>
+<td>32</td>
+<td>冰块+木箱</td>
+</tr>
+<tr>
+<td>30</td>
+<td>9×9</td>
+<td>8</td>
+<td>终极综合</td>
+<td>元素50+掉落2+障碍15</td>
+<td>44</td>
+<td>冰块+木箱+限洗牌2次</td>
+</tr>
+</tbody></table>
+<p>所有掉落物关卡共用同一套滑道规则：出口列是连续 4 列，开局与补图只取 3 种图案，最底行整行只取 2 种；底排任意连排会打开金色出口。</p>
+<h3 id="记忆翻牌：MEM-LEVELS（20-关）"><a href="#记忆翻牌：MEM-LEVELS（20-关）" class="headerlink" title="记忆翻牌：MEM_LEVELS（20 关）"></a>记忆翻牌：MEM_LEVELS（20 关）</h3><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// source/link/script.js</span></span><br><span class="line"><span class="keyword">var</span> <span class="variable constant_">MEM_LEVELS</span>=[</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">3</span>,<span class="attr">r</span>:<span class="number">4</span>,<span class="attr">f</span>:<span class="number">6</span>,<span class="attr">p</span>:<span class="number">12</span>,<span class="attr">rev</span>:<span class="number">10</span>,<span class="attr">t</span>:<span class="number">0</span>,<span class="attr">e</span>:<span class="number">0</span>,<span class="attr">h</span>:<span class="number">4</span>,<span class="attr">s</span>:<span class="number">2</span>&#125;,</span><br><span class="line">  ...</span><br><span class="line">  &#123;<span class="attr">c</span>:<span class="number">6</span>,<span class="attr">r</span>:<span class="number">8</span>,<span class="attr">f</span>:<span class="number">24</span>,<span class="attr">p</span>:<span class="number">48</span>,<span class="attr">rev</span>:<span class="number">15</span>,<span class="attr">t</span>:<span class="number">460</span>,<span class="attr">e</span>:<span class="number">2</span>,<span class="attr">h</span>:<span class="number">1</span>,<span class="attr">s</span>:<span class="number">0</span>&#125;</span><br><span class="line">];</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>键</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>c</code> &#x2F; <code>r</code></td>
+<td>列数 &#x2F; 行数，按「A×B &#x3D; 列×行」解释；乘积 <code>p</code> 就是总牌数</td>
+</tr>
+<tr>
+<td><code>f</code></td>
+<td>图种，恰好等于对数 <code>p/2</code>，每种图正好一对两张</td>
+</tr>
+<tr>
+<td><code>p</code></td>
+<td>总牌数，等于 <code>c*r</code></td>
+</tr>
+<tr>
+<td><code>rev</code></td>
+<td>展示（亮牌）秒数，开局所有牌正面朝上这么久</td>
+</tr>
+<tr>
+<td><code>t</code></td>
+<td>配对限时秒数，<code>0</code> 表示不限时；亮牌结束后才开始倒数</td>
+</tr>
+<tr>
+<td><code>e</code></td>
+<td>允许犯错次数，<code>0</code> 表示不限；第 <code>e+1</code> 次配错即失败</td>
+</tr>
+<tr>
+<td><code>h</code> &#x2F; <code>s</code></td>
+<td>提示 &#x2F; 重排次数</td>
+</tr>
+</tbody></table>
+<p>20 关一览：</p>
+<table>
+<thead>
+<tr>
+<th>关</th>
+<th>棋盘</th>
+<th>图种(对)</th>
+<th>总牌数</th>
+<th>展示时间</th>
+<th>配对限时</th>
+<th>允许犯错次数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>3×4</td>
+<td>6</td>
+<td>12</td>
+<td>10s</td>
+<td>不限时</td>
+<td>不限</td>
+</tr>
+<tr>
+<td>2</td>
+<td>3×4</td>
+<td>6</td>
+<td>12</td>
+<td>9s</td>
+<td>不限时</td>
+<td>不限</td>
+</tr>
+<tr>
+<td>3</td>
+<td>4×4</td>
+<td>8</td>
+<td>16</td>
+<td>11s</td>
+<td>不限时</td>
+<td>不限</td>
+</tr>
+<tr>
+<td>4</td>
+<td>4×4</td>
+<td>8</td>
+<td>16</td>
+<td>10s</td>
+<td>不限时</td>
+<td>不限</td>
+</tr>
+<tr>
+<td>5</td>
+<td>4×5</td>
+<td>10</td>
+<td>20</td>
+<td>12s</td>
+<td>420s（7分）</td>
+<td>8次</td>
+</tr>
+<tr>
+<td>6</td>
+<td>4×5</td>
+<td>10</td>
+<td>20</td>
+<td>11s</td>
+<td>410s（6分50秒）</td>
+<td>8次</td>
+</tr>
+<tr>
+<td>7</td>
+<td>4×6</td>
+<td>12</td>
+<td>24</td>
+<td>13s</td>
+<td>430s（7分10秒）</td>
+<td>7次</td>
+</tr>
+<tr>
+<td>8</td>
+<td>4×6</td>
+<td>12</td>
+<td>24</td>
+<td>12s</td>
+<td>420s（7分）</td>
+<td>7次</td>
+</tr>
+<tr>
+<td>9</td>
+<td>5×6</td>
+<td>15</td>
+<td>30</td>
+<td>14s</td>
+<td>450s（7分30秒）</td>
+<td>6次</td>
+</tr>
+<tr>
+<td>10</td>
+<td>5×6</td>
+<td>15</td>
+<td>30</td>
+<td>13s</td>
+<td>440s（7分20秒）</td>
+<td>6次</td>
+</tr>
+<tr>
+<td>11</td>
+<td>5×6</td>
+<td>15</td>
+<td>30</td>
+<td>13s</td>
+<td>440s（7分20秒）</td>
+<td>6次</td>
+</tr>
+<tr>
+<td>12</td>
+<td>5×6</td>
+<td>15</td>
+<td>30</td>
+<td>12s</td>
+<td>430s（7分10秒）</td>
+<td>5次</td>
+</tr>
+<tr>
+<td>13</td>
+<td>6×6</td>
+<td>18</td>
+<td>36</td>
+<td>15s</td>
+<td>460s（7分40秒）</td>
+<td>5次</td>
+</tr>
+<tr>
+<td>14</td>
+<td>6×6</td>
+<td>18</td>
+<td>36</td>
+<td>14s</td>
+<td>450s（7分30秒）</td>
+<td>5次</td>
+</tr>
+<tr>
+<td>15</td>
+<td>6×6</td>
+<td>18</td>
+<td>36</td>
+<td>14s</td>
+<td>450s（7分30秒）</td>
+<td>4次</td>
+</tr>
+<tr>
+<td>16</td>
+<td>6×6</td>
+<td>18</td>
+<td>36</td>
+<td>13s</td>
+<td>440s（7分20秒）</td>
+<td>4次</td>
+</tr>
+<tr>
+<td>17</td>
+<td>6×8</td>
+<td>24</td>
+<td>48</td>
+<td>17s</td>
+<td>480s（8分）</td>
+<td>4次</td>
+</tr>
+<tr>
+<td>18</td>
+<td>6×8</td>
+<td>24</td>
+<td>48</td>
+<td>16s</td>
+<td>470s（7分50秒）</td>
+<td>3次</td>
+</tr>
+<tr>
+<td>19</td>
+<td>6×8</td>
+<td>24</td>
+<td>48</td>
+<td>16s</td>
+<td>470s（7分50秒）</td>
+<td>3次</td>
+</tr>
+<tr>
+<td>20</td>
+<td>6×8</td>
+<td>24</td>
+<td>48</td>
+<td>15s</td>
+<td>460s（7分40秒）</td>
+<td>2次</td>
+</tr>
+</tbody></table>
+<p>第 1~4 关 <code>t:0, e:0</code>，既不限时也不限犯错；第 5 关起两条约束同时生效，越往后时间越紧、容错越少。</p>
+<p>三张表放在一起看，同一个字母在不同表里含义完全不同：<code>t</code> 在连连看是限时秒数、在翻牌是配对限时秒数，消消乐则没有 <code>t</code>；<code>m</code> 只在消消乐里是步数，翻牌用 <code>t</code> 和 <code>e</code>。读代码永远要以「这张表自己那一栏的解释」为准，不能想当然。</p>
+<h2 id="一局游戏的当前状态：S、G、M"><a href="#一局游戏的当前状态：S、G、M" class="headerlink" title="一局游戏的当前状态：S、G、M"></a>一局游戏的当前状态：S、G、M</h2><p>代码里没有第二份棋盘。每个游戏的所有可变成量集中放在一个状态对象里，开局那一刻整个换成新的。连连看的叫 <code>S</code>：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// source/link/script.js</span></span><br><span class="line">  S=&#123;<span class="attr">lv</span>:lv,<span class="attr">no</span>:level,<span class="attr">g</span>:d.<span class="property">g</span>,<span class="attr">rows</span>:d.<span class="property">rows</span>,<span class="attr">cols</span>:d.<span class="property">cols</span>,<span class="attr">cell</span>:d.<span class="property">cell</span>,<span class="attr">total</span>:d.<span class="property">total</span>,</span><br><span class="line">     <span class="attr">left</span>:d.<span class="property">total</span>,<span class="attr">time</span>:lv.<span class="property">t</span>,<span class="attr">hint</span>:lv.<span class="property">h</span>,<span class="attr">shuf</span>:lv.<span class="property">s</span>,<span class="attr">score</span>:<span class="number">0</span>,<span class="attr">sel</span>:<span class="literal">null</span>,<span class="attr">locked</span>:<span class="literal">false</span>,<span class="attr">grav</span>:lv.<span class="property">grav</span>||<span class="literal">null</span>&#125;;</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>lv</code></td>
+<td>本关的参数表，就是 <code>LEVELS</code> 里那一行</td>
+</tr>
+<tr>
+<td><code>no</code></td>
+<td>第几关，从 1 开始</td>
+</tr>
+<tr>
+<td><code>g</code></td>
+<td>那张大一圈的棋盘表本身</td>
+</tr>
+<tr>
+<td><code>rows</code> &#x2F; <code>cols</code></td>
+<td>棋盘的行数与列数，不含外圈</td>
+</tr>
+<tr>
+<td><code>cell</code></td>
+<td>一格多少像素，第五篇算的就是这个数</td>
+</tr>
+<tr>
+<td><code>total</code></td>
+<td>开局共有多少张图</td>
+</tr>
+<tr>
+<td><code>left</code></td>
+<td>还剩多少张没消</td>
+</tr>
+<tr>
+<td><code>time</code></td>
+<td>剩余秒数，每 0.1 秒减一次</td>
+</tr>
+<tr>
+<td><code>hint</code> &#x2F; <code>shuf</code></td>
+<td>剩余的提示与重排次数</td>
+</tr>
+<tr>
+<td><code>score</code></td>
+<td>本关分数</td>
+</tr>
+<tr>
+<td><code>sel</code></td>
+<td>当前选中哪张，没选中是 <code>null</code></td>
+</tr>
+<tr>
+<td><code>locked</code></td>
+<td>是否正在播放消除动画，用来挡住新的点击</td>
+</tr>
+<tr>
+<td><code>grav</code></td>
+<td>本关聚拢方向，没有该规则时是 <code>null</code></td>
+</tr>
+</tbody></table>
+<p><code>null</code> 是「这里没有东西」，不是 0、也不是空字符串。<code>locked:false</code> 里的 <code>false</code>&#x2F;<code>true</code> 是布尔值，只有这两个状态，专门用来当开关。</p>
+<p><code>var S=null, timer=0...</code> 那一行里：<code>timer</code> 是定时器的编号（第七篇用它停计时），<code>lastMatch</code> 与 <code>combo</code> 管连续消除的加分。<code>S=null</code> 的含义是「开局前根本不存在任何一局」，所以点击处理进来第一件事都是检查 <code>S</code> 在不在，见第七篇的 <code>tap</code>。</p>
+<p>同一段里还剩一个 <code>runBase=S.score</code>，赋值之后没有任何地方读这个变量，属于遗留写法。留着不影响运行，但别按「本关起始分」去理解计分。</p>
+<p>美图消消乐与记忆翻牌的状态对象与 <code>S</code> 同构，差别集中在「约束」这一栏：</p>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>连连看 <code>S</code></th>
+<th>消消乐 <code>G</code></th>
+<th>翻牌 <code>M</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>约束值</td>
+<td><code>time</code> 剩余秒数</td>
+<td><code>moves</code> 剩余步数</td>
+<td><code>time</code> 配对剩余秒数（<code>t:0</code> 时不计时）、<code>err</code> 已犯错次数</td>
+</tr>
+<tr>
+<td>过关条件</td>
+<td><code>left</code> 减到 0</td>
+<td><code>m3GoalsDone()</code>：<code>prog</code> 每条都达到 <code>lv.g[i].n</code></td>
+<td><code>left</code> 减到 0（剩余对数）</td>
+</tr>
+<tr>
+<td>进度条画什么</td>
+<td>剩余时间的百分比</td>
+<td>各条目标进度的平均百分比</td>
+<td>亮牌阶段画亮牌比例；配对期限时画剩余时间比例，不限时画已配对比例</td>
+</tr>
+<tr>
+<td>盘面层</td>
+<td><code>g</code> 数字棋盘（带外圈）</td>
+<td><code>g</code> 图案棋盘 + <code>ov</code> 障碍层 + <code>prog</code> 目标进度 + <code>targets</code> 指定元素</td>
+<td><code>g</code> 数字棋盘 + <code>reveal</code> 亮牌剩余秒数 + <code>errLim</code> 犯错上限</td>
+</tr>
+<tr>
+<td>特有属性</td>
+<td><code>total</code></td>
+<td><code>pool</code> 加权发牌池、<code>dropNeed</code> &#x2F; <code>dropGot</code> 掉落物计数、<code>exitCols</code> &#x2F; <code>chute</code> &#x2F; <code>exitOpen</code> &#x2F; <code>nextDropCol</code>、<code>shufUsed</code> 已洗牌次数、<code>over</code></td>
+<td><code>rev</code> 亮牌总秒数、<code>flips</code> 翻牌次数、<code>streak</code>、<code>first</code>、<code>busy</code></td>
+</tr>
+</tbody></table>
+<p>三个对象都有 <code>locked</code> 或等价的 <code>busy</code>：动画播放期间挡住新的点击。<code>M.first</code> 记录第一张翻开的牌，<code>M.streak</code> 记录连续配对成功次数。胜负确定时消消乐用 <code>G.over</code>、翻牌用 <code>M.over</code> 关闸，并停掉各自的闹钟；翻牌的两个闹钟是 <code>revT</code>（亮牌）与 <code>pairT</code>（配对限时）。</p>
+<h2 id="本篇新名词"><a href="#本篇新名词" class="headerlink" title="本篇新名词"></a>本篇新名词</h2><table>
+<thead>
+<tr>
+<th>名词</th>
+<th>一句话解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>数组</td>
+<td>一排按顺序编号的值，编号从 0 起，写 <code>a[2]</code> 取第三个</td>
+</tr>
+<tr>
+<td>二维数组</td>
+<td>数组的元素还是数组，写 <code>g[行][列]</code></td>
+</tr>
+<tr>
+<td>对象</td>
+<td>一堆有名字的值，写 <code>{名字: 值}</code>，用点号取</td>
+</tr>
+<tr>
+<td>索引</td>
+<td>数组里的位置编号</td>
+</tr>
+<tr>
+<td>循环</td>
+<td><code>for(起点; 条件; 每轮怎么变)</code>，条件成立就一直执行</td>
+</tr>
+<tr>
+<td>分支</td>
+<td><code>if(条件){...} else {...}</code>，按条件走哪条路</td>
+</tr>
+<tr>
+<td>函数</td>
+<td>一段起名字、可以带参数、可以返回值的代码</td>
+</tr>
+<tr>
+<td>参数</td>
+<td>调用函数时递进去的值</td>
+</tr>
+<tr>
+<td>返回值</td>
+<td>函数算完递出来的那个值</td>
+</tr>
+<tr>
+<td>三元表达式</td>
+<td><code>条件 ? A : B</code>，二选一</td>
+</tr>
+<tr>
+<td>布尔值</td>
+<td>只有 <code>true</code> 与 <code>false</code> 两种状态的值</td>
+</tr>
+<tr>
+<td>全等</td>
+<td><code>===</code>，两边值和类型都一样才算相等</td>
+</tr>
+<tr>
+<td><code>null</code></td>
+<td>表示「没有值」的那个特殊值</td>
+</tr>
+<tr>
+<td>字符串拼接</td>
+<td>用 <code>+</code> 把文字与数字接成一整段文字</td>
+</tr>
+<tr>
+<td>相对路径 &#x2F; 绝对路径</td>
+<td>不带 <code>/</code> 开头的按当前目录找，带 <code>/</code> 开头的从根路径找</td>
+</tr>
+</tbody></table>
+<h2 id="自测"><a href="#自测" class="headerlink" title="自测"></a>自测</h2><ol>
+<li>连连看的代码表为什么比棋盘横竖各多两行两列？少这一圈会怎样？ 答：这一圈是留给连线绕棋盘外用的通道。少了这一圈，边界上的图就没有绕行路线，很多本该连得上的组合会被判成连不上。</li>
+<li>美图消消乐和记忆翻牌的棋盘为什么不需要外圈？ 答：外圈是为「连线绕到棋盘外」服务的。消消乐只看相邻格子连成排，翻牌只比两张图编号，都不需要从棋盘外绕路。</li>
+<li><code>g[0][3]</code> 上的值在连连看里有可能不是 0 吗？ 答：不可能。第 0 行是外圈，填牌从行 1 开始，外圈永远是空格。</li>
+<li>表里存的值是 <code>7</code>，代表什么？ 答：这张格子的图是第 7 种图案，对应 <code>img/image6.jpg</code>。三个游戏都遵守这个约定；区别在连连看和翻牌里同编号恰好两张，消消乐里同编号随机分布、可能多于两张。</li>
+<li>连连看关卡表里的 <code>s:0</code> 是什么意思？ 答：这一关的重排次数是 0，重排按钮一开始就是禁用状态，排成死局只能重玩。</li>
+<li>关卡表里写着 <code>c:15</code>，手机窄屏上也一定是 15 列吗？ 答：不一定。<code>c</code> 是设计目标，实际行列由牌数的因数分解在当前窗口里重新挑，挑法见第五篇。</li>
+<li>三张关卡表里的 <code>t</code> 各是什么？ 答：连连看的 <code>t</code> 是限时秒数，记忆翻牌的 <code>t</code> 是配对限时秒数（<code>0</code> 表示不限时），美图消消乐没有 <code>t</code>——目标写在 <code>g</code> 数组里，<code>gt</code> 只是给玩家看的原文。</li>
+<li><code>MODE</code>、<code>S</code>、<code>G</code>、<code>M</code> 为什么各设一个，而不是合成一个大对象？ 答：分开后每个游戏只操作自己的状态，点击分发只需要一次 <code>MODE</code> 判断；合在一起则每个函数都要面对另外两个游戏的字段，改一处容易碰坏别处。</li>
+<li>消消乐的「终极综合」为什么写成三条 <code>g</code> 记录？ 答：「元素50+掉落2+障碍15」是三个互不替代的目标，<code>G.prog</code> 逐条记进度，<code>m3GoalsDone()</code> 要三条都满才过关；合成一条就没法分别显示进度。</li>
+<li>第 30 关 <code>s:2</code> 限的是哪种洗牌？ 答：只限玩家手动按重排按钮。死局时的自动重排是保底机制，不消耗这 2 次，否则玩家会在不知情时用光机会。</li>
+<li>翻牌第 5 关 <code>t:420,e:8</code> 里的 420 秒从什么时候开始数？ 答：亮牌 <code>rev:12</code> 秒结束、牌全部翻面之后才启动 <code>pairT</code>，亮牌时间不占配对限时；第 9 次配错才判负。</li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io">61飞兔</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://cyg0825.github.io/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/">https://cyg0825.github.io/2026/11/01/01-%E7%BB%93%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%A2%E7%8A%B6/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://cyg0825.github.io" target="_blank">学海拾茜</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E8%BF%9E%E8%BF%9E%E7%9C%8B/">连连看</a><a class="post-meta__tags" href="/tags/%E7%BE%8E%E5%9B%BE%E6%B6%88%E6%B6%88%E4%B9%90/">美图消消乐</a><a class="post-meta__tags" href="/tags/%E8%AE%B0%E5%BF%86%E7%BF%BB%E7%89%8C/">记忆翻牌</a><a class="post-meta__tags" href="/tags/JavaScript/">JavaScript</a></div><div class="post-share"><div class="social-share" data-image="/img/link/lk-01-home.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="/assets/css/share.min.css" media="print" onload="this.media='all'"><script src="/assets/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/11/02/02-%E9%9A%8F%E6%9C%BA%E6%95%B0%E4%B8%8E%E5%8F%91%E7%89%8C/" title="02-随机数与发牌"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-02-board.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">02-随机数与发牌</div></div><div class="info-2"><div class="info-item-1">手写随机数发生器、洗牌与发牌：连连看和翻牌的成对牌堆、消消乐的逐格抽样，以及各自的保险怎么加。</div></div></div></a><a class="pagination-related" href="/2026/10/22/hexo-%E6%9C%AC%E5%9C%B0%E5%90%8E%E5%8F%B0/" title="Hexo 本地后台"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Hexo 本地后台</div></div><div class="info-2"><div class="info-item-1">这是什么给 Hexo 源目录配一个只在本机跑的编辑后台，管到 source/ 的全部内容加上根目录的配置文件：文章、草稿、独立页面、主题自定义集合、source/_data/ 里的数据文件、scaffolds/ 里的模板、静态资源都能增删改；_config.yml 与主题配置铺成中文标签的表单。构建和部署仍在命令行做，后台不落 public/，也不执行任何 hexo 命令。 覆盖面靠目录约定自动发现：source/_posts/ 是文章，source/_drafts/ 是草稿，source/_&lt;名&gt;/ 是主题自定义的集合，其余 markdown 与 html 文件是页面，剩下的都归资源。后台不认识的 front-matter 键、读不懂的配置结构，一律降级成原文编辑而不是拒绝。将来站点加集合、加配置键，后台不用改代码，这是「通用」在这里的全部含义。 出发点是把「改一篇内容」的代价压到最低。命令行侧手工改一篇要同时盯住 front-matter 的键名与引号风格、分类要写成数组、嵌套缩进要对、配图要先算出站内相对路径，任何一处漏了都要等构建才发现。源目录不是 git 仓...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/" title="07-点击计分与存档"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-06-win.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-06</div><div class="info-item-2">07-点击计分与存档</div></div><div class="info-2"><div class="info-item-1">一次点击背后的状态机、计时与连击计分、写在本地的三份存档、三个游戏各自的胜负结算与背景音乐。</div></div></div></a><a class="pagination-related" href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/" title="05-布局自适应"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-13-after-resize.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-05</div><div class="info-item-2">05-布局自适应</div></div><div class="info-2"><div class="info-item-1">格子边长在开局时怎么挑、行列怎么分解、窗口变化时怎么用同一段计算跟上；消消乐与翻牌为什么只要一套简单得多的算式。</div></div></div></a><a class="pagination-related" href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/" title="04-死局与自动重排"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-04-hint.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-04</div><div class="info-item-2">04-死局与自动重排</div></div><div class="info-2"><div class="info-item-1">怎么知道盘面上还有没有可走的一步，死局之后的重排怎么保证不会越排越死，三个游戏各自把这道保险装在哪。</div></div></div></a><a class="pagination-related" href="/2026/11/02/02-%E9%9A%8F%E6%9C%BA%E6%95%B0%E4%B8%8E%E5%8F%91%E7%89%8C/" title="02-随机数与发牌"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-02-board.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-02</div><div class="info-item-2">02-随机数与发牌</div></div><div class="info-2"><div class="info-item-1">手写随机数发生器、洗牌与发牌：连连看和翻牌的成对牌堆、消消乐的逐格抽样，以及各自的保险怎么加。</div></div></div></a><a class="pagination-related" href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/" title="03-连线判定"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-03b-one-turn.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-03</div><div class="info-item-2">03-连线判定</div></div><div class="info-2"><div class="info-item-1">拐弯不超过两次的连线怎么判、折线怎么回溯出来，以及消消乐的连排判定、翻牌的配对判定为什么简单得多。</div></div></div></a><a class="pagination-related" href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/" title="06-界面骨架与样式"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-08-dark.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-05</div><div class="info-item-2">06-界面骨架与样式</div></div><div class="info-2"><div class="info-item-1">Link/index.html 的骨架与 Link/style.css 的样式逐行：颜色令牌、深浅色、圆角动画与移动端安全区；三个游戏怎么共用同一副骨架。</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/cat.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">61飞兔</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">66</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">30</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">24</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/cyg0825"><i class="fab fa-github"></i><span>关注我</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%B8%AA%E9%A1%B5%E9%9D%A2%E8%A3%85%E4%B8%89%E4%B8%AA%E5%B0%8F%E6%B8%B8%E6%88%8F"><span class="toc-number">1.</span> <span class="toc-text">一个页面装三个小游戏</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A6%96%E9%A1%B5%E4%B8%8E%E4%B8%80%E7%9B%98%E6%A3%8B"><span class="toc-number">2.</span> <span class="toc-text">首页与一盘棋</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E4%B8%AA%E6%B8%B8%E6%88%8F%E6%80%8E%E4%B9%88%E5%9C%A8%E4%B8%80%E4%BB%BD%E4%BB%A3%E7%A0%81%E9%87%8C%E5%88%87%E6%8D%A2"><span class="toc-number">3.</span> <span class="toc-text">三个游戏怎么在一份代码里切换</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%9E%E8%BF%9E%E7%9C%8B%E7%9A%84%E6%A3%8B%E7%9B%98%EF%BC%9A%E4%B8%80%E5%BC%A0%E6%AF%94%E6%A3%8B%E7%9B%98%E5%A4%A7%E4%B8%80%E5%9C%88%E7%9A%84%E8%A1%A8"><span class="toc-number">4.</span> <span class="toc-text">连连看的棋盘：一张比棋盘大一圈的表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%A6%E4%B8%A4%E4%B8%AA%E6%B8%B8%E6%88%8F%E7%9A%84%E6%A3%8B%E7%9B%98%EF%BC%9A%E4%B8%8D%E8%A6%81%E5%A4%96%E5%9C%88%E7%9A%84%E6%99%AE%E9%80%9A%E8%A1%A8"><span class="toc-number">5.</span> <span class="toc-text">另两个游戏的棋盘：不要外圈的普通表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A1%A8%E9%87%8C%E5%AD%98%E7%9A%84%E5%80%BC%EF%BC%9A0-%E6%98%AF%E7%A9%BA%EF%BC%8C%E6%AD%A3%E6%95%B4%E6%95%B0%E6%98%AF%E5%9B%BE%E6%A1%88%E7%BC%96%E5%8F%B7"><span class="toc-number">6.</span> <span class="toc-text">表里存的值：0 是空，正整数是图案编号</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E4%B8%AA%E6%96%B9%E5%90%91-DIRS"><span class="toc-number">7.</span> <span class="toc-text">四个方向 DIRS</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E8%A1%A8-LEVELS"><span class="toc-number">8.</span> <span class="toc-text">关卡表 LEVELS</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%A6%E4%B8%A4%E5%BC%A0%E5%85%B3%E5%8D%A1%E8%A1%A8%EF%BC%9AM3-LEVELS-%E4%B8%8E-MEM-LEVELS"><span class="toc-number">9.</span> <span class="toc-text">另两张关卡表：M3_LEVELS 与 MEM_LEVELS</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BE%8E%E5%9B%BE%E6%B6%88%E6%B6%88%E4%B9%90%EF%BC%9AM3-LEVELS%EF%BC%8830-%E5%85%B3%EF%BC%89"><span class="toc-number">9.1.</span> <span class="toc-text">美图消消乐：M3_LEVELS（30 关）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%B0%E5%BF%86%E7%BF%BB%E7%89%8C%EF%BC%9AMEM-LEVELS%EF%BC%8820-%E5%85%B3%EF%BC%89"><span class="toc-number">9.2.</span> <span class="toc-text">记忆翻牌：MEM_LEVELS（20 关）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E5%B1%80%E6%B8%B8%E6%88%8F%E7%9A%84%E5%BD%93%E5%89%8D%E7%8A%B6%E6%80%81%EF%BC%9AS%E3%80%81G%E3%80%81M"><span class="toc-number">10.</span> <span class="toc-text">一局游戏的当前状态：S、G、M</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%AC%E7%AF%87%E6%96%B0%E5%90%8D%E8%AF%8D"><span class="toc-number">11.</span> <span class="toc-text">本篇新名词</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%87%AA%E6%B5%8B"><span class="toc-number">12.</span> <span class="toc-text">自测</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/" title="07-点击计分与存档"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-06-win.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07-点击计分与存档"/></a><div class="content"><a class="title" href="/2026/11/06/07-%E7%82%B9%E5%87%BB%E8%AE%A1%E5%88%86%E4%B8%8E%E5%AD%98%E6%A1%A3/" title="07-点击计分与存档">07-点击计分与存档</a><time datetime="2026-11-06T00:20:00.000Z" title="发表于 2026-11-06 08:20:00">2026-11-06</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/" title="06-界面骨架与样式"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-08-dark.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06-界面骨架与样式"/></a><div class="content"><a class="title" href="/2026/11/05/06-%E7%95%8C%E9%9D%A2%E9%AA%A8%E6%9E%B6%E4%B8%8E%E6%A0%B7%E5%BC%8F/" title="06-界面骨架与样式">06-界面骨架与样式</a><time datetime="2026-11-05T08:40:00.000Z" title="发表于 2026-11-05 16:40:00">2026-11-05</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/" title="05-布局自适应"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-13-after-resize.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05-布局自适应"/></a><div class="content"><a class="title" href="/2026/11/05/05-%E5%B8%83%E5%B1%80%E8%87%AA%E9%80%82%E5%BA%94/" title="05-布局自适应">05-布局自适应</a><time datetime="2026-11-05T01:30:00.000Z" title="发表于 2026-11-05 09:30:00">2026-11-05</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/" title="04-死局与自动重排"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-04-hint.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04-死局与自动重排"/></a><div class="content"><a class="title" href="/2026/11/04/04-%E6%AD%BB%E5%B1%80%E4%B8%8E%E8%87%AA%E5%8A%A8%E9%87%8D%E6%8E%92/" title="04-死局与自动重排">04-死局与自动重排</a><time datetime="2026-11-04T01:10:00.000Z" title="发表于 2026-11-04 09:10:00">2026-11-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/" title="03-连线判定"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/link/lk-03b-one-turn.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03-连线判定"/></a><div class="content"><a class="title" href="/2026/11/03/03-%E8%BF%9E%E7%BA%BF%E5%88%A4%E5%AE%9A/" title="03-连线判定">03-连线判定</a><time datetime="2026-11-03T01:20:00.000Z" title="发表于 2026-11-03 09:20:00">2026-11-03</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2024 - 2026 By 61飞兔</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.3</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.staticfile.org/vanilla-lazyload/19.1.3/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
+(function () {
+  var menus = document.getElementById('sidebar-menus')
+  var card = document.querySelector('#aside-content .card-info')
+  if (!menus || !card || menus.dataset.profileIn) return
+  var name = card.querySelector('.author-info-name')
+  var btn = card.querySelector('#card-info-btn')
+  if (name) {
+    var n = name.cloneNode(true)
+    n.className = 'sidebar-author-name'
+    menus.querySelector('.avatar-img').after(n)
+  }
+  if (btn) {
+    var b = btn.cloneNode(true)
+    b.removeAttribute('id')
+    b.className = 'sidebar-follow'
+    menus.querySelector('.site-data').after(b)
+  }
+  menus.dataset.profileIn = '1'
+})()
+</script><script>
+(function () {
+  if (window.scopeSelectBound) return
+  window.scopeSelectBound = 1
+  // 第一项命中即用第二项当选中范围：代码块要跳过行号那一列
+  var SCOPES = [['figure.highlight', 'td.code'], ['table', ''], ['pre', ''], ['blockquote', '']]
+  var block = null, clicked = null, hasClick = false
+  function scope(node) {
+    while (node && node.nodeType === 3) node = node.parentNode
+    if (!node || node.nodeType !== 1 || !node.closest || !node.closest('#article-container')) return null
+    var best = null
+    for (var i = 0; i < SCOPES.length; i++) {
+      var box = node.closest(SCOPES[i][0])
+      if (!box) continue
+      var target = box
+      if (SCOPES[i][1]) {
+        var inner = box.querySelector(SCOPES[i][1])
+        if (inner) target = inner
+      }
+      // 表格里套代码块时取更深的那一层，选中范围跟着光标最近的块走
+      if (!best || best.contains(target)) best = target
+    }
+    return best
+  }
+  document.addEventListener('mousedown', function (e) {
+    hasClick = true
+    clicked = scope(e.target)
+    block = null
+  })
+  document.addEventListener('keydown', function (e) {
+    if (e.keyCode !== 65 || !(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return
+    var el = document.activeElement
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return
+    var sel = window.getSelection()
+    // 点过就用点中的那一块，没点过（纯键盘操作）才看光标当前所在的块
+    var cur = hasClick ? clicked : (sel && sel.rangeCount && scope(sel.anchorNode))
+    if (!cur || cur === block) { block = null; return }
+    var r = document.createRange()
+    r.selectNodeContents(cur)
+    sel.removeAllRanges()
+    sel.addRange(r)
+    block = cur
+    e.preventDefault()
+  }, true)
+})()
+</script><div class="aplayer no-destroy" data-id="9086662585" data-server="netease" data-type="playlist" data-fixed="true" data-autoplay="false" data-order="random" data-mini="true" data-api="https://api.injahow.cn/meting/?server=:server&amp;type=:type&amp;id=:id&amp;r=:r">
+</div><link rel="stylesheet" href="/assets/css/APlayer.min.css" media="print" onload="this.media='all'"><script src="/assets/js/APlayer.min.js"></script><script src="/assets/js/Meting.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索文章" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>

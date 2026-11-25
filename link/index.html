@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="shortcut icon" href="/img/333.png">
+<title>小游戏</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="/css/site-loading.css">
+</head>
+<body>
+<!-- 全站加载层：与主题页面共用 /css/site-loading.css 和 /js/site-loading.js -->
+<div id="site-loading" role="status" aria-live="polite" aria-label="页面加载中">
+  <div class="sl-ring" aria-hidden="true"></div>
+  <div class="sl-title">正在加载，请稍候…</div>
+  <div class="sl-track" aria-hidden="true"><div class="sl-bar"></div></div>
+  <div class="sl-pct">0%</div>
+  <div class="sl-sub">页面与图片准备中</div>
+</div>
+<script src="/js/site-loading.js"></script>
+<header>
+  <div class="brand" id="brand">小游戏</div>
+  <div id="tools">
+    <button id="bMusic" class="ico" aria-label="音乐开"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1 0 14 17.55V7h4V3h-6z"/><line class="slash" x1="4.5" y1="19.5" x2="19.5" y2="4.5"/></svg></button>
+    <button id="bHome" class="ico" aria-label="首页"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></button>
+  </div>
+</header>
+<main>
+  <section id="home">
+    <div id="gtabs">
+      <button id="tabLink" class="gt on">连连看</button>
+      <button id="tabM3" class="gt">美图消消乐</button>
+      <button id="tabMem" class="gt">记忆翻牌</button>
+    </div>
+    <p class="lead" id="lead">点两张相同的图，连线拐弯不超过两次即可消除。每关消完全部图块就算过。</p>
+    <p class="tip">小提示：图片第一次打开要现加载，会稍慢一点；看过一遍有了缓存，再进基本秒开。</p>
+    <div id="levels"></div>
+    <div class="sum">已过 <b id="sMax">0</b>/<b id="sMaxAll">20</b> 关 · 总分 <b id="sTotal">0</b></div>
+  </section>
+  <section id="game" hidden>
+    <div id="side">
+      <div id="stat">
+        <div id="hud" hidden>
+          <span><i>关卡</i><b id="hLv">1</b>/<b id="hLvMax">20</b></span>
+          <span><i id="hL2">剩余</i><b id="hLeft">0</b> <i id="hU2">对</i></span>
+          <span><i>分数</i><b id="hScore">0</b></span>
+          <span><i id="hL4">限时</i><b id="hTime">--</b></span>
+        </div>
+        <div id="barwrap"><div id="bar"></div></div>
+      </div>
+      <div id="act" hidden>
+        <button id="bHint">提示 <span class="n" id="nHint">0</span></button>
+        <button id="bShuf">重排 <span class="n" id="nShuf">0</span></button>
+        <button id="bRetry">重玩</button>
+      </div>
+    </div>
+    <div id="stage"><div id="board"><svg id="line"></svg><div id="tiles"></div></div></div>
+  </section>
+</main>
+<div id="toast"></div>
+<div id="mask" hidden>
+  <div class="dlg">
+    <h2 id="dTitle"></h2>
+    <p id="dText"></p>
+    <div class="row">
+      <button id="dA" class="go"></button>
+      <button id="dB"></button>
+    </div>
+  </div>
+</div>
+<audio id="bgm" preload="none"></audio>
+<script src="script.js"></script>
+</body>
+</html>
